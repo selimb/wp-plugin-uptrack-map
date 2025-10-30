@@ -126,18 +126,25 @@ $version = $plugin_data['Version'];
                 <?php
                 foreach ($settings->options as $name => $option) {
                     if (!$option->type) continue;
-                    // kml_map_table has many inputs, so we prevent focus.
-                    $html_for = $option->type == "kml_map_table" ? 'for="__undefined__"' : '';
                 ?>
                     <div class="container">
-                        <label <?php echo $html_for ?>>
+                        <?php if ($option->type == 'kml_map_table'): ?>
                             <span class="label"><?php echo $option->display_name; ?></span>
                             <span class="input-group">
                                 <?php
                                 $option->widget($name, $settings->get($name), $settings);
                                 ?>
                             </span>
-                        </label>
+                        <?php else: ?>
+                            <label <?php echo $html_for ?>>
+                                <span class="label"><?php echo $option->display_name; ?></span>
+                                <span class="input-group">
+                                    <?php
+                                    $option->widget($name, $settings->get($name), $settings);
+                                    ?>
+                                </span>
+                            </label>
+                        <?php endif; ?>
 
                         <?php
                         if ($option->helptext) {

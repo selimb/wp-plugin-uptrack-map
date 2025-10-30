@@ -56,11 +56,12 @@ class Leaflet_Map_Admin
     }
 
     /**
-     * Admin init registers styles
+     * Admin init registers styles and scripts
      */
     public function admin_init()
     {
         wp_register_style('leaflet_admin_stylesheet', plugins_url('style.css', LEAFLET_MAP__PLUGIN_FILE));
+        wp_register_script('leaflet_admin_js', plugins_url('scripts/admin.js', LEAFLET_MAP__PLUGIN_FILE));
     }
 
     /**
@@ -92,6 +93,7 @@ class Leaflet_Map_Admin
     public function settings_page()
     {
         wp_enqueue_style('leaflet_admin_stylesheet');
+        wp_enqueue_script('leaflet_admin_js');
 
         $settings = Leaflet_Map_Plugin_Settings::init();
         $plugin_data = get_plugin_data(LEAFLET_MAP__PLUGIN_FILE);

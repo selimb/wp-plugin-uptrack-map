@@ -126,3 +126,8 @@ p {
   padding: 0;
   padding-left: 4px;
 }
+
+/* Relies on [select-required]. */
+select.invalid {
+  border: 2px solid red;
+}
