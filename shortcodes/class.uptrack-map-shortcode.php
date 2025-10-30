@@ -24,10 +24,11 @@ class Uptrack_Map_Shortcode extends Leaflet_Shortcode
      */
     protected function getHTML($atts = '', $content = null)
     {
-        //
+        wp_register_style('uptrack_map_stylesheet', plugins_url('uptrack-map.css', LEAFLET_MAP__PLUGIN_FILE));
+        wp_enqueue_style('uptrack_map_stylesheet');
+
         wp_enqueue_script('leaflet_ajax_geojson_js');
         wp_enqueue_script('uptrack_map_js');
-        $fitbounds = true;
 
         $settings = Leaflet_Map_Plugin_Settings::init();
         $kml_directory = $settings->get('uptrack_kml_directory');
@@ -82,9 +83,6 @@ class Uptrack_Map_Shortcode extends Leaflet_Shortcode
                 'elevation_m' => $info["elevation_m"],
                 'duration_d' => $info["duration_d"],
             ];
-
-            // XXX debugging
-            echo '<p>' . htmlspecialchars($kml_url) . ' -> ' . htmlspecialchars($post_title) . ' at ' . htmlspecialchars($post_url) . '</p>';
         }
 
         ob_start();
@@ -93,14 +91,6 @@ class Uptrack_Map_Shortcode extends Leaflet_Shortcode
     const data = <?php echo json_encode($data); ?>;
     window.UptrackMapPlugin.render(data);
 
-    // XXX huh?
-    const rewrite_keys = {
-        stroke: 'color',
-        'stroke-width': 'weight',
-        'stroke-opacity': 'opacity',
-        fill: 'fillColor',
-        'fill-opacity': 'fillOpacity',
-    };
     <?php
         $script = ob_get_clean();
 
