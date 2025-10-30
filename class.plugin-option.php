@@ -100,10 +100,11 @@ class Leaflet_Map_Plugin_Option
      *
      * @param string $name  widget name
      * @param varies $value widget value
+     * @param Leaflet_Map_Plugin_Settings $settings all settings
      *
      * @return HTML
      */
-    function widget($name, $value)
+    function widget($name, $value, $settings)
     {
         switch ($this->type) {
             case 'text':
@@ -170,6 +171,80 @@ class Leaflet_Map_Plugin_Option
                     }
                     ?>
                 </select>
+            <?php
+                break;
+
+            case 'kml_map_table':
+            ?>
+                <table class="widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>KML File</th>
+                            <th>Blog Post</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $kml_directory = $settings->get('uptrack_kml_directory');
+                        if ($kml_directory) {
+                            $full_path = WP_CONTENT_DIR . '/' . ltrim($kml_directory, '/');
+                            // Get all published posts
+                            $posts = get_posts(array(
+                                'numberposts' => -1,
+                                'post_type' => 'post'
+                            ));
+                            if (is_dir($full_path)) {
+                                $files = glob($full_path . '/*.kml');
+                                if ($files) {
+                                    sort($files);
+                                    foreach ($files as $file) {
+                                        $filename = basename($file);
+                                        $blog_post_input = $name . '[' . htmlspecialchars($filename) . '][post_id]';
+                        ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($filename); ?></td>
+                                            <td>
+                                                <select name="<?php echo $blog_post_input; ?>">
+                                                    <option value="">-- Select a post --</option>
+                                                    <?php
+                                                    foreach ($posts as $post) {
+                                                        $selected = ($value && isset($value[$filename]) && $value[$filename]["post_id"] == $post->ID) ? ' selected' : '';
+                                                    ?>
+                                                        <option value="<?php echo $post->ID; ?>" <?php echo $selected; ?>>
+                                                            <?php echo htmlspecialchars($post->post_title); ?>
+                                                        </option>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    <?php
+                                    }
+                                } else {
+                                    ?>
+                                    <tr>
+                                        <td colspan="2">No KML files found in: <?php echo htmlspecialchars($full_path); ?></td>
+                                    </tr>
+                                <?php
+                                }
+                            } else {
+                                ?>
+                                <tr>
+                                    <td colspan="2">KML directory not found: <?php echo htmlspecialchars($full_path); ?></td>
+                                </tr>
+                            <?php
+                            }
+                        } else {
+                            ?>
+                            <tr>
+                                <td colspan="2">KML directory not set</td>
+                            </tr>
+                        <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
             <?php
                 break;
             default:

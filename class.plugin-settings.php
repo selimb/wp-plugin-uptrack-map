@@ -80,6 +80,18 @@ class Leaflet_Map_Plugin_Settings
         */
         // XXX Remove unnecessary ones.
         $this->options = array(
+            'uptrack_kml_directory' => array(
+                'display_name' => __('KML Directory', 'leaflet-map'),
+                'default' => 'kml-paths',
+                'type' => 'text',
+                'helptext' => 'KML Directory, relative to wp-content',
+            ),
+            'uptrack_map_table' => array(
+                'display_name' => __('KML Mapping', 'leaflet-map'),
+                'default' => '',
+                'type' => 'kml_map_table',
+                'helptext' => 'KML mapping table',
+            ),
             'default_lat' => array(
                 'display_name' => __('Default Latitude', 'leaflet-map'),
                 'default' => '44.67',
