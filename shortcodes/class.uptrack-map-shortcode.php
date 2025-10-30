@@ -73,8 +73,9 @@ class Uptrack_Map_Shortcode extends Leaflet_Shortcode
                 $post_url = get_permalink($post);
             }
 
-            // [sync-UptrackMapInput]
+            // [sync-uptrack-RouteInfo]
             $data[] = [
+                'id' => $filename,
                 'kml_url' => $kml_url,
                 'type' => $info["type"],
                 'marker_distance_percent' => (float)$info["marker_distance_percent"],

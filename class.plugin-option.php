@@ -244,7 +244,7 @@ class Leaflet_Map_Plugin_Option
                                             <td>
                                                 <select name="<?php echo $type_input; ?>">
                                                     <?php
-                                                    // [sync-UptrackRouteType]
+                                                    // [sync-uptrack-RouteType]
                                                     foreach (["ski_touring", "mountaineering", "hiking"] as $type) {
                                                         $selected = $type_value == $type ? ' selected' : '';
                                                     ?>

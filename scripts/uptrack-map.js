@@ -5,13 +5,14 @@
 /** @import geojson from "geojson" */
 
 /**
- * SYNC [sync-UptrackRouteType]
+ * SYNC [sync-uptrack-RouteType]
  * @typedef {"ski_touring" | "mountaineering" | "hiking"} UptrackRouteType
  */
 
 /**
- * SYNC [sync-UptrackMapInput]
- * @typedef {Object} UptrackMapInput
+ * SYNC [sync-uptrack-RouteInfo]
+ * @typedef {Object} RouteInfo
+ * @property {string} id
  * @property {string} kml_url
  * @property {UptrackRouteType} type
  * @property {number} marker_distance_percent
@@ -21,6 +22,7 @@
  * @property {number} elevation_m
  * @property {number} duration_d
  */
+/** @typedef {RouteInfo['id']} RouteId */
 
 (function () {
   /**
@@ -56,7 +58,7 @@
   };
 
   /**
-   * @param {UptrackMapInput} info
+   * @param {RouteInfo} info
    * @param {{outline?: boolean}} options
    * @returns {L.PathOptions}
    */
@@ -85,7 +87,7 @@
 
   /**
    * @typedef {Object} Route
-   * @property {UptrackMapInput} info
+   * @property {RouteInfo} info
    * @property {L.Layer} line
    * @property {L.Marker | undefined} marker
    */
@@ -102,15 +104,15 @@
       this.groupRoot = L.featureGroup();
       this.groupRoot.addTo(this.map);
 
-      /** @type {Route[]} */
-      this.routes = [];
+      /** @type {Map<RouteInfo['id'], Route>} */
+      this.routes = new Map();
 
       this.focusCard = new FocusCard({ position: 'bottomleft' });
       this.focusCard.onClose = () => {
         this.unfocus();
       };
 
-      /** @type {{index: number; outlineLayer: L.Layer} | undefined} */
+      /** @type {{id: RouteId; outlineLayer: L.Layer} | undefined} */
       this.focus = undefined;
 
       /** @type {Record<UptrackRouteType, boolean>} */
@@ -127,16 +129,16 @@
     }
 
     /**
-     * @param {UptrackMapInput[]} data
+     * @param {RouteInfo[]} data
      */
     async loadRoutes(data) {
       const map = this.map;
 
       await Promise.all(
-        data.map(async (info, routeIndex) => {
-          const { line, marker } = await this.loadRoute(info, routeIndex);
+        data.map(async (info) => {
+          const { line, marker } = await this.loadRoute(info);
 
-          this.routes.push({ info, line, marker });
+          this.routes.set(info.id, { info, line, marker });
         })
       );
 
@@ -144,12 +146,12 @@
     }
 
     /**
-     * @param {UptrackMapInput} info
-     * @param {number} routeIndex
+     * @param {RouteInfo} info
      */
-    async loadRoute(info, routeIndex) {
+    async loadRoute(info) {
       /** @type {L.Marker | undefined} */
       let marker;
+      const routeId = info.id;
 
       /** @type {L.GeoJSONOptions & {renderer: L.Renderer}} */
       const options = {
@@ -164,13 +166,13 @@
           }
 
           createdLayer.on('click', (evt) => {
-            this.handleRouteClick(evt, routeIndex, createdLayer);
+            this.handleRouteClick(evt, routeId, createdLayer);
           });
           marker = UptrackMapManager.createRouteMarker(info, createdLayer);
           if (marker) {
             this.map.addLayer(marker);
             marker.on('click', (evt) => {
-              this.handleRouteClick(evt, routeIndex, createdLayer);
+              this.handleRouteClick(evt, routeId, createdLayer);
             });
           }
         },
@@ -187,7 +189,7 @@
     }
 
     /**
-     * @param {UptrackMapInput} info
+     * @param {RouteInfo} info
      * @param {L.Polyline} polyline
      * @returns {L.Marker | undefined}
      */
@@ -217,7 +219,7 @@
 
     /**
      * @param {L.LatLng[]} lineCoords
-     * @param {UptrackMapInput} info
+     * @param {RouteInfo} info
      * @returns {L.LatLng}
      */
     static findMarkerCoords(lineCoords, info) {
@@ -262,21 +264,26 @@
 
     /**
      * @param {L.LeafletMouseEvent} evt
-     * @param {number} routeIndex
+     * @param {RouteId} routeId
      * @param {L.Polyline} polyline
      */
-    handleRouteClick(evt, routeIndex, polyline) {
-      this.focusRoute(routeIndex, polyline);
+    handleRouteClick(evt, routeId, polyline) {
+      this.focusRoute(routeId, polyline);
     }
 
     /**
-     * @param {number} routeIndex
+     * @param {RouteId} routeId
      * @param {L.Polyline} polyline
      */
-    focusRoute(routeIndex, polyline) {
-      const route = this.routes[routeIndex];
+    focusRoute(routeId, polyline) {
+      const route = this.routes.get(routeId);
+      if (!route) {
+        log('error', 'Could not find route with ID', routeId);
+        return;
+      }
+
       if (this.focus) {
-        if (this.focus.index === routeIndex) {
+        if (this.focus.id === routeId) {
           // Already focused.
           return;
         }
@@ -285,7 +292,7 @@
       }
 
       this.focus = {
-        index: routeIndex,
+        id: routeId,
         outlineLayer: this.renderFocusLayer(route, polyline),
       };
 
@@ -335,11 +342,11 @@
     }
 
     applyVisibility() {
-      const focusedIndex = this.focus?.index;
+      const focusedId = this.focus?.id;
       const routeTypeFilter = this.routeTypeFilter;
-      for (const [index, route] of this.routes.entries()) {
-        if (focusedIndex !== undefined) {
-          if (index === focusedIndex) {
+      for (const [routeId, route] of this.routes.entries()) {
+        if (focusedId !== undefined) {
+          if (routeId === focusedId) {
             this._showLayers(route.line, route.marker);
           } else {
             this._hideLayers(route.line, route.marker);
@@ -497,7 +504,7 @@
       /** @type {FocusCardElements | undefined} */
       this.$elements = undefined;
 
-      /** @type {UptrackMapInput | undefined} */
+      /** @type {RouteInfo | undefined} */
       this.routeInfo = undefined;
 
       this.shown = false;
@@ -505,7 +512,7 @@
 
     /**
      * @param {L.Map} map
-     * @param {UptrackMapInput} info
+     * @param {RouteInfo} info
      */
     show(map, info) {
       this.routeInfo = info;
@@ -585,6 +592,8 @@
 
       this._update();
 
+      document.addEventListener('keyup', this._handleDocumentKeyup);
+
       return $container;
     }
 
@@ -593,6 +602,7 @@
      */
     onRemove() {
       this.shown = false;
+      document.removeEventListener('keyup', this._handleDocumentKeyup);
     }
 
     /** Updates all DOM elements. */
@@ -610,6 +620,15 @@
       $elevation.textContent = info.elevation_m.toFixed(0);
       $duration.textContent = info.duration_d.toFixed(0);
     }
+
+    /**
+     * @param {KeyboardEvent} evt
+     */
+    _handleDocumentKeyup = (evt) => {
+      if (evt.key === 'Escape') {
+        this.onClose?.();
+      }
+    };
 
     _getElements() {
       if (!this.$elements) {
@@ -638,7 +657,7 @@
   // Entrypoint
   // ===============================================================================================
   /**
-   * @param {UptrackMapInput[]} data
+   * @param {RouteInfo[]} data
    */
   function renderUptrackMap(data) {
     /** @type {L.Map} */
