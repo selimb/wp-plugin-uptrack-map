@@ -77,11 +77,12 @@ class Uptrack_Map_Shortcode extends Leaflet_Shortcode
             $data[] = [
                 'kml_url' => $kml_url,
                 'type' => $info["type"],
+                'marker_distance_percent' => (float)$info["marker_distance_percent"],
                 'post_url' => $post_url,
                 'post_title' => $post_title,
-                'distance_km' => $info["distance_km"],
-                'elevation_m' => $info["elevation_m"],
-                'duration_d' => $info["duration_d"],
+                'distance_km' => (float)$info["distance_km"],
+                'elevation_m' => (float)$info["elevation_m"],
+                'duration_d' => (float)$info["duration_d"],
             ];
         }
 

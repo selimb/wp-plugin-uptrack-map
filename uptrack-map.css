@@ -1,3 +1,6 @@
+/*
+ * Legend
+ */
 .leaflet-control-layers-selector {
   /* hide native checkbox */
   appearance: none;
@@ -27,4 +30,27 @@
 
   user-select: none;
   -webkit-user-select: none;
+}
+
+/*
+ * Focus Card
+ */
+.uptrack-focus-card {
+  /* Exactly the same as .leaflet-control-layers */
+  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  background: white;
+  border-radius: 5px;
+
+  /* Inspired by https://leafletjs.com/examples/choropleth/ */
+  padding: 6px 8px;
+}
+
+.uptrack-focus-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.uptrack-focus-card-title {
+  font-size: x-large;
 }

@@ -2,17 +2,19 @@
 'use strict';
 
 /** @import L from "leaflet" */
+/** @import geojson from "geojson" */
 
 /**
- * SYNC [sync-UptrackLayerType]
- * @typedef {"ski_touring" | "mountaineering" | "hiking"} UptrackLayerType
+ * SYNC [sync-UptrackRouteType]
+ * @typedef {"ski_touring" | "mountaineering" | "hiking"} UptrackRouteType
  */
 
 /**
  * SYNC [sync-UptrackMapInput]
  * @typedef {Object} UptrackMapInput
  * @property {string} kml_url
- * @property {UptrackLayerType} type
+ * @property {UptrackRouteType} type
+ * @property {number} marker_distance_percent
  * @property {string} post_url
  * @property {string} post_title
  * @property {number} distance_km
@@ -20,13 +22,25 @@
  * @property {number} duration_d
  */
 
-/**
- * @typedef {Array<{layer: L.Layer, info: UptrackMapInput}>} LayerCollection
- */
-
 (function () {
-  /** @type {Record<UptrackLayerType, {label: string, color: string}>} */
-  const LAYER_TYPE_PROPS = {
+  /**
+   * @param {'info' | 'warn' | 'error'} level
+   * @param {unknown[]} args
+   */
+  function log(level, ...args) {
+    console[level]('[UptrackMap]', ...args);
+  }
+
+  /**
+   * @param {string} message
+   * @param {ErrorOptions} [options]
+   */
+  function err(message, options) {
+    return new Error(`[UptrackMap] ${message}`, options);
+  }
+
+  /** @type {Record<UptrackRouteType, {label: string, color: string}>} */
+  const ROUTE_TYPE_PROPS = {
     ski_touring: {
       label: 'Ski Touring',
       color: 'blue',
@@ -42,6 +56,588 @@
   };
 
   /**
+   * @param {UptrackMapInput} info
+   * @param {{outline?: boolean}} options
+   * @returns {L.PathOptions}
+   */
+  function getStyle(info, options = {}) {
+    const { outline = false } = options;
+    const color = ROUTE_TYPE_PROPS[info.type].color ?? 'blue';
+    const weight = 3;
+    return {
+      color,
+      opacity: outline ? 0.4 : 1.0,
+      weight: outline ? weight * 4 : weight,
+      // Set interactive `false` so that we don't have to setup click handlers.
+      interactive: outline ? false : true,
+    };
+  }
+
+  /**
+   * @param {string} kmlText
+   * @returns {geojson.GeoJSON}
+   */
+  function parseKml(kmlText) {
+    const xml = new DOMParser().parseFromString(kmlText, 'text/xml');
+    // @ts-ignore -- See tmcw_togeojson
+    return window.toGeoJSON.kml(xml);
+  }
+
+  /**
+   * @typedef {Object} Route
+   * @property {UptrackMapInput} info
+   * @property {L.Layer} line
+   * @property {L.Marker | undefined} marker
+   */
+
+  class UptrackMapManager {
+    /**
+     * @param {L.Map} map
+     */
+    constructor(map) {
+      this.map = map;
+
+      this.renderer = L.canvas({ tolerance: 14 });
+
+      this.groupRoot = L.featureGroup();
+      this.groupRoot.addTo(this.map);
+
+      /** @type {Route[]} */
+      this.routes = [];
+
+      this.focusCard = new FocusCard({ position: 'bottomleft' });
+      this.focusCard.onClose = () => {
+        this.unfocus();
+      };
+
+      /** @type {{index: number; outlineLayer: L.Layer} | undefined} */
+      this.focus = undefined;
+
+      /** @type {Record<UptrackRouteType, boolean>} */
+      this.routeTypeFilter = {
+        ski_touring: true,
+        hiking: true,
+        mountaineering: true,
+      };
+
+      this.legend = Legend.create(this.map);
+      this.legend.onInputClick = (routeType) => {
+        this.updateRouteTypeFilter(routeType);
+      };
+    }
+
+    /**
+     * @param {UptrackMapInput[]} data
+     */
+    async loadRoutes(data) {
+      const map = this.map;
+
+      await Promise.all(
+        data.map(async (info, routeIndex) => {
+          const { line, marker } = await this.loadRoute(info, routeIndex);
+
+          this.routes.push({ info, line, marker });
+        })
+      );
+
+      map.fitBounds(this.groupRoot.getBounds());
+    }
+
+    /**
+     * @param {UptrackMapInput} info
+     * @param {number} routeIndex
+     */
+    async loadRoute(info, routeIndex) {
+      /** @type {L.Marker | undefined} */
+      let marker;
+
+      /** @type {L.GeoJSONOptions & {renderer: L.Renderer}} */
+      const options = {
+        style: getStyle(info),
+        onEachFeature: (_feature, createdLayer) => {
+          if (!(createdLayer instanceof L.Polyline)) {
+            log('warn', 'Found non-Polyline feature in route.', {
+              info,
+              createdLayer,
+            });
+            return;
+          }
+
+          createdLayer.on('click', (evt) => {
+            this.handleRouteClick(evt, routeIndex, createdLayer);
+          });
+          marker = UptrackMapManager.createRouteMarker(info, createdLayer);
+          if (marker) {
+            this.map.addLayer(marker);
+            marker.on('click', (evt) => {
+              this.handleRouteClick(evt, routeIndex, createdLayer);
+            });
+          }
+        },
+        renderer: this.renderer,
+      };
+
+      const resp = await fetch(info.kml_url);
+      const kmlText = await resp.text();
+      const geoJson = parseKml(kmlText);
+      const line = L.geoJSON(geoJson, options);
+      this.groupRoot.addLayer(line);
+
+      return { line, marker };
+    }
+
+    /**
+     * @param {UptrackMapInput} info
+     * @param {L.Polyline} polyline
+     * @returns {L.Marker | undefined}
+     */
+    static createRouteMarker(info, polyline) {
+      if (info.marker_distance_percent < 0) {
+        return undefined;
+      }
+
+      // Assume we're dealing with a simple LineString.
+      const lineCoords = /** @type {L.LatLng[]} */ (polyline.getLatLngs());
+      if (lineCoords.length === 0) {
+        return undefined;
+      }
+
+      /** @type {L.LatLng} */
+      let markerCoords;
+      if (info.marker_distance_percent === 0) {
+        markerCoords = lineCoords[0];
+      } else if (info.marker_distance_percent >= 100) {
+        markerCoords = lineCoords[lineCoords.length - 1];
+      } else {
+        markerCoords = UptrackMapManager.findMarkerCoords(lineCoords, info);
+      }
+      const marker = L.marker(markerCoords);
+      return marker;
+    }
+
+    /**
+     * @param {L.LatLng[]} lineCoords
+     * @param {UptrackMapInput} info
+     * @returns {L.LatLng}
+     */
+    static findMarkerCoords(lineCoords, info) {
+      /** @type {number[]} */
+      const distances = [0];
+      let distanceTotal = 0;
+      let prevCoord = lineCoords[0];
+      for (let i = 1; i < lineCoords.length; i++) {
+        const coord = lineCoords[i];
+        const segmentDistance = prevCoord.distanceTo(coord);
+        distanceTotal += segmentDistance;
+        distances.push(distanceTotal);
+        prevCoord = coord;
+      }
+
+      const targetDistance =
+        (info.marker_distance_percent / 100) * distanceTotal;
+
+      /** @type {L.LatLng | undefined} */
+      let targetCoords;
+
+      for (let i = 1; i < distances.length; i++) {
+        if (distances[i] < targetDistance) {
+          continue;
+        }
+        const start = lineCoords[i - 1];
+        const end = lineCoords[i];
+        const segmentDistance = distances[i] - distances[i - 1];
+        const distanceIntoSegment = targetDistance - distances[i - 1];
+        const ratio = distanceIntoSegment / segmentDistance;
+
+        const lat = start.lat + ratio * (end.lat - start.lat);
+        const lng = start.lng + ratio * (end.lng - start.lng);
+        targetCoords = L.latLng(lat, lng);
+        return targetCoords;
+      }
+
+      log('warn', 'Could not determine marker coordinates.', info);
+      // Fallback to start.
+      return lineCoords[0];
+    }
+
+    /**
+     * @param {L.LeafletMouseEvent} evt
+     * @param {number} routeIndex
+     * @param {L.Polyline} polyline
+     */
+    handleRouteClick(evt, routeIndex, polyline) {
+      this.focusRoute(routeIndex, polyline);
+    }
+
+    /**
+     * @param {number} routeIndex
+     * @param {L.Polyline} polyline
+     */
+    focusRoute(routeIndex, polyline) {
+      const route = this.routes[routeIndex];
+      if (this.focus) {
+        if (this.focus.index === routeIndex) {
+          // Already focused.
+          return;
+        }
+        // Otherwise, remove previous outline.
+        this._hideLayers(this.focus.outlineLayer);
+      }
+
+      this.focus = {
+        index: routeIndex,
+        outlineLayer: this.renderFocusLayer(route, polyline),
+      };
+
+      this.applyVisibility();
+      this.legend.disableInputs(true);
+      this.focusCard.show(this.map, route.info);
+    }
+
+    unfocus() {
+      if (!this.focus) {
+        return;
+      }
+      this._hideLayers(this.focus.outlineLayer);
+      this.focus = undefined;
+
+      this.applyVisibility();
+      this.legend.disableInputs(false);
+      this.focusCard.hide(this.map);
+    }
+
+    /**
+     * @param {Route} route
+     * @param {L.Polyline} polyline
+     * @returns {L.Layer}
+     */
+    renderFocusLayer(route, polyline) {
+      const map = this.map;
+
+      const coords = polyline.getLatLngs();
+      const outlineLayer = L.polyline(
+        // So weird.
+        /** @type {any} */ (coords),
+        getStyle(route.info, { outline: true })
+      );
+      map.addLayer(outlineLayer);
+      return outlineLayer;
+    }
+
+    /**
+     * @param {UptrackRouteType} type
+     */
+    updateRouteTypeFilter(type) {
+      const typeEnabled = !this.routeTypeFilter[type];
+      this.routeTypeFilter[type] = typeEnabled;
+
+      this.applyVisibility();
+    }
+
+    applyVisibility() {
+      const focusedIndex = this.focus?.index;
+      const routeTypeFilter = this.routeTypeFilter;
+      for (const [index, route] of this.routes.entries()) {
+        if (focusedIndex !== undefined) {
+          if (index === focusedIndex) {
+            this._showLayers(route.line, route.marker);
+          } else {
+            this._hideLayers(route.line, route.marker);
+          }
+        } else {
+          const type = route.info.type;
+          if (routeTypeFilter[type]) {
+            this._showLayers(route.line, route.marker);
+          } else {
+            this._hideLayers(route.line, route.marker);
+          }
+        }
+      }
+    }
+
+    /**
+     * @param {Array<L.Layer | undefined>} layers
+     */
+    _showLayers(...layers) {
+      const map = this.map;
+      for (const layer of layers) {
+        if (layer && !map.hasLayer(layer)) {
+          map.addLayer(layer);
+        }
+      }
+    }
+
+    /**
+     * @param {Array<L.Layer | undefined>} layers
+     */
+    _hideLayers(...layers) {
+      const map = this.map;
+      for (const layer of layers) {
+        if (layer && map.hasLayer(layer)) {
+          map.removeLayer(layer);
+        }
+      }
+    }
+  }
+
+  // ===============================================================================================
+  // Legend
+  // ===============================================================================================
+
+  /**
+   * Reuses the built-in Layers control, with some customized styling to get colored checkboxes,
+   * but exposes the built-in click handlers so that we can manage our own damn state.
+   * The built-in Layers control doesn't play well with our route focusing logic.
+   */
+  class Legend extends L.Control.Layers {
+    /** @type {((routeType: UptrackRouteType) => void) | undefined} */
+    onInputClick = undefined;
+
+    /**
+     * @param {L.Map} map
+     */
+    static create(map) {
+      const data = Object.fromEntries(
+        Object.entries(ROUTE_TYPE_PROPS).map(([type, props]) => {
+          const html = `<span data-route-type="${type}" data-color="${props.color}" class="uptrack-legend-text">${props.label}</span>`;
+          // Create dummy groups to populate the legend.
+          return [html, L.featureGroup().addTo(map)];
+        })
+      );
+
+      const control = new Legend(undefined, data, {
+        collapsed: true,
+        position: 'topleft',
+      });
+      control.addTo(map);
+      return control;
+    }
+
+    /**
+     * @param {L.Map} map
+     */
+    onAdd(map) {
+      const container = super.onAdd?.(map);
+      if (!container) {
+        throw err('Expected L.Control.Layers.onAdd to return a container');
+      }
+
+      container.querySelectorAll('.uptrack-legend-text').forEach((elem) => {
+        const span = /** @type {HTMLSpanElement} */ (elem);
+        const input = span.parentElement?.parentElement?.querySelector('input');
+
+        input?.style.setProperty('color', span.getAttribute('data-color'));
+
+        const routeType = /** @type {UptrackRouteType} */ (
+          span.getAttribute('data-route-type')
+        );
+        input?.addEventListener('click', () => {
+          this.onInputClick?.(routeType);
+        });
+      });
+
+      return container;
+    }
+
+    /**
+     * @param {boolean} disabled
+     */
+    disableInputs(disabled) {
+      const container = this.getContainer();
+      container?.querySelectorAll('input').forEach((input) => {
+        input.disabled = disabled;
+      });
+    }
+
+    _checkDisabledLayers() {
+      // No-op to disable built-in disabling logic.
+    }
+  }
+
+  // ===============================================================================================
+  // Focus Card
+  // ===============================================================================================
+  const FOCUS_CARD_HTML = `
+<div class="uptrack-focus-card">
+  <div class="uptrack-focus-card-header">
+    <a class="uptrack-focus-card-title"></a>
+    <button data-target="closeButton" type="button" aria-label="Close" class="uptrack-focus-card-close-button">&#10005;</button>
+  </div>
+  <div>
+    <ul>
+      <li> <span>Duration:</span>  <span data-target="distance"></span>  <span>days</span> </li>
+      <li> <span>Distance:</span>  <span data-target="elevation"></span> <span>km</span> </li>
+      <li> <span>Elevation:</span> <span data-target="duration"></span> <span>m</span> </li>
+    </ul>
+  <div>
+</div>
+  `;
+
+  class FocusCard extends L.Control {
+    /** @type {(() => void) | undefined} */
+    onClose = undefined;
+
+    /**
+     * @type {L.ControlOptions}
+     */
+    constructor(options) {
+      super(options);
+
+      this.$htmlTemplate = document.createElement('template');
+      this.$htmlTemplate.innerHTML = FOCUS_CARD_HTML.trim();
+
+      /**
+       * @typedef {Object} FocusCardElements
+       * @property {HTMLElement} $title
+       * @property {HTMLButtonElement} $closeButton
+       * @property {HTMLElement} $distance
+       * @property {HTMLElement} $duration
+       * @property {HTMLElement} $elevation
+       */
+      /** @type {FocusCardElements | undefined} */
+      this.$elements = undefined;
+
+      /** @type {UptrackMapInput | undefined} */
+      this.routeInfo = undefined;
+
+      this.shown = false;
+    }
+
+    /**
+     * @param {L.Map} map
+     * @param {UptrackMapInput} info
+     */
+    show(map, info) {
+      this.routeInfo = info;
+
+      if (!this.shown) {
+        map.addControl(this);
+        // Needs to be done *after* `addControl`, so that Leaflet adds our elements to the document.
+        this._correctAdminBarMargin();
+      } else {
+        // No need to call this above, since we call `_update` in `onAdd`.
+        this._update();
+      }
+    }
+
+    /**
+     * @param {L.Map} map
+     */
+    hide(map) {
+      map.removeControl(this);
+    }
+
+    /**
+     * Called by base class when this control is added.
+     */
+    onAdd() {
+      /**
+       * @template {keyof HTMLElementTagNameMap} T
+       * @param {T} _elemType
+       * @param {string} selector
+       * @param {HTMLElement | DocumentFragment} $parent
+       * @returns {HTMLElementTagNameMap[T]}
+       */
+      function getElem(_elemType, selector, $parent) {
+        const $elem = $parent.querySelector(selector);
+        if (!$elem) {
+          log('error', 'Missing element for selector', selector, 'in', $parent);
+          throw err(`Missing element for selector ${selector}`);
+        } else {
+          return /** @type {any} */ ($elem);
+        }
+      }
+
+      const $fragment = /** @type {DocumentFragment} */ (
+        this.$htmlTemplate.content.cloneNode(true)
+      );
+      const $container = getElem('div', '.uptrack-focus-card', $fragment);
+      if (!$container) {
+        throw err('Missing .uptrack-focus-card container');
+      }
+
+      const $title = getElem('span', '.uptrack-focus-card-title', $container);
+      const $closeButton = getElem(
+        'button',
+        '[data-target="closeButton"]',
+        $container
+      );
+      const $distance = getElem('span', '[data-target="distance"]', $container);
+      const $elevation = getElem(
+        'span',
+        '[data-target="elevation"]',
+        $container
+      );
+      const $duration = getElem('span', '[data-target="duration"]', $container);
+
+      $closeButton.addEventListener('click', () => {
+        this.onClose?.();
+      });
+
+      this.$elements = {
+        $title,
+        $closeButton,
+        $distance,
+        $elevation,
+        $duration,
+      };
+      this.shown = true;
+
+      this._update();
+
+      return $container;
+    }
+
+    /**
+     * Called by base class when this control is removed.
+     */
+    onRemove() {
+      this.shown = false;
+    }
+
+    /** Updates all DOM elements. */
+    _update() {
+      const info = this.routeInfo;
+      if (!info) {
+        return;
+      }
+      const { $title, $distance, $duration, $elevation } = this._getElements();
+
+      $title.textContent = info.post_title;
+      $title.setAttribute('href', info.post_url);
+
+      $distance.textContent = info.distance_km.toFixed(0);
+      $elevation.textContent = info.elevation_m.toFixed(0);
+      $duration.textContent = info.duration_d.toFixed(0);
+    }
+
+    _getElements() {
+      if (!this.$elements) {
+        throw err('FocusCard elements not initialized');
+      }
+      return this.$elements;
+    }
+
+    _correctAdminBarMargin() {
+      const $adminBar = document.querySelector('#wpadminbar');
+      if (!$adminBar) {
+        return;
+      }
+      const $container = this.getContainer();
+      if (!$container) {
+        return;
+      }
+      const adminBarHeight = $adminBar.clientHeight;
+      // 10px is the default marginBottom
+      const offset = adminBarHeight + 10;
+      $container.style.marginBottom = `${offset}px`;
+    }
+  }
+
+  // ===============================================================================================
+  // Entrypoint
+  // ===============================================================================================
+  /**
    * @param {UptrackMapInput[]} data
    */
   function renderUptrackMap(data) {
@@ -49,173 +645,8 @@
     // @ts-ignore
     const map = window.WPLeafletMapPlugin.getCurrentMap();
 
-    const groupRoot = L.featureGroup();
-    groupRoot.addTo(map);
-
-    /** @type {Record<UptrackLayerType, L.FeatureGroup>} */
-    const groups = {
-      ski_touring: L.featureGroup(),
-      mountaineering: L.featureGroup(),
-      hiking: L.featureGroup(),
-    };
-    for (const group of Object.values(groups)) {
-      group.addTo(groupRoot);
-    }
-
-    /** @type {LayerCollection} */
-    const layers = [];
-
-    const clickHandler = new ClickHandler(map, layers);
-
-    /** @type {Array<Promise<void>>} */
-    const readyPromises = [];
-
-    for (const info of data) {
-      const { layer, ready } = renderKmlLayer(info, clickHandler);
-
-      const group = groups[info.type] ?? groups.ski_touring;
-      layer.addTo(group);
-      layers.push({ layer, info });
-
-      readyPromises.push(ready);
-    }
-
-    void Promise.all(readyPromises).then(() => {
-      map.fitBounds(groupRoot.getBounds());
-    });
-
-    renderLegend(map, groups);
-  }
-
-  class ClickHandler {
-    /**
-     * @param {L.Map} map
-     * @param {LayerCollection} layers
-     */
-    constructor(map, layers) {
-      /** @type {L.Map} */
-      this.map = map;
-
-      /** @type {LayerCollection} */
-      this.layers = layers;
-
-      /** @type {boolean} */
-      this.isFocused = false;
-    }
-
-    /**
-     * @param {L.LeafletMouseEvent} evt
-     * @param {L.Layer} clickedLayer
-     */
-    handleClick(evt, clickedLayer) {
-      const map = this.map;
-      if (this.isFocused) {
-        this.isFocused = false;
-        // Start by removing the clicked layer so that the color on overlapped lines is preserved.
-        clickedLayer.remove();
-        for (const { layer } of this.layers) {
-          layer.addTo(map);
-        }
-      } else {
-        this.isFocused = true;
-        for (const { layer } of this.layers) {
-          if (layer !== clickedLayer) {
-            layer.remove();
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * @param {UptrackMapInput} info
-   * @param {ClickHandler} clickHandler
-   * @returns { { layer: L.Layer, ready: Promise<void> } }
-   */
-  function renderKmlLayer(info, clickHandler) {
-    const {
-      kml_url,
-      post_url,
-      post_title,
-      distance_km,
-      elevation_m,
-      duration_d,
-    } = info;
-
-    /** @type {L.GeoJSONOptions & {type: 'kml'}} */
-    const options = {
-      type: 'kml',
-      style: getStyle(info),
-      onEachFeature: (_feature, createdLayer) => {
-        createdLayer.on('click', (evt) => {
-          clickHandler.handleClick(evt, layer);
-        });
-      },
-    };
-
-    /** @type {L.Layer} */
-    // @ts-ignore
-    const layer = L.ajaxGeoJson(kml_url, options);
-
-    /** @type {Promise<void>} */
-    const ready = new Promise((resolve) => {
-      layer.on('ready', () => {
-        resolve();
-      });
-    });
-
-    return { layer, ready };
-  }
-
-  /** @type {Record<UptrackLayerType, string} */
-  const TYPE_MAP = {
-    ski_touring: 'blue',
-    mountaineering: 'red',
-    hiking: 'green',
-  };
-
-  /**
-   * @param {UptrackMapInput} info
-   * @returns {L.GeoJSONOptions['style']}
-   */
-  function getStyle(info) {
-    const color = TYPE_MAP[info.type] ?? 'blue';
-    return { color };
-  }
-
-  class Legend extends L.Control.Layers {
-    onAdd(map) {
-      // @ts-ignore
-      const container = super.onAdd(map);
-      container.querySelectorAll('.uptrack-legend-text').forEach((elem) => {
-        const span = /** @type {HTMLSpanElement} */ (elem);
-        const input = span.parentElement?.parentElement?.querySelector('input');
-        input?.style.setProperty('color', span.getAttribute('data-color'));
-      });
-
-      return container;
-    }
-  }
-
-  /**
-   * @param {L.Map} map
-   * @param {Record<UptrackLayerType, L.FeatureGroup>} groups
-   * @returns {void}
-   */
-  function renderLegend(map, groups) {
-    const data = Object.fromEntries(
-      Object.entries(groups).map(([type, group]) => {
-        const props = LAYER_TYPE_PROPS[type];
-        const html = `<span data-color="${props.color}" class="uptrack-legend-text">${props.label}</span>`;
-        return [html, group];
-      })
-    );
-
-    const layerControl = new Legend(undefined, data, {
-      collapsed: true,
-      position: 'topleft',
-    });
-    layerControl.addTo(map);
+    const mgr = new UptrackMapManager(map);
+    void mgr.loadRoutes(data);
   }
 
   // @ts-ignore

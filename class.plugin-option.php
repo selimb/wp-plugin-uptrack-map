@@ -182,6 +182,7 @@ class Leaflet_Map_Plugin_Option
                             <th>KML File</th>
                             <th>Blog Post</th>
                             <th>Type</th>
+                            <th>Marker Distance (%)</th>
                             <th>Distance (km)</th>
                             <th>Elevation (m)</th>
                             <th>Duration (days)</th>
@@ -210,6 +211,9 @@ class Leaflet_Map_Plugin_Option
 
                                         $type_input = $base_input_name . '[type]';
                                         $type_value = $value[$filename]["type"] ?? 'ski_touring';
+
+                                        $marker_distance_percent_input = $base_input_name . '[marker_distance_percent]';
+                                        $marker_distance_percent_value = $value[$filename]["marker_distance_percent"] ?? "0";
 
                                         $distance_input = $base_input_name . '[distance_km]';
                                         $distance_value = $value[$filename]["distance_km"] ?? "0";
@@ -240,7 +244,7 @@ class Leaflet_Map_Plugin_Option
                                             <td>
                                                 <select name="<?php echo $type_input; ?>">
                                                     <?php
-                                                    // [sync-UptrackLayerType]
+                                                    // [sync-UptrackRouteType]
                                                     foreach (["ski_touring", "mountaineering", "hiking"] as $type) {
                                                         $selected = $type_value == $type ? ' selected' : '';
                                                     ?>
@@ -251,6 +255,15 @@ class Leaflet_Map_Plugin_Option
                                                     }
                                                     ?>
                                                 </select>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="-1"
+                                                    max="100"
+                                                    step="1"
+                                                    name="<?php echo htmlspecialchars($marker_distance_percent_input); ?>"
+                                                    value="<?php echo htmlspecialchars($marker_distance_percent_value); ?>" />
+                                            </td>
                                             <td>
                                                 <input
                                                     type="number"
