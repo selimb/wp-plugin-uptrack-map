@@ -181,6 +181,9 @@ class Leaflet_Map_Plugin_Option
                         <tr>
                             <th>KML File</th>
                             <th>Blog Post</th>
+                            <th>Distance (km)</th>
+                            <th>Elevation (m)</th>
+                            <th>Duration (days)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -199,7 +202,17 @@ class Leaflet_Map_Plugin_Option
                                     sort($files);
                                     foreach ($files as $file) {
                                         $filename = basename($file);
-                                        $blog_post_input = $name . '[' . htmlspecialchars($filename) . '][post_id]';
+                                        $base_input_name = $name . '[' . htmlspecialchars($filename) . ']';
+                                        $blog_post_input = $base_input_name . '[post_id]';
+
+                                        $distance_input = $base_input_name . '[distance_km]';
+                                        $distance_value = ($value && isset($value[$filename]) && isset($value[$filename]["distance_km"])) ? $value[$filename]["distance_km"] : '0';
+
+                                        $elevation_input = $base_input_name . '[elevation_m]';
+                                        $elevation_value = ($value && isset($value[$filename]) && isset($value[$filename]["elevation_m"])) ? $value[$filename]["elevation_m"] : '0';
+
+                                        $duration_input = $base_input_name . '[duration_d]';
+                                        $duration_value = ($value && isset($value[$filename]) && isset($value[$filename]["duration_d"])) ? $value[$filename]["duration_d"] : '0';
                         ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($filename); ?></td>
@@ -217,6 +230,30 @@ class Leaflet_Map_Plugin_Option
                                                     }
                                                     ?>
                                                 </select>
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    name="<?php echo $distance_input; ?>"
+                                                    value="<?php echo $distance_value; ?>" />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    name="<?php echo $elevation_input; ?>"
+                                                    value="<?php echo $elevation_value; ?>" />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    name="<?php echo $duration_input; ?>"
+                                                    value="<?php echo $duration_value; ?>" />
                                             </td>
                                         </tr>
                                     <?php

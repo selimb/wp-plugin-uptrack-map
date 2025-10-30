@@ -71,6 +71,9 @@ class Uptrack_Map_Shortcode extends Leaflet_Shortcode
                 'kml_url' => $kml_url,
                 'post_url' => $post_url,
                 'post_title' => $post_title,
+                'distance_km' => $info["distance_km"],
+                'elevation_m' => $info["elevation_m"],
+                'duration_d' => $info["duration_d"],
             ];
 
             // XXX debugging
