@@ -83,6 +83,10 @@ class Leaflet_Map
             'file' => 'class.video-overlay-shortcode.php',
             'class' => 'Leaflet_Video_Overlay_Shortcode'
         ),
+        'uptrack-map' => array(
+            'file' => 'class.uptrack-map-shortcode.php',
+            'class' => 'Uptrack_Map_Shortcode'
+        )
     );
 
     /**
