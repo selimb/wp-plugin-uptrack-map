@@ -20,6 +20,10 @@
  * @property {number} duration_d
  */
 
+/**
+ * @typedef {Array<{layer: L.Layer, info: UptrackMapInput}>} LayerCollection
+ */
+
 (function () {
   /** @type {Record<UptrackLayerType, {label: string, color: string}>} */
   const LAYER_TYPE_PROPS = {
@@ -58,14 +62,17 @@
       group.addTo(groupRoot);
     }
 
-    /** @type {Array<{layer: L.Layer, info: UptrackMapInput}>} */
+    /** @type {LayerCollection} */
     const layers = [];
+
+    const clickHandler = new ClickHandler(map, layers);
 
     /** @type {Array<Promise<void>>} */
     const readyPromises = [];
 
     for (const info of data) {
-      const { layer, ready } = renderKmlLayer(info);
+      const { layer, ready } = renderKmlLayer(info, clickHandler);
+
       const group = groups[info.type] ?? groups.ski_touring;
       layer.addTo(group);
       layers.push({ layer, info });
@@ -80,11 +87,52 @@
     renderLegend(map, groups);
   }
 
+  class ClickHandler {
+    /**
+     * @param {L.Map} map
+     * @param {LayerCollection} layers
+     */
+    constructor(map, layers) {
+      /** @type {L.Map} */
+      this.map = map;
+
+      /** @type {LayerCollection} */
+      this.layers = layers;
+
+      /** @type {boolean} */
+      this.isFocused = false;
+    }
+
+    /**
+     * @param {L.LeafletMouseEvent} evt
+     * @param {L.Layer} clickedLayer
+     */
+    handleClick(evt, clickedLayer) {
+      const map = this.map;
+      if (this.isFocused) {
+        this.isFocused = false;
+        // Start by removing the clicked layer so that the color on overlapped lines is preserved.
+        clickedLayer.remove();
+        for (const { layer } of this.layers) {
+          layer.addTo(map);
+        }
+      } else {
+        this.isFocused = true;
+        for (const { layer } of this.layers) {
+          if (layer !== clickedLayer) {
+            layer.remove();
+          }
+        }
+      }
+    }
+  }
+
   /**
    * @param {UptrackMapInput} info
+   * @param {ClickHandler} clickHandler
    * @returns { { layer: L.Layer, ready: Promise<void> } }
    */
-  function renderKmlLayer(info) {
+  function renderKmlLayer(info, clickHandler) {
     const {
       kml_url,
       post_url,
@@ -98,6 +146,11 @@
     const options = {
       type: 'kml',
       style: getStyle(info),
+      onEachFeature: (_feature, createdLayer) => {
+        createdLayer.on('click', (evt) => {
+          clickHandler.handleClick(evt, layer);
+        });
+      },
     };
 
     /** @type {L.Layer} */
