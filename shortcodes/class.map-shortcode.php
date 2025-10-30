@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Map Shortcode
  *
@@ -59,7 +60,7 @@ class Leaflet_Map_Shortcode extends Leaflet_Shortcode
      *
      * @return array new atts, which is actually an array
      */
-    protected function getAtts($atts='')
+    protected function getAtts($atts = '')
     {
         $atts = (array) $atts;
         extract($atts, EXTR_SKIP);
@@ -85,11 +86,11 @@ class Leaflet_Map_Shortcode extends Leaflet_Shortcode
             : (array_key_exists('scrollwheel', $atts)
                 ? $scrollwheel
                 : $settings->get('scroll_wheel_zoom'));
-         $atts['doubleclickzoom'] = isset($doubleClickZoom)
-             ? $doubleClickZoom
-             : (array_key_exists('doubleclickzoom', $atts)
-                 ? $doubleclickzoom
-                 : $settings->get('double_click_zoom'));
+        $atts['doubleclickzoom'] = isset($doubleClickZoom)
+            ? $doubleClickZoom
+            : (array_key_exists('doubleclickzoom', $atts)
+                ? $doubleclickzoom
+                : $settings->get('double_click_zoom'));
 
         // @deprecated backwards-compatible fit_markers
         $atts['fit_markers'] = array_key_exists('fit_markers', $atts) ?
@@ -182,7 +183,7 @@ class Leaflet_Map_Shortcode extends Leaflet_Shortcode
 
         // get raw variables, allowing for JavaScript variables in values
         $raw_map_options = array();
-        foreach($map_options as $key=>$val) {
+        foreach ($map_options as $key => $val) {
             $original_value = isset($atts[$key]) ? $atts[$key] : null;
 
             $liquid = $this->LM->liquid($original_value);
@@ -236,92 +237,95 @@ class Leaflet_Map_Shortcode extends Leaflet_Shortcode
      *
      * @return string HTML div element
      */
-    protected function getDiv($height, $width) {
+    protected function getDiv($height, $width)
+    {
         // div does not get wrapped in script tags
         ob_start();
-        ?>
-<div class="leaflet-map WPLeafletMap" style="height:<?php
-    echo htmlspecialchars($height);
-?>; width:<?php
-    echo htmlspecialchars($width);
-?>;"></div><?php
-        return ob_get_clean();
-    }
-
-    /**
-     * Get script for shortcode
-     *
-     * @param array  $atts    sometimes this is null
-     * @param string $content anything within a shortcode
-     *
-     * @return string HTML
-     */
-    protected function getHTML($atts='', $content=null)
-    {
-        extract($this->getAtts($atts));
-
-        if (!empty($address)) {
-            /* try geocoding */
-            include_once LEAFLET_MAP__PLUGIN_DIR . 'class.geocoder.php';
-            $location = new Leaflet_Geocoder($address);
-            $lat = $location->lat;
-            $lng = $location->lng;
+?>
+        <div class="leaflet-map WPLeafletMap" style="height:<?php
+                                                            echo htmlspecialchars($height);
+                                                            ?>; width:<?php
+            echo htmlspecialchars($width);
+            ?>;"></div><?php
+            return ob_get_clean();
         }
 
-        $settings = Leaflet_Map_Plugin_Settings::init();
+        /**
+         * Get script for shortcode
+         *
+         * @param array  $atts    sometimes this is null
+         * @param string $content anything within a shortcode
+         *
+         * @return string HTML
+         */
+        protected function getHTML($atts = '', $content = null)
+        {
+            extract($this->getAtts($atts));
 
-        // map uses lat/lng
-        $lat = isset($lat) ? $lat : $settings->get('default_lat');
-        $lng = isset($lng) ? $lng : $settings->get('default_lng');
+            if (!empty($address)) {
+                /* try geocoding */
+                include_once LEAFLET_MAP__PLUGIN_DIR . 'class.geocoder.php';
+                $location = new Leaflet_Geocoder($address);
+                $lat = $location->lat;
+                $lng = $location->lng;
+            }
 
-        // validate lat/lng
-        $lat = $this->LM->filter_float($lat);
-        $lng = $this->LM->filter_float($lng);
+            $settings = Leaflet_Map_Plugin_Settings::init();
 
-        /*
+            // map uses lat/lng
+            $lat = isset($lat) ? $lat : $settings->get('default_lat');
+            $lng = isset($lng) ? $lng : $settings->get('default_lng');
+
+            // validate lat/lng
+            $lat = $this->LM->filter_float($lat);
+            $lng = $this->LM->filter_float($lng);
+
+            /*
         mapquest doesn't need tile urls
         */
-        if (wp_script_is('leaflet_mapquest_plugin', 'registered')) {
-            $tileurl = '';
-        } else {
-            $tileurl = empty($tileurl) ? $settings->get('map_tile_url') : $tileurl;
+            if (wp_script_is('leaflet_mapquest_plugin', 'registered')) {
+                $tileurl = '';
+            } else {
+                $tileurl = empty($tileurl) ? $settings->get('map_tile_url') : $tileurl;
+            }
+
+            $detect_retina = empty($detect_retina) ? $settings->get('detect_retina') : $detect_retina;
+
+            $detect_retina = filter_var($detect_retina, FILTER_VALIDATE_BOOLEAN);
+
+            /* should be iterated for multiple maps */
+            ob_start();
+            ?>/*<script>
+            */
+            var baseUrl = atob('<?php echo base64_encode(filter_var($tileurl, FILTER_SANITIZE_URL)); ?>');
+            var base = (!baseUrl && window.MQ) ?
+                window.MQ.mapLayer() : L.tileLayer(baseUrl,
+                    L.Util.extend({}, {
+                            detectRetina: <?php echo $detect_retina ? '1' : '0'; ?>,
+                        },
+                        <?php echo $tile_layer_options; ?>
+                    )
+                );
+            var options = L.Util.extend({}, {
+                    layers: [base],
+                    attributionControl: false
+                },
+                <?php echo $map_options; ?>,
+                <?php echo $raw_map_options; ?>
+            );
+            window.WPLeafletMapPlugin.createMap(options).setView(<?php
+                                                                    echo '[' . $lat . ',' . $lng . '],' . $zoom;
+                                                                    ?>);
+            <?php
+
+            $show_scale = isset($show_scale) ? $show_scale : $settings->get('show_scale');
+
+            if ($show_scale) {
+                echo do_shortcode('[leaflet-scale noScriptWrap]');
+            }
+
+            $script = ob_get_clean();
+
+            return $this->getDiv($height, $width) . $this->wrap_script($script, 'WPLeafletMapShortcode');
         }
-
-        $detect_retina = empty($detect_retina) ? $settings->get('detect_retina') : $detect_retina;
-
-        $detect_retina = filter_var($detect_retina, FILTER_VALIDATE_BOOLEAN);
-
-        /* should be iterated for multiple maps */
-        ob_start();
-        ?>/*<script>*/
-var baseUrl = atob('<?php echo base64_encode(filter_var($tileurl, FILTER_SANITIZE_URL)); ?>');
-var base = (!baseUrl && window.MQ) ?
-    window.MQ.mapLayer() : L.tileLayer(baseUrl,
-        L.Util.extend({}, {
-            detectRetina: <?php echo $detect_retina ? '1' : '0'; ?>,
-        },
-        <?php echo $tile_layer_options; ?>
-        )
-    );
-    var options = L.Util.extend({}, {
-        layers: [base],
-        attributionControl: false
-    },
-    <?php echo $map_options; ?>,
-    <?php echo $raw_map_options; ?>
-);
-window.WPLeafletMapPlugin.createMap(options).setView(<?php
-    echo '[' . $lat . ',' . $lng . '],' . $zoom;
-?>);<?php
-
-        $show_scale = isset($show_scale) ? $show_scale : $settings->get('show_scale');
-
-        if ($show_scale) {
-            echo do_shortcode('[leaflet-scale noScriptWrap]');
-        }
-
-        $script = ob_get_clean();
-
-        return $this->getDiv($height, $width) . $this->wrap_script($script, 'WPLeafletMapShortcode');
     }
-}

@@ -112,35 +112,35 @@ However, you can also just give it an address, and the chosen geocoder (default:
 
 #### [leaflet-map] Options:
 
-| Option                       | Default                                              |
-| ---------------------------- | ---------------------------------------------------- |
-| `lat` and `lng` or `address` | lat: 44.67, lng: -63.61                              |
-| `zoom`                       | 12                                                   |
-| `height`                     | 250                                                  |
-| `width`                      | 100%                                                 |
-| `fitbounds`                  | 0 (false)                                            |
-| `zoomcontrol`                | 0 (false)                                            |
-| `scrollwheel`                | 0 (false)                                            |
-| `doubleclickzoom`            | 0 (false)                                            |
-| `min_zoom`                   | 0                                                    |
-| `max_zoom`                   | 20                                                   |
-| `subdomains`                 | abc                                                  |
-| `attribution`                | ©Leaflet ©OpenStreetMap                              |
-| `closepopuponclick`          | false                                                |
-| `trackresize`                | false                                                |
-| `boxZoom`                    | true                                                 |
-| `dragging`                   | true                                                 |
-| `keyboard`                   | true                                                 |
-| `maxbounds`                  | null                                                 |
-| `detect-retina`              | 0 (false)                                            |
+| Option                       | Default                                          |
+| ---------------------------- | ------------------------------------------------ |
+| `lat` and `lng` or `address` | lat: 44.67, lng: -63.61                          |
+| `zoom`                       | 12                                               |
+| `height`                     | 250                                              |
+| `width`                      | 100%                                             |
+| `fitbounds`                  | 0 (false)                                        |
+| `zoomcontrol`                | 0 (false)                                        |
+| `scrollwheel`                | 0 (false)                                        |
+| `doubleclickzoom`            | 0 (false)                                        |
+| `min_zoom`                   | 0                                                |
+| `max_zoom`                   | 20                                               |
+| `subdomains`                 | abc                                              |
+| `attribution`                | ©Leaflet ©OpenStreetMap                          |
+| `closepopuponclick`          | false                                            |
+| `trackresize`                | false                                            |
+| `boxZoom`                    | true                                             |
+| `dragging`                   | true                                             |
+| `keyboard`                   | true                                             |
+| `maxbounds`                  | null                                             |
+| `detect-retina`              | 0 (false)                                        |
 | `tileurl`                    | 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' |
-| `subdomains`                 | 'abc'                                                |
-| `tap`                        | true                                                 |
-| `tilesize`                   | 256                                                  |
-| `mapid`                      | null                                                 |
-| `accesstoken`                | null                                                 |
-| `zoomoffset`                 | 0                                                    |
-| `nowrap`                     | false                                                |
+| `subdomains`                 | 'abc'                                            |
+| `tap`                        | true                                             |
+| `tilesize`                   | 256                                              |
+| `mapid`                      | null                                             |
+| `accesstoken`                | null                                             |
+| `zoomoffset`                 | 0                                                |
+| `nowrap`                     | false                                            |
 
 ---
 
@@ -179,32 +179,33 @@ Then in the console, check the coordinates when you move the marker (should only
 
 ### [leaflet-wms]
 
-Much the same as leaflet-map above, but for wms services and uses `src` for the service url, 
-`layer` for the layer name and `crs` for the coordination system (only supported by 
+Much the same as leaflet-map above, but for wms services and uses `src` for the service url,
+`layer` for the layer name and `crs` for the coordination system (only supported by
 leaflet: EPSG:3857 and EPSG:4326).
+
 ```
 [leaflet-wms source="https://your/wms/service?" layer="yourLayer" crs="EPSG:3857" zoom=1]
 ```
 
 #### [leaflet-wms] Options:
 
-| Option            | Default                                   |
-| ----------------- | ----------------------------------------- |
+| Option            | Default                                    |
+| ----------------- | ------------------------------------------ |
 | `src`             | https://ows.mundialis.de/services/service? |
-| `layer `          | TOPO-OSM-WMS                              |
-| `crs `            | EPSG:3857                                 |
-| `zoom`            | 12                                        |
-| `height`          | 250                                       |
-| `width`           | 100%                                      |
-| `fitbounds`       | 0 (false)                                 |
-| `zoomcontrol`     | 0 (false)                                 |
-| `scrollwheel`     | 0 (false)                                 |
-| `doubleclickzoom` | 0 (false)                                 |
-| `min_zoom`        | 0                                         |
-| `max_zoom`        | 20                                        |
-| `attribution`     | ©Leaflet ©OpenStreetMap                   |
-| `lat`             | 0                                         |
-| `lng`             | 0                                         |
+| `layer `          | TOPO-OSM-WMS                               |
+| `crs `            | EPSG:3857                                  |
+| `zoom`            | 12                                         |
+| `height`          | 250                                        |
+| `width`           | 100%                                       |
+| `fitbounds`       | 0 (false)                                  |
+| `zoomcontrol`     | 0 (false)                                  |
+| `scrollwheel`     | 0 (false)                                  |
+| `doubleclickzoom` | 0 (false)                                  |
+| `min_zoom`        | 0                                          |
+| `max_zoom`        | 20                                         |
+| `attribution`     | ©Leaflet ©OpenStreetMap                    |
+| `lat`             | 0                                          |
+| `lng`             | 0                                          |
 
 ---
 

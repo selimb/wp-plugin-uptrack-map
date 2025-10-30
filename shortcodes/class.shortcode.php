@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Abstract Shortcode
  *
@@ -8,7 +9,7 @@
 
 /**
  * Abstract Shortcode Class
- * 
+ *
  * Use with add_shortcode('leaflet-map', array ('Leaflet_Shortcode', 'shortcode'))
  * extend and manipulate __construct
  */
@@ -25,12 +26,12 @@ abstract class Leaflet_Shortcode
      *
      * @param array  $atts    string
      * @param string $content Optional
-     * 
+     *
      * @since 2.8.2
-     * 
+     *
      * @return string (typically, return a script tag with Leaflet logic)
      */
-    abstract protected function getHTML($atts='', $content=null);
+    abstract protected function getHTML($atts = '', $content = null);
 
     public static function getClass()
     {
@@ -42,7 +43,7 @@ abstract class Leaflet_Shortcode
      *
      * @param array|string|null $atts    string|array
      * @param string|null       $content Optional
-     * 
+     *
      * @return string HTML
      */
     public static function shortcode($atts = '', $content = null)
@@ -57,9 +58,9 @@ abstract class Leaflet_Shortcode
         // and: [leaflet-marker !doubleClickZoom !boxZoom]
         // meaning doubleClickZoom=0 boxZoom=0
         if (!empty($atts)) {
-            foreach($atts as $k => $v) {
+            foreach ($atts as $k => $v) {
                 if (
-                    is_numeric($k) && 
+                    is_numeric($k) &&
                     !key_exists($v, $atts) &&
                     !!$v
                 ) {
@@ -89,24 +90,27 @@ abstract class Leaflet_Shortcode
      *
      * @param string $script JavaScript
      * @param string $name string name of function
-     * 
+     *
      * @return string JavaScript
      */
-    protected function wrap_script($script, $name="")
+    protected function wrap_script($script, $name = "")
     {
         ob_start();
-        ?><script>
-window.WPLeafletMapPlugin = window.WPLeafletMapPlugin || [];
-window.WPLeafletMapPlugin.push(function <?php echo $name; ?>() {<?php echo $script; ?>});</script><?php
-        return ob_get_clean();
-    }
+?><script>
+            window.WPLeafletMapPlugin = window.WPLeafletMapPlugin || [];
+            window.WPLeafletMapPlugin.push(function <?php echo $name; ?>() {
+                <?php echo $script; ?>
+            });
+        </script><?php
+                    return ob_get_clean();
+                }
 
-    /**
-     * Create an LM variable for each shortcode class 
-     * instance
-     */
-    protected function __construct()
-    {
-        $this->LM = Leaflet_Map::init();
-    }
-}
+                /**
+                 * Create an LM variable for each shortcode class
+                 * instance
+                 */
+                protected function __construct()
+                {
+                    $this->LM = Leaflet_Map::init();
+                }
+            }

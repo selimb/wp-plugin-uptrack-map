@@ -55,6 +55,7 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
       WORDPRESS_DEBUG: 1
+    user: '1000:1000'
 
 volumes:
   wp_db:

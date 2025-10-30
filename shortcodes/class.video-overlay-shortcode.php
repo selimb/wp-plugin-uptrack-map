@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Video Overlay Shortcode
  *

@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Used to generate an admin for Leaflet Map
  *
  * PHP Version 5.5
- * 
+ *
  * @category Admin
  * @author   Benjamin J DeLong <ben@bozdoz.com>
  */
@@ -20,16 +21,16 @@ class Leaflet_Map_Admin
 {
     /**
      * Singleton Instance
-     * 
+     *
      * @var Leaflet_Map_Admin $_instance
      */
     private static $_instance = null;
 
     /**
      * Singleton
-     * 
+     *
      * @static
-     * 
+     *
      * @return Leaflet_Map_Admin
      */
     public static function init()
@@ -57,7 +58,7 @@ class Leaflet_Map_Admin
     /**
      * Admin init registers styles
      */
-    public function admin_init() 
+    public function admin_init()
     {
         wp_register_style('leaflet_admin_stylesheet', plugins_url('style.css', LEAFLET_MAP__PLUGIN_FILE));
     }
@@ -103,26 +104,26 @@ class Leaflet_Map_Admin
     public function shortcode_page()
     {
         wp_enqueue_style('leaflet_admin_stylesheet');
-        
+
         if (defined('WP_DEBUG') && WP_DEBUG) {
             $minified = '';
         } else {
             $minified = '.min';
         }
 
-        wp_enqueue_script('custom_plugin_js', plugins_url(sprintf('scripts/shortcode-helper%s.js', $minified), LEAFLET_MAP__PLUGIN_FILE), Array('leaflet_js'), false);
+        wp_enqueue_script('custom_plugin_js', plugins_url(sprintf('scripts/shortcode-helper%s.js', $minified), LEAFLET_MAP__PLUGIN_FILE), array('leaflet_js'), false);
 
         include 'templates/shortcode-helper.php';
     }
 
     /**
      * Add settings link to the plugin on Installed Plugins page
-     * 
+     *
      * @return array
      */
     public function plugin_action_links($links)
     {
-        $links[] = '<a href="'. esc_url( get_admin_url(null, 'admin.php?page=leaflet-map') ) .'">Settings</a>';
+        $links[] = '<a href="' . esc_url(get_admin_url(null, 'admin.php?page=leaflet-map')) . '">Settings</a>';
         return $links;
     }
 }

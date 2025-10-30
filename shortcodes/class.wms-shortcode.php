@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Wms Shortcode
  *
@@ -63,30 +64,30 @@ class Leaflet_Wms_Shortcode extends Leaflet_Map_Shortcode
     $crs = str_replace(':', '', empty($crs) ? 'EPSG:3857' : $crs);
 
     if ($source == 'https://ows.mundialis.de/services/service?' && $layer == 'TOPO-OSM-WMS') {
-        $attribution = empty($attribution) ? '© OpenStreetMap Contributors' : $attribution;
+      $attribution = empty($attribution) ? '© OpenStreetMap Contributors' : $attribution;
     }
     $attribution = empty($attribution) ? '' : $attribution;
 
     ob_start();
-    ?>/*<script>*/
-var srcUrl = atob('<?php echo base64_encode( $source ); ?>');
-var options = L.Util.extend({}, {
-        attributionControl: false
-    }, <?php echo $map_options; ?>);
-var zoom = <?php echo $zoom; ?>;
-var map = window.WPLeafletMapPlugin.createMap(options).setView(L.latLng(<?php echo $lat; ?>, <?php echo $lng; ?>), zoom);
-var wmslayer = L.tileLayer.wms(
-  srcUrl, 
-  {
-    layers: '<?php echo esc_js($layer); ?>',
-    crs: L.CRS['<?php echo esc_js($crs); ?>']
-  }
-).addTo( map );
+?>/*<script>
+  */
+  var srcUrl = atob('<?php echo base64_encode($source); ?>');
+  var options = L.Util.extend({}, {
+    attributionControl: false
+  }, <?php echo $map_options; ?>);
+  var zoom = <?php echo $zoom; ?>;
+  var map = window.WPLeafletMapPlugin.createMap(options).setView(L.latLng(<?php echo $lat; ?>, <?php echo $lng; ?>), zoom);
+  var wmslayer = L.tileLayer.wms(
+    srcUrl, {
+      layers: '<?php echo esc_js($layer); ?>',
+      crs: L.CRS['<?php echo esc_js($crs); ?>']
+    }
+  ).addTo(map);
 
-<?php
-$script = ob_get_clean();
+  <?php
+    $script = ob_get_clean();
 
-return $this->getDiv($height, $width) .
-  $this->wrap_script($script, 'WPLeafletWmsShortcode');
+    return $this->getDiv($height, $width) .
+      $this->wrap_script($script, 'WPLeafletWmsShortcode');
   }
 }

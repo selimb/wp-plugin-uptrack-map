@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Image Overlay Shortcode
  *
@@ -71,15 +72,16 @@ class Leaflet_Image_Overlay_Shortcode extends Leaflet_Shortcode
         $options = $this->LM->json_sanitize($options, $args);
 
         ob_start();
-        ?>/*<script>*/
-            var group = window.WPLeafletMapPlugin.getCurrentGroup();
-            var src = '<?php echo htmlspecialchars($url, ENT_QUOTES); ?>';
-            var options = <?php echo $options; ?>;
-            var bounds = <?php echo json_encode($bounds); ?>;
-            var layer = <?php echo $this->type; ?>(src, bounds, options);
-            layer.addTo(group);
-            window.WPLeafletMapPlugin.overlays.push( layer );
-        <?php
+?>/*<script>
+    */
+    var group = window.WPLeafletMapPlugin.getCurrentGroup();
+    var src = '<?php echo htmlspecialchars($url, ENT_QUOTES); ?>';
+    var options = <?php echo $options; ?>;
+    var bounds = <?php echo json_encode($bounds); ?>;
+    var layer = <?php echo $this->type; ?>(src, bounds, options);
+    layer.addTo(group);
+    window.WPLeafletMapPlugin.overlays.push(layer);
+    <?php
         $script = ob_get_clean();
 
         return $this->wrap_script($script, 'WPLeafletOverlayShortcode');

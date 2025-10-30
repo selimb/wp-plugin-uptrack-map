@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Marker Shortcode
  *
@@ -28,7 +29,7 @@ class Leaflet_Marker_Shortcode extends Leaflet_Shortcode
      *
      * @return null
      */
-    protected function getHTML($atts='', $content=null)
+    protected function getHTML($atts = '', $content = null)
     {
         if (!empty($atts)) {
             extract($atts, EXTR_SKIP);
@@ -36,7 +37,7 @@ class Leaflet_Marker_Shortcode extends Leaflet_Shortcode
 
         if (!empty($address)) {
             include_once LEAFLET_MAP__PLUGIN_DIR . 'class.geocoder.php';
-            $location = new Leaflet_Geocoder( $address );
+            $location = new Leaflet_Geocoder($address);
             $lat = $location->lat;
             $lng = $location->lng;
         }
@@ -44,8 +45,8 @@ class Leaflet_Marker_Shortcode extends Leaflet_Shortcode
         $lat_set = isset($lat) || isset($y);
         $lng_set = isset($lng) || isset($x);
 
-        $lat = empty($lat) ? ( empty($y) ? '0' : $y ) : $lat;
-        $lng = empty($lng) ? ( empty($x) ? '0' : $x ) : $lng;
+        $lat = empty($lat) ? (empty($y) ? '0' : $y) : $lat;
+        $lng = empty($lng) ? (empty($x) ? '0' : $x) : $lng;
 
         // validate lat/lng
         $lat = $this->LM->filter_float($lat);
@@ -107,41 +108,42 @@ class Leaflet_Marker_Shortcode extends Leaflet_Shortcode
         $options = $this->LM->json_sanitize($options, $args);
 
         ob_start();
-        ?>/*<script>*/
-var map = window.WPLeafletMapPlugin.getCurrentMap();
-var group = window.WPLeafletMapPlugin.getCurrentGroup();
-var marker_options = window.WPLeafletMapPlugin.getIconOptions(<?php echo $options; ?>);
-var marker = <?php echo $default_marker; ?>(
-    [<?php echo $lat . ',' . $lng; ?>],
-    marker_options
-);
-var is_image = map.is_image_map;
-<?php
-if (!$lat_set && !$lng_set) {
-    /* update lat lng to previous map's center */
-?>
-    marker.setLatLng( map.getCenter() );
-<?php
-}
-?>
-if (marker_options.draggable) {
-    marker.on('dragend', function () {
-        var latlng = this.getLatLng();
-        var lat = latlng.lat;
-        var lng = latlng.lng;
-        if (is_image) {
-            console.log('leaflet-marker y=' + lat + ' x=' + lng);
-        } else {
-            console.log('leaflet-marker lat=' + lat + ' lng=' + lng);
+?>/*<script>
+    */
+    var map = window.WPLeafletMapPlugin.getCurrentMap();
+    var group = window.WPLeafletMapPlugin.getCurrentGroup();
+    var marker_options = window.WPLeafletMapPlugin.getIconOptions(<?php echo $options; ?>);
+    var marker = <?php echo $default_marker; ?>(
+        [<?php echo $lat . ',' . $lng; ?>],
+        marker_options
+    );
+    var is_image = map.is_image_map;
+    <?php
+        if (!$lat_set && !$lng_set) {
+            /* update lat lng to previous map's center */
+    ?>
+        marker.setLatLng(map.getCenter());
+    <?php
         }
-    });
-}
-marker.addTo( group );
-<?php
-    $this->LM->add_popup_to_shape($atts, $content, 'marker');
-?>
-window.WPLeafletMapPlugin.markers.push( marker );
-        <?php
+    ?>
+    if (marker_options.draggable) {
+        marker.on('dragend', function() {
+            var latlng = this.getLatLng();
+            var lat = latlng.lat;
+            var lng = latlng.lng;
+            if (is_image) {
+                console.log('leaflet-marker y=' + lat + ' x=' + lng);
+            } else {
+                console.log('leaflet-marker lat=' + lat + ' lng=' + lng);
+            }
+        });
+    }
+    marker.addTo(group);
+    <?php
+        $this->LM->add_popup_to_shape($atts, $content, 'marker');
+    ?>
+    window.WPLeafletMapPlugin.markers.push(marker);
+    <?php
 
         $script = ob_get_clean();
 

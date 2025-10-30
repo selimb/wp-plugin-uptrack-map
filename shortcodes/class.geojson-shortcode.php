@@ -1,9 +1,10 @@
 <?php
+
 /**
  * GeoJSON Shortcode
  *
  * Use with [leaflet-geojson src="..."]
- * 
+ *
  * @category Shortcode
  * @author   Benjamin J DeLong <ben@bozdoz.com>
  */
@@ -22,31 +23,31 @@ class Leaflet_Geojson_Shortcode extends Leaflet_Shortcode
 {
     /**
      * Default src for geoJSON
-     * 
+     *
      * @var string $default_src
      */
     protected $default_src = 'https://gist.githubusercontent.com/bozdoz/064a7101b95a324e8852fe9381ab9a18/raw/03f4f54b13a3a7e256732760a8b679818d9d36fc/map.geojson';
 
     /**
      * How leaflet renders the src
-     * 
-     * @var string $type 
+     *
+     * @var string $type
      */
     protected $type = 'json';
 
     /**
      * Get Script for Shortcode
-     * 
+     *
      * @param string $atts    could be an array
      * @param string $content
-     * 
+     *
      * @return string HTML
      */
-    protected function getHTML($atts='', $content=null)
+    protected function getHTML($atts = '', $content = null)
     {
         if ($atts) {
             extract($atts, EXTR_SKIP);
-        } 
+        }
 
         wp_enqueue_script('leaflet_ajax_geojson_js');
 
@@ -79,7 +80,7 @@ class Leaflet_Geojson_Shortcode extends Leaflet_Shortcode
         $popup_text = trim($popup_text);
 
         $table_view = filter_var(empty($table_view) ? 0 : $table_view, FILTER_VALIDATE_INT);
-        
+
         //options of iconUrl feature
         $options = array(
             'iconUrl' => isset($iconurl) ? $iconurl : null,
@@ -99,96 +100,102 @@ class Leaflet_Geojson_Shortcode extends Leaflet_Shortcode
 
         $options = $this->LM->json_sanitize($options, $args);
 
-    // set the default for onEachFeature
-    ob_start();
-    ?>
-function onEachFeature (feature, layer) {
-    var props = feature.properties || {};
-    var text;
-    if (table_view) {
+        // XXX don't need to have a default, we'll just hard-code it.
+        // set the default for onEachFeature
+        ob_start();
+?>
+        function onEachFeature (feature, layer) {
+        var props = feature.properties || {};
+        var text;
+        if (table_view) {
         text = window.WPLeafletMapPlugin.propsToTable(props);
-    } else {
+        } else {
         text = popup_property
-            ? props[ popup_property ]
-            : window.WPLeafletMapPlugin.template(
-                popup_text, 
-                feature.properties
-            );
-    }
-    if (text) {
+        ? props[ popup_property ]
+        : window.WPLeafletMapPlugin.template(
+        popup_text,
+        feature.properties
+        );
+        }
+        if (text) {
         layer.bindPopup( text );
-    }
-}
-    <?php
-    $onEachFeature = ob_get_clean();
-
-    // use with: add_filter('leaflet_map_geojson_onEachFeature', 'example_callback', 10, 3);
-    // function takes default onEachFeature
-    $onEachFeature = apply_filters('leaflet_map_geojson_onEachFeature', $onEachFeature);
-
-    // create the geojson script
-    ob_start();
-    ?>/*<script>*/
-var src = '<?php echo htmlspecialchars($src, ENT_QUOTES); ?>';
-var default_style = <?php echo $style_json; ?>;
-var rewrite_keys = {
-    stroke : 'color',
-    'stroke-width' : 'weight',
-    'stroke-opacity' : 'opacity',
-    fill : 'fillColor',
-    'fill-opacity' : 'fillOpacity',
-};
-// htmlspecialchars converts & to "&amp;"; maybe unnecessarily, and maybe 3x
-var ampersandRegex = /&(?:amp;){1,3}/g
-var layer = L.ajaxGeoJson(src.replace(ampersandRegex, '&'), {
-    type: '<?php echo $this->type; ?>',
-    style : layerStyle,
-    onEachFeature : onEachFeature,
-    pointToLayer: pointToLayer
-});
-var fitbounds = <?php echo $fitbounds ? '1' : '0'; ?>;
-var circleMarker = <?php echo $circleMarker ? '1' : '0'; ?>;
-var popup_text = window.WPLeafletMapPlugin.unescape("<?php echo esc_js(
-  $popup_text
-); ?>");
-var popup_property = "<?php echo esc_js($popup_property); ?>";
-var table_view = <?php echo $table_view; ?>;
-var group = window.WPLeafletMapPlugin.getCurrentGroup();
-var markerOptions = window.WPLeafletMapPlugin.getIconOptions(<?php echo $options; ?>);
-layer.addTo( group );
-window.WPLeafletMapPlugin.geojsons.push( layer );
-if (fitbounds) {
-    layer.on('ready', function () {
-        this.map.fitBounds( this.getBounds() );
-    });
-}
-function layerStyle (feature) {
-    var props = feature.properties || {};
-    var style = {};
-    function camelFun (_, first_letter) {
-        return first_letter.toUpperCase();
-    };
-    for (var key in props) {
-        if (key.match('-')) {
-            var camelcase = key.replace(/-(\w)/, camelFun);
-            style[ camelcase ] = props[ key ];
         }
-        // rewrite style keys from geojson.io
-        if (rewrite_keys[ key ]) {
-            style[ rewrite_keys[ key ] ] = props[ key ];
+        }
+        <?php
+        $onEachFeature = ob_get_clean();
+
+        // use with: add_filter('leaflet_map_geojson_onEachFeature', 'example_callback', 10, 3);
+        // function takes default onEachFeature
+        $onEachFeature = apply_filters('leaflet_map_geojson_onEachFeature', $onEachFeature);
+
+        // create the geojson script
+        ob_start();
+        ?>/*<script>
+            */
+            var src = '<?php echo htmlspecialchars($src, ENT_QUOTES); ?>';
+            var default_style = <?php echo $style_json; ?>;
+            var rewrite_keys = {
+                stroke: 'color',
+                'stroke-width': 'weight',
+                'stroke-opacity': 'opacity',
+                fill: 'fillColor',
+                'fill-opacity': 'fillOpacity',
+            };
+            // htmlspecialchars converts & to "&amp;"; maybe unnecessarily, and maybe 3x
+            var ampersandRegex = /&(?:amp;){1,3}/g
+            var layer = L.ajaxGeoJson(src.replace(ampersandRegex, '&'), {
+                type: '<?php echo $this->type; ?>',
+                style: layerStyle,
+                onEachFeature: onEachFeature,
+                pointToLayer: pointToLayer
+            });
+            var fitbounds = <?php echo $fitbounds ? '1' : '0'; ?>;
+            var circleMarker = <?php echo $circleMarker ? '1' : '0'; ?>;
+            var popup_text = window.WPLeafletMapPlugin.unescape("<?php echo esc_js(
+                                                                        $popup_text
+                                                                    ); ?>");
+            var popup_property = "<?php echo esc_js($popup_property); ?>";
+            var table_view = <?php echo $table_view; ?>;
+            var group = window.WPLeafletMapPlugin.getCurrentGroup();
+            var markerOptions = window.WPLeafletMapPlugin.getIconOptions(<?php echo $options; ?>);
+            layer.addTo(group);
+            window.WPLeafletMapPlugin.geojsons.push(layer);
+            if (fitbounds) {
+                layer.on('ready', function() {
+                    this.map.fitBounds(this.getBounds());
+                });
+            }
+
+            function layerStyle(feature) {
+                var props = feature.properties || {};
+                var style = {};
+
+                function camelFun(_, first_letter) {
+                    return first_letter.toUpperCase();
+                };
+                for (var key in props) {
+                    if (key.match('-')) {
+                        var camelcase = key.replace(/-(\w)/, camelFun);
+                        style[camelcase] = props[key];
+                    }
+                    // rewrite style keys from geojson.io
+                    if (rewrite_keys[key]) {
+                        style[rewrite_keys[key]] = props[key];
+                    }
+                }
+                return L.Util.extend(style, default_style);
+            }
+            <?php echo $onEachFeature; ?>
+
+            function pointToLayer(feature, latlng) {
+                if (circleMarker) {
+                    return L.circleMarker(latlng);
+                }
+                return L.marker(latlng, markerOptions);
+            }
+            <?php
+            $script = ob_get_clean();
+
+            return $this->wrap_script($script, 'WPLeaflet' . $this->type . 'Shortcode');
         }
     }
-    return L.Util.extend(style, default_style);
-}
-<?php echo $onEachFeature; ?>
-function pointToLayer (feature, latlng) {
-    if (circleMarker) {
-        return L.circleMarker(latlng);
-    }
-    return L.marker(latlng, markerOptions);
-}<?php
-        $script = ob_get_clean();
-
-        return $this->wrap_script($script, 'WPLeaflet' . $this->type .'Shortcode');
-    }
-}

@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Line Shortcode
  *
  * Use with [leaflet-line ...]
- * 
+ *
  * @category Shortcode
  * @author   Benjamin J DeLong <ben@bozdoz.com>
  */
@@ -22,25 +23,25 @@ class Leaflet_Line_Shortcode extends Leaflet_Shortcode
 {
     /**
      * How leaflet renders the shape
-     * 
-     * @var string $type 
+     *
+     * @var string $type
      */
     protected $type = 'line';
 
     /**
      * Get Script for Shortcode
-     * 
+     *
      * @param string $atts    shortcode attributes
      * @param string $content optional
-     * 
+     *
      * @return string HTML
      */
-    protected function getHTML($atts='', $content=null)
+    protected function getHTML($atts = '', $content = null)
     {
         if (!empty($atts)) {
             extract($atts, EXTR_SKIP);
         }
-        
+
         $style_json = $this->LM->get_style_json($atts);
 
         $fitbounds = empty($fitbounds) ? 0 : $fitbounds;
@@ -52,7 +53,7 @@ class Leaflet_Line_Shortcode extends Leaflet_Shortcode
 
         $fitbounds = filter_var($fitbounds, FILTER_VALIDATE_BOOLEAN);
 
-        $locations = Array();
+        $locations = array();
 
         if (!empty($addresses)) {
             include_once LEAFLET_MAP__PLUGIN_DIR . 'class.geocoder.php';
@@ -60,7 +61,7 @@ class Leaflet_Line_Shortcode extends Leaflet_Shortcode
             foreach ($addresses as $address) {
                 if (trim($address)) {
                     $location = new Leaflet_Geocoder($address);
-                    $locations[] = Array($location->lat, $location->lng);
+                    $locations[] = array($location->lat, $location->lng);
                 }
             }
         } else if (!empty($latlngs)) {
@@ -83,7 +84,7 @@ class Leaflet_Line_Shortcode extends Leaflet_Shortcode
 
         $js_factory = 'L.polyline';
         $collection = 'lines';
-        
+
         if ($this->type == 'polygon') {
             $js_factory = 'L.polygon';
             $locations = "[$location_json]";
@@ -91,20 +92,22 @@ class Leaflet_Line_Shortcode extends Leaflet_Shortcode
         }
 
         ob_start();
-        ?>/*<script>*/
-var previous_map = window.WPLeafletMapPlugin.getCurrentMap();
-var group = window.WPLeafletMapPlugin.getCurrentGroup();
-var shape = <?php echo $js_factory; ?>(<?php echo $location_json; ?>, <?php echo $style_json; ?>);
-var fitbounds = <?php echo $fitbounds ? '1' : '0'; ?>;
-shape.addTo( group );
-if (fitbounds) {
-    // zoom the map to the shape
-    previous_map.fitBounds( shape.getBounds() );
-}
-<?php 
-    $this->LM->add_popup_to_shape($atts, $content, 'shape'); 
-?>
-window.WPLeafletMapPlugin.<?php echo $collection; ?>.push( shape );<?php
+?>/*<script>
+    */
+    var previous_map = window.WPLeafletMapPlugin.getCurrentMap();
+    var group = window.WPLeafletMapPlugin.getCurrentGroup();
+    var shape = <?php echo $js_factory; ?>(<?php echo $location_json; ?>, <?php echo $style_json; ?>);
+    var fitbounds = <?php echo $fitbounds ? '1' : '0'; ?>;
+    shape.addTo(group);
+    if (fitbounds) {
+        // zoom the map to the shape
+        previous_map.fitBounds(shape.getBounds());
+    }
+    <?php
+        $this->LM->add_popup_to_shape($atts, $content, 'shape');
+    ?>
+    window.WPLeafletMapPlugin.<?php echo $collection; ?>.push(shape);
+    <?php
         $script = ob_get_clean();
 
         return $this->wrap_script($script, 'WPLeafletLineShortcode');
