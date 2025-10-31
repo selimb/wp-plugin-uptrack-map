@@ -46,6 +46,14 @@
 
   /** For the dragging effect */
   touch-action: none;
+
+  /* Positioning */
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1000; /* Like in Leaflet Controls */
+  pointer-events: auto;
 }
 
 .uptrack-focus-card-header {

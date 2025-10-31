@@ -111,7 +111,7 @@
       /** @type {Map<RouteInfo['id'], Route>} */
       this.routes = new Map();
 
-      this.focusCard = new FocusCard({ position: 'bottomleft' });
+      this.focusCard = new FocusCard();
       this.focusCard.onClose = () => {
         this.unfocus();
       };
@@ -621,16 +621,19 @@
    * @property {number} delta
    * @property {number} x0
    */
-  class FocusCard extends L.Control {
+
+  /**
+   * Focus card control.
+   * This is *not* implemented as a Leaflet Control because:
+   * - We want it to take the full width and it's awkward to do that with Leaflet's CSS and DOM hierarchy.
+   * - We don't want to be able to drag the map "through" the card, which prevents things like
+   *   text selection.
+   */
+  class FocusCard {
     /** @type {(() => void) | undefined} */
     onClose = undefined;
 
-    /**
-     * @param {L.ControlOptions} options
-     */
-    constructor(options) {
-      super(options);
-
+    constructor() {
       this.$htmlTemplate = document.createElement('template');
       this.$htmlTemplate.innerHTML = FOCUS_CARD_HTML.trim();
 
@@ -663,9 +666,8 @@
       this.routeInfo = info;
 
       if (!this.shown) {
-        map.addControl(this);
-        // Needs to be done *after* `addControl`, so that Leaflet adds our elements to the document.
-        this._correctAdminBarMargin();
+        const $container = this._render(map);
+        this._correctAdminBarMargin($container);
       } else {
         // No need to call this above, since we call `_update` in `onAdd`.
         this._update();
@@ -676,13 +678,20 @@
      * @param {L.Map} map
      */
     hide(map) {
-      map.removeControl(this);
+      const { $container } = this.$elements ?? {};
+      if ($container) {
+        $container.remove();
+        this.$elements = undefined;
+      }
+      this.shown = false;
+      document.removeEventListener('keyup', this._handleDocumentKeyup);
     }
 
     /**
-     * Called by base class when this control is added.
+     * @param {L.Map} map
+     * @returns
      */
-    onAdd() {
+    _render(map) {
       /**
        * @template {keyof HTMLElementTagNameMap} T
        * @param {T} _elemType
@@ -705,8 +714,16 @@
       );
       const $container = getElem('div', '.uptrack-focus-card', $fragment);
       if (!$container) {
-        throw err('Missing .uptrack-focus-card container');
+        throw err('Template missing .uptrack-focus-card container');
       }
+      // const parent = map
+      //   .getContainer()
+      //   .querySelector('.leaflet-control-container');
+      // if (!parent) {
+      //   throw err('Map is missing .leaflet-control-container');
+      // }
+      // parent.appendChild($container);
+      document.body.appendChild($container);
 
       const $title = getElem('span', '.uptrack-focus-card-title', $container);
       const $closeButton = getElem(
@@ -745,14 +762,6 @@
       document.addEventListener('keyup', this._handleDocumentKeyup);
 
       return $container;
-    }
-
-    /**
-     * Called by base class when this control is removed.
-     */
-    onRemove() {
-      this.shown = false;
-      document.removeEventListener('keyup', this._handleDocumentKeyup);
     }
 
     /** Updates most DOM elements based on the route info. */
@@ -861,13 +870,12 @@
       return this.$elements;
     }
 
-    _correctAdminBarMargin() {
+    /**
+     * @param {HTMLElement} $container
+     */
+    _correctAdminBarMargin($container) {
       const $adminBar = document.querySelector('#wpadminbar');
       if (!$adminBar) {
-        return;
-      }
-      const $container = this.getContainer();
-      if (!$container) {
         return;
       }
       const adminBarHeight = $adminBar.clientHeight;
