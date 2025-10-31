@@ -102,10 +102,14 @@
   // Main Man
   // ===============================================================================================
   /**
+   * NOTE: `undefined` is used to indicate "not computed yet", whereas `null` is used to indicate
+   * "computed, but nothing to show".
    * @typedef {Object} Route
    * @property {RouteInfo} info
    * @property {L.Layer} line
-   * @property {L.Marker | undefined} marker
+   * @property {L.Marker | null | undefined} marker
+   * @property {L.Layer | null | undefined} outline
+   * @property {L.Layer | null | undefined} endpoints
    */
 
   class UptrackMapManager {
@@ -131,9 +135,7 @@
       /**
        * @typedef {Object} FocusState
        * @property {RouteId} id
-       * @property {L.Layer} outlineLayer
        * @property {L.Popup | undefined} popup
-       * @property {L.FeatureGroup | undefined} endpointMarkers
        * @property {"hover" | "click"} type
        */
       /** @type {FocusState | undefined} */
@@ -179,7 +181,13 @@
         data.map(async (info) => {
           const { line, marker } = await this.loadRoute(info);
 
-          this.routes.set(info.id, { info, line, marker });
+          this.routes.set(info.id, {
+            info,
+            line,
+            marker,
+            endpoints: undefined,
+            outline: undefined,
+          });
         })
       );
 
@@ -395,11 +403,7 @@
         if (this.focus.id === routeId && this.focus.type === type) {
           return;
         }
-        this._hideLayers(
-          this.focus.outlineLayer,
-          this.focus.popup,
-          this.focus.endpointMarkers
-        );
+        this._hideLayers(this.focus.popup, route.outline, route.endpoints);
       }
 
       const popup =
@@ -407,14 +411,20 @@
           ? this.renderHoverPopup(routeId, polyline, coord, route.info)
           : undefined;
 
-      const endpointMarkers = this.renderEndpointMarkers(polyline);
+      if (route.endpoints === undefined) {
+        route.endpoints = this.renderEndpointMarkers(polyline);
+      }
+      this._showLayers(route.endpoints);
+
+      if (route.outline === undefined) {
+        route.outline = this.renderOutline(route, polyline);
+      }
+      this._showLayers(route.outline);
 
       this.focus = {
         id: routeId,
         type,
-        outlineLayer: this.renderFocusLayer(route, polyline),
         popup,
-        endpointMarkers,
       };
 
       if (type === 'click') {
@@ -428,11 +438,8 @@
       if (!this.focus) {
         return;
       }
-      this._hideLayers(
-        this.focus.outlineLayer,
-        this.focus.popup,
-        this.focus.endpointMarkers
-      );
+      const route = this.routes.get(this.focus.id);
+      this._hideLayers(this.focus.popup, route?.outline, route?.endpoints);
       this.focus = undefined;
 
       this.applyVisibility();
@@ -445,7 +452,7 @@
      * @param {L.Polyline} polyline
      * @returns {L.Layer}
      */
-    renderFocusLayer(route, polyline) {
+    renderOutline(route, polyline) {
       const map = this.map;
 
       const coords = polyline.getLatLngs();
@@ -454,7 +461,6 @@
         /** @type {any} */ (coords),
         UptrackMapManager.getStyle(route.info, { outline: true })
       );
-      map.addLayer(outlineLayer);
       return outlineLayer;
     }
 
@@ -483,12 +489,12 @@
 
     /**
      * @param {L.Polyline} polyline
-     * @returns {L.FeatureGroup | undefined}
+     * @returns {L.FeatureGroup | null}
      */
     renderEndpointMarkers(polyline) {
       const coords = /** @type {L.LatLng[]} */ (polyline.getLatLngs());
       if (coords.length === 0) {
-        return undefined;
+        return null;
       }
 
       /** @type {L.CircleMarker[]} */
@@ -532,7 +538,6 @@
       markers.push(startMarker);
 
       const group = L.featureGroup(markers);
-      this.map.addLayer(group);
       return group;
     }
 
@@ -574,7 +579,7 @@
     }
 
     /**
-     * @param {Array<L.Layer | undefined>} layers
+     * @param {Array<L.Layer | null | undefined>} layers
      */
     _showLayers(...layers) {
       const map = this.map;
@@ -586,7 +591,7 @@
     }
 
     /**
-     * @param {Array<L.Layer | undefined>} layers
+     * @param {Array<L.Layer | null | undefined>} layers
      */
     _hideLayers(...layers) {
       const map = this.map;
