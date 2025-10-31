@@ -43,14 +43,26 @@
 
   /* Inspired by https://leafletjs.com/examples/choropleth/ */
   padding: 6px 8px;
+
+  /** For the dragging effect */
+  touch-action: none;
 }
 
 .uptrack-focus-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .uptrack-focus-card-title {
   font-size: x-large;
+}
+
+/*
+ * Hover Popup
+ */
+.uptrack-hover-popup {
+  font-weight: bold;
+  cursor: pointer;
 }

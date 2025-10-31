@@ -25,21 +25,19 @@
 /** @typedef {RouteInfo['id']} RouteId */
 
 (function () {
-  /**
-   * @param {'info' | 'warn' | 'error'} level
-   * @param {unknown[]} args
-   */
-  function log(level, ...args) {
-    console[level]('[UptrackMap]', ...args);
-  }
-
-  /**
-   * @param {string} message
-   * @param {ErrorOptions} [options]
-   */
-  function err(message, options) {
-    return new Error(`[UptrackMap] ${message}`, options);
-  }
+  // ===============================================================================================
+  // Constants
+  // ===============================================================================================
+  const CANVAS_TOLERANCE = 14;
+  const ROUTE_LINE_WEIGHT = 3;
+  const ROUTE_OUTLINE_WEIGHT = 12;
+  const ROUTE_OUTLINE_OPACITY = 0.2;
+  const FOCUS_CARD_SWIPE_DISTANCE_PX = (() => {
+    const smallestDimension = Math.min(window.innerWidth, window.innerHeight);
+    const distance = smallestDimension * 0.4;
+    // Clamp to reasonable values.
+    return clamp(distance, 150, 400);
+  })();
 
   /** @type {Record<UptrackRouteType, {label: string, color: string}>} */
   const ROUTE_TYPE_PROPS = {
@@ -57,34 +55,40 @@
     },
   };
 
+  // ===============================================================================================
+  // Logging
+  // ===============================================================================================
   /**
-   * @param {RouteInfo} info
-   * @param {{outline?: boolean}} options
-   * @returns {L.PathOptions}
+   * @param {'info' | 'warn' | 'error'} level
+   * @param {unknown[]} args
    */
-  function getStyle(info, options = {}) {
-    const { outline = false } = options;
-    const color = ROUTE_TYPE_PROPS[info.type].color ?? 'blue';
-    const weight = 3;
-    return {
-      color,
-      opacity: outline ? 0.2 : 1.0,
-      weight: outline ? weight * 4 : weight,
-      // Set interactive `false` so that we don't have to setup click handlers.
-      interactive: outline ? false : true,
-    };
+  function log(level, ...args) {
+    console[level]('[UptrackMap]', ...args);
   }
 
   /**
-   * @param {string} kmlText
-   * @returns {geojson.GeoJSON}
+   * @param {string} message
+   * @param {ErrorOptions} [options]
    */
-  function parseKml(kmlText) {
-    const xml = new DOMParser().parseFromString(kmlText, 'text/xml');
-    // @ts-ignore -- See tmcw_togeojson
-    return window.toGeoJSON.kml(xml);
+  function err(message, options) {
+    return new Error(`[UptrackMap] ${message}`, options);
   }
 
+  // ===============================================================================================
+  // Utils
+  // ===============================================================================================
+  /**
+   * @param {number} v
+   * @param {number} min
+   * @param {number} max
+   */
+  function clamp(v, min, max) {
+    return v < min ? min : v > max ? max : v;
+  }
+
+  // ===============================================================================================
+  // Main Man
+  // ===============================================================================================
   /**
    * @typedef {Object} Route
    * @property {RouteInfo} info
@@ -99,7 +103,7 @@
     constructor(map) {
       this.map = map;
 
-      this.renderer = L.canvas({ tolerance: 14 });
+      this.renderer = L.canvas({ tolerance: CANVAS_TOLERANCE });
 
       this.groupRoot = L.featureGroup();
       this.groupRoot.addTo(this.map);
@@ -136,6 +140,23 @@
     }
 
     /**
+     * @param {RouteInfo} info
+     * @param {{outline?: boolean}} options
+     * @returns {L.PathOptions}
+     */
+    static getStyle(info, options = {}) {
+      const { outline = false } = options;
+      const color = ROUTE_TYPE_PROPS[info.type].color ?? 'blue';
+      return {
+        color,
+        opacity: outline ? ROUTE_OUTLINE_OPACITY : 1.0,
+        weight: outline ? ROUTE_OUTLINE_WEIGHT : ROUTE_LINE_WEIGHT,
+        // Set interactive `false` so that we don't have to setup click handlers.
+        interactive: outline ? false : true,
+      };
+    }
+
+    /**
      * @param {RouteInfo[]} data
      */
     async loadRoutes(data) {
@@ -162,7 +183,7 @@
 
       /** @type {L.GeoJSONOptions & {renderer: L.Renderer}} */
       const options = {
-        style: getStyle(info),
+        style: UptrackMapManager.getStyle(info),
         onEachFeature: (_feature, createdLayer) => {
           if (!(createdLayer instanceof L.Polyline)) {
             log('warn', 'Found non-Polyline feature in route.', {
@@ -175,12 +196,15 @@
           createdLayer.on('click', (evt) => {
             this.handleRouteClick(evt, routeId, createdLayer);
           });
-          createdLayer.on('mouseover', (evt) => {
-            this.handleRouteMouseover(evt, routeId, createdLayer);
-          });
-          createdLayer.on('mouseout', (evt) => {
-            this.handleRouteMouseout(evt, routeId, createdLayer);
-          });
+          // [mobile-mouse] For some reason these are fired on mobile, which prevents the `click` event.
+          if (!L.Browser.mobile) {
+            createdLayer.on('mouseover', (evt) => {
+              this.handleRouteMouseover(evt, routeId, createdLayer);
+            });
+            createdLayer.on('mouseout', (evt) => {
+              this.handleRouteMouseout(evt, routeId, createdLayer);
+            });
+          }
 
           marker = UptrackMapManager.createRouteMarker(info, createdLayer);
           if (marker) {
@@ -189,12 +213,15 @@
             marker.on('click', (evt) => {
               this.handleRouteClick(evt, routeId, createdLayer);
             });
-            marker.on('mouseover', (evt) => {
-              this.handleRouteMouseover(evt, routeId, createdLayer);
-            });
-            marker.on('mouseout', (evt) => {
-              this.handleRouteMouseout(evt, routeId, createdLayer);
-            });
+            // See [mobile-mouse].
+            if (!L.Browser.mobile) {
+              marker.on('mouseover', (evt) => {
+                this.handleRouteMouseover(evt, routeId, createdLayer);
+              });
+              marker.on('mouseout', (evt) => {
+                this.handleRouteMouseout(evt, routeId, createdLayer);
+              });
+            }
           }
         },
         renderer: this.renderer,
@@ -202,7 +229,7 @@
 
       const resp = await fetch(info.kml_url);
       const kmlText = await resp.text();
-      const geoJson = parseKml(kmlText);
+      const geoJson = UptrackMapManager.parseKml(kmlText);
       const line = L.geoJSON(geoJson, options);
       this.groupRoot.addLayer(line);
 
@@ -303,6 +330,9 @@
      * @param {L.Polyline} polyline
      */
     handleRouteMouseover(evt, routeId, polyline) {
+      if (this.focus?.type === 'click') {
+        return;
+      }
       this.focusRoute(
         routeId,
         polyline,
@@ -317,9 +347,22 @@
      * @param {L.Polyline} polyline
      */
     handleRouteMouseout(evt, routeId, polyline) {
-      if (this.focus?.type === 'hover') {
-        this.unfocus();
+      if (this.focus?.type !== 'hover') {
+        return;
       }
+
+      // Avoid unfocusing if the mouse is moving into the popup.
+      const popup = this.focus.popup;
+      if (popup) {
+        const relatedTarget = evt.originalEvent.relatedTarget;
+        if (relatedTarget instanceof HTMLElement) {
+          if (popup.getElement()?.contains(relatedTarget)) {
+            return;
+          }
+        }
+      }
+
+      this.unfocus();
     }
 
     /**
@@ -343,7 +386,9 @@
       }
 
       const popup =
-        type === 'hover' ? this.renderHoverPopup(coord, route.info) : undefined;
+        type === 'hover'
+          ? this.renderHoverPopup(routeId, polyline, coord, route.info)
+          : undefined;
 
       this.focus = {
         id: routeId,
@@ -383,22 +428,33 @@
       const outlineLayer = L.polyline(
         // So weird.
         /** @type {any} */ (coords),
-        getStyle(route.info, { outline: true })
+        UptrackMapManager.getStyle(route.info, { outline: true })
       );
       map.addLayer(outlineLayer);
       return outlineLayer;
     }
 
     /**
-     *
+     * @param {RouteId} routeId
+     * @param {L.Polyline} polyline
      * @param {L.LatLng} coord
      * @param {RouteInfo} info
      */
-    renderHoverPopup(coord, info) {
-      return L.popup(coord, {
+    renderHoverPopup(routeId, polyline, coord, info) {
+      const popup = L.popup(coord, {
         closeButton: false,
         content: info.post_title,
+        // "Higher" `y` offset (default is 7) so that the popup sits above the line.
+        offset: [0, 2],
+        className: 'uptrack-hover-popup',
       }).addTo(this.map);
+      popup.getElement()?.addEventListener('click', () => {
+        this.focusRoute(routeId, polyline, 'click', coord);
+      });
+      popup.getElement()?.addEventListener('mouseleave', () => {
+        this.unfocus();
+      });
+      return popup;
     }
 
     /**
@@ -454,6 +510,16 @@
           map.removeLayer(layer);
         }
       }
+    }
+
+    /**
+     * @param {string} kmlText
+     * @returns {geojson.GeoJSON}
+     */
+    static parseKml(kmlText) {
+      const xml = new DOMParser().parseFromString(kmlText, 'text/xml');
+      // @ts-ignore -- See tmcw_togeojson
+      return window.toGeoJSON.kml(xml);
     }
   }
 
@@ -550,12 +616,17 @@
 </div>
   `;
 
+  /**
+   * @typedef {Object} DragState
+   * @property {number} delta
+   * @property {number} x0
+   */
   class FocusCard extends L.Control {
     /** @type {(() => void) | undefined} */
     onClose = undefined;
 
     /**
-     * @type {L.ControlOptions}
+     * @param {L.ControlOptions} options
      */
     constructor(options) {
       super(options);
@@ -565,6 +636,7 @@
 
       /**
        * @typedef {Object} FocusCardElements
+       * @property {HTMLElement} $container
        * @property {HTMLElement} $title
        * @property {HTMLButtonElement} $closeButton
        * @property {HTMLElement} $distance
@@ -576,6 +648,9 @@
 
       /** @type {RouteInfo | undefined} */
       this.routeInfo = undefined;
+
+      /** @type {undefined | DragState} */
+      this.dragState = undefined;
 
       this.shown = false;
     }
@@ -650,8 +725,13 @@
       $closeButton.addEventListener('click', () => {
         this.onClose?.();
       });
+      $container.addEventListener('touchstart', this._handleTouchStart);
+      $container.addEventListener('touchmove', this._handleTouchMove);
+      $container.addEventListener('touchend', this._handleTouchEnd);
+      $container.addEventListener('touchcancel', this._handleTouchCancel);
 
       this.$elements = {
+        $container,
         $title,
         $closeButton,
         $distance,
@@ -675,7 +755,7 @@
       document.removeEventListener('keyup', this._handleDocumentKeyup);
     }
 
-    /** Updates all DOM elements. */
+    /** Updates most DOM elements based on the route info. */
     _update() {
       const info = this.routeInfo;
       if (!info) {
@@ -699,6 +779,80 @@
         this.onClose?.();
       }
     };
+
+    /**
+     * @param {TouchEvent} evt
+     */
+    _handleTouchStart = (evt) => {
+      this._updateDrag({ delta: 0, x0: evt.touches[0].clientX });
+    };
+
+    /**
+     * @param {TouchEvent} evt
+     */
+    _handleTouchMove = (evt) => {
+      if (!this.dragState) {
+        return;
+      }
+      // Prevents map panning.
+      evt.stopPropagation();
+
+      const x0 = this.dragState.x0;
+      const x1 = evt.touches[0].clientX;
+      const delta = x1 - x0;
+      if (delta === 0) {
+        return;
+      }
+      this._updateDrag({ delta, x0 });
+    };
+
+    /**
+     * @param {TouchEvent} evt
+     */
+    _handleTouchEnd = (evt) => {
+      if (!this.dragState) {
+        return;
+      }
+      const { delta } = this.dragState;
+      if (Math.abs(delta) > FOCUS_CARD_SWIPE_DISTANCE_PX) {
+        this.onClose?.();
+      }
+      this._updateDrag(undefined);
+    };
+
+    /**
+     * @param {TouchEvent} evt
+     */
+    _handleTouchCancel = (evt) => {
+      if (!this.dragState) {
+        return;
+      }
+      window.alert('touch cancel');
+      this._updateDrag(undefined);
+    };
+
+    /**
+     * @param {DragState | undefined} dragState
+     */
+    _updateDrag(dragState) {
+      const { $container } = this._getElements();
+      this.dragState = dragState;
+
+      const style = $container.style;
+      if (dragState) {
+        const { delta } = dragState;
+        style.transform = `translateX(${delta}px)`;
+        style.transition = '';
+        style.opacity = (
+          1 -
+          Math.abs(delta) / FOCUS_CARD_SWIPE_DISTANCE_PX
+        ).toString();
+      } else {
+        style.transform = '';
+        style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        style.opacity = '1.0';
+      }
+    }
 
     _getElements() {
       if (!this.$elements) {
