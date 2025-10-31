@@ -68,7 +68,7 @@
     const weight = 3;
     return {
       color,
-      opacity: outline ? 0.4 : 1.0,
+      opacity: outline ? 0.2 : 1.0,
       weight: outline ? weight * 4 : weight,
       // Set interactive `false` so that we don't have to setup click handlers.
       interactive: outline ? false : true,
@@ -112,7 +112,14 @@
         this.unfocus();
       };
 
-      /** @type {{id: RouteId; outlineLayer: L.Layer} | undefined} */
+      /**
+       * @typedef {Object} FocusState
+       * @property {RouteId} id
+       * @property {L.Layer} outlineLayer
+       * @property {L.Popup | undefined} popup
+       * @property {"hover" | "click"} type
+       */
+      /** @type {FocusState | undefined} */
       this.focus = undefined;
 
       /** @type {Record<UptrackRouteType, boolean>} */
@@ -168,11 +175,25 @@
           createdLayer.on('click', (evt) => {
             this.handleRouteClick(evt, routeId, createdLayer);
           });
+          createdLayer.on('mouseover', (evt) => {
+            this.handleRouteMouseover(evt, routeId, createdLayer);
+          });
+          createdLayer.on('mouseout', (evt) => {
+            this.handleRouteMouseout(evt, routeId, createdLayer);
+          });
+
           marker = UptrackMapManager.createRouteMarker(info, createdLayer);
           if (marker) {
             this.map.addLayer(marker);
+
             marker.on('click', (evt) => {
               this.handleRouteClick(evt, routeId, createdLayer);
+            });
+            marker.on('mouseover', (evt) => {
+              this.handleRouteMouseover(evt, routeId, createdLayer);
+            });
+            marker.on('mouseout', (evt) => {
+              this.handleRouteMouseout(evt, routeId, createdLayer);
             });
           }
         },
@@ -268,14 +289,46 @@
      * @param {L.Polyline} polyline
      */
     handleRouteClick(evt, routeId, polyline) {
-      this.focusRoute(routeId, polyline);
+      this.focusRoute(
+        routeId,
+        polyline,
+        'click',
+        this.map.layerPointToLatLng(polyline.closestLayerPoint(evt.layerPoint))
+      );
+    }
+
+    /**
+     * @param {L.LeafletMouseEvent} evt
+     * @param {RouteId} routeId
+     * @param {L.Polyline} polyline
+     */
+    handleRouteMouseover(evt, routeId, polyline) {
+      this.focusRoute(
+        routeId,
+        polyline,
+        'hover',
+        this.map.layerPointToLatLng(polyline.closestLayerPoint(evt.layerPoint))
+      );
+    }
+
+    /**
+     * @param {L.LeafletMouseEvent} evt
+     * @param {RouteId} routeId
+     * @param {L.Polyline} polyline
+     */
+    handleRouteMouseout(evt, routeId, polyline) {
+      if (this.focus?.type === 'hover') {
+        this.unfocus();
+      }
     }
 
     /**
      * @param {RouteId} routeId
      * @param {L.Polyline} polyline
+     * @param {'hover' | 'click'} type
+     * @param {L.LatLng} coord
      */
-    focusRoute(routeId, polyline) {
+    focusRoute(routeId, polyline, type, coord) {
       const route = this.routes.get(routeId);
       if (!route) {
         log('error', 'Could not find route with ID', routeId);
@@ -283,29 +336,34 @@
       }
 
       if (this.focus) {
-        if (this.focus.id === routeId) {
-          // Already focused.
+        if (this.focus.id === routeId && this.focus.type === type) {
           return;
         }
-        // Otherwise, remove previous outline.
-        this._hideLayers(this.focus.outlineLayer);
+        this._hideLayers(this.focus.outlineLayer, this.focus.popup);
       }
+
+      const popup =
+        type === 'hover' ? this.renderHoverPopup(coord, route.info) : undefined;
 
       this.focus = {
         id: routeId,
         outlineLayer: this.renderFocusLayer(route, polyline),
+        type,
+        popup,
       };
 
-      this.applyVisibility();
-      this.legend.disableInputs(true);
-      this.focusCard.show(this.map, route.info);
+      if (type === 'click') {
+        this.applyVisibility();
+        this.legend.disableInputs(true);
+        this.focusCard.show(this.map, route.info);
+      }
     }
 
     unfocus() {
       if (!this.focus) {
         return;
       }
-      this._hideLayers(this.focus.outlineLayer);
+      this._hideLayers(this.focus.outlineLayer, this.focus.popup);
       this.focus = undefined;
 
       this.applyVisibility();
@@ -329,6 +387,18 @@
       );
       map.addLayer(outlineLayer);
       return outlineLayer;
+    }
+
+    /**
+     *
+     * @param {L.LatLng} coord
+     * @param {RouteInfo} info
+     */
+    renderHoverPopup(coord, info) {
+      return L.popup(coord, {
+        closeButton: false,
+        content: info.post_title,
+      }).addTo(this.map);
     }
 
     /**
