@@ -29,9 +29,21 @@
   // Constants
   // ===============================================================================================
   const CANVAS_TOLERANCE = 14;
+
   const ROUTE_LINE_WEIGHT = 3;
+
   const ROUTE_OUTLINE_WEIGHT = 12;
   const ROUTE_OUTLINE_OPACITY = 0.2;
+
+  const ROUTE_MARKER_RADIUS_PX = 6;
+  const ROUTE_MARKER_WEIGHT_PX = 2;
+  const ROUTE_MARKER_COLOR = 'black';
+  const ROUTE_MARKER_FILL_OPACITY = 1.0;
+  const ROUTE_MARKER_START_FILL_COLOR = 'limegreen';
+  const ROUTE_MARKER_END_FILL_COLOR = 'orangered';
+  const ROUTE_MARKER_ROUNDTRIP_FILL_COLOR = 'black';
+  const ROUNDTRIP_EPSILON = 50;
+
   const FOCUS_CARD_SWIPE_DISTANCE_PX = (() => {
     const smallestDimension = Math.min(window.innerWidth, window.innerHeight);
     const distance = smallestDimension * 0.4;
@@ -121,6 +133,7 @@
        * @property {RouteId} id
        * @property {L.Layer} outlineLayer
        * @property {L.Popup | undefined} popup
+       * @property {L.FeatureGroup | undefined} endpointMarkers
        * @property {"hover" | "click"} type
        */
       /** @type {FocusState | undefined} */
@@ -382,7 +395,11 @@
         if (this.focus.id === routeId && this.focus.type === type) {
           return;
         }
-        this._hideLayers(this.focus.outlineLayer, this.focus.popup);
+        this._hideLayers(
+          this.focus.outlineLayer,
+          this.focus.popup,
+          this.focus.endpointMarkers
+        );
       }
 
       const popup =
@@ -390,11 +407,14 @@
           ? this.renderHoverPopup(routeId, polyline, coord, route.info)
           : undefined;
 
+      const endpointMarkers = this.renderEndpointMarkers(polyline);
+
       this.focus = {
         id: routeId,
-        outlineLayer: this.renderFocusLayer(route, polyline),
         type,
+        outlineLayer: this.renderFocusLayer(route, polyline),
         popup,
+        endpointMarkers,
       };
 
       if (type === 'click') {
@@ -408,7 +428,11 @@
       if (!this.focus) {
         return;
       }
-      this._hideLayers(this.focus.outlineLayer, this.focus.popup);
+      this._hideLayers(
+        this.focus.outlineLayer,
+        this.focus.popup,
+        this.focus.endpointMarkers
+      );
       this.focus = undefined;
 
       this.applyVisibility();
@@ -458,6 +482,61 @@
     }
 
     /**
+     * @param {L.Polyline} polyline
+     * @returns {L.FeatureGroup | undefined}
+     */
+    renderEndpointMarkers(polyline) {
+      const coords = /** @type {L.LatLng[]} */ (polyline.getLatLngs());
+      if (coords.length === 0) {
+        return undefined;
+      }
+
+      /** @type {L.CircleMarker[]} */
+      const markers = [];
+
+      const c0 = coords[0];
+
+      /** @type {L.CircleMarker | undefined} */
+      let endMarker;
+      if (coords.length > 1) {
+        const cN = coords[coords.length - 1];
+        const isRoundtrip = c0.distanceTo(cN) <= ROUNDTRIP_EPSILON;
+        if (!isRoundtrip) {
+          endMarker = L.circleMarker(cN, {
+            radius: ROUTE_MARKER_RADIUS_PX,
+            color: ROUTE_MARKER_COLOR,
+            weight: ROUTE_MARKER_WEIGHT_PX,
+            fillColor: ROUTE_MARKER_END_FILL_COLOR,
+            fillOpacity: ROUTE_MARKER_FILL_OPACITY,
+            interactive: false,
+          });
+          markers.push(endMarker);
+        }
+      }
+
+      console.info(
+        endMarker
+          ? ROUTE_MARKER_START_FILL_COLOR
+          : ROUTE_MARKER_ROUNDTRIP_FILL_COLOR
+      );
+      const startMarker = L.circleMarker(c0, {
+        radius: ROUTE_MARKER_RADIUS_PX,
+        color: ROUTE_MARKER_COLOR,
+        weight: ROUTE_MARKER_WEIGHT_PX,
+        fillColor: endMarker
+          ? ROUTE_MARKER_START_FILL_COLOR
+          : ROUTE_MARKER_ROUNDTRIP_FILL_COLOR,
+        fillOpacity: ROUTE_MARKER_FILL_OPACITY,
+        interactive: false,
+      });
+      markers.push(startMarker);
+
+      const group = L.featureGroup(markers);
+      this.map.addLayer(group);
+      return group;
+    }
+
+    /**
      * @param {UptrackRouteType} type
      */
     updateRouteTypeFilter(type) {
@@ -469,11 +548,17 @@
 
     applyVisibility() {
       const focusedId = this.focus?.id;
+      const focusType = this.focus?.type;
       const routeTypeFilter = this.routeTypeFilter;
       for (const [routeId, route] of this.routes.entries()) {
         if (focusedId !== undefined) {
           if (routeId === focusedId) {
-            this._showLayers(route.line, route.marker);
+            if (focusType === 'click') {
+              this._showLayers(route.line);
+              this._hideLayers(route.marker);
+            } else {
+              this._showLayers(route.line, route.marker);
+            }
           } else {
             this._hideLayers(route.line, route.marker);
           }
