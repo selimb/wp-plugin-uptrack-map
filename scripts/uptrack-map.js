@@ -30,10 +30,23 @@
   // ===============================================================================================
   const CANVAS_TOLERANCE = 14;
 
-  const ROUTE_LINE_WEIGHT = 3;
-
-  const ROUTE_OUTLINE_WEIGHT = 12;
-  const ROUTE_OUTLINE_OPACITY = 0.2;
+  const ROUTE_STYLES = {
+    normal: {
+      opacity: 1.0,
+      weight: 3,
+      interactive: true,
+    },
+    focus: {
+      opacity: 0.2,
+      weight: 12,
+      interactive: false,
+    },
+    fade: {
+      opacity: 0.3,
+      weight: 3,
+      interactive: true,
+    },
+  };
 
   const ROUTE_MARKER_RADIUS_PX = 6;
   const ROUTE_MARKER_WEIGHT_PX = 2;
@@ -102,13 +115,19 @@
   // Main Man
   // ===============================================================================================
   /**
+   * @typedef {L.LatLng[]} LineCoords
+   */
+
+  /**
    * NOTE: `undefined` is used to indicate "not computed yet", whereas `null` is used to indicate
    * "computed, but nothing to show".
    * @typedef {Object} Route
    * @property {RouteInfo} info
    * @property {L.Layer} line
+   * @property {LineCoords} coords
+   * @property {L.Layer} fadeLine
    * @property {L.Marker | null | undefined} marker
-   * @property {L.Layer | null | undefined} outline
+   * @property {L.Layer | null | undefined} focusOutline
    * @property {L.Layer | null | undefined} endpoints
    */
 
@@ -135,11 +154,16 @@
       /**
        * @typedef {Object} FocusState
        * @property {RouteId} id
-       * @property {L.Popup | undefined} popup
-       * @property {"hover" | "click"} type
        */
       /** @type {FocusState | undefined} */
       this.focus = undefined;
+      /**
+       * @typedef {Object} HoverState
+       * @property {RouteId} id
+       * @property {L.Popup} popup
+       */
+      /** @type {HoverState | undefined} */
+      this.hover = undefined;
 
       /** @type {Record<UptrackRouteType, boolean>} */
       this.routeTypeFilter = {
@@ -156,18 +180,19 @@
 
     /**
      * @param {RouteInfo} info
-     * @param {{outline?: boolean}} options
+     * @param {{variant?: 'focus' | 'fade' | 'normal'}} options
      * @returns {L.PathOptions}
      */
-    static getStyle(info, options = {}) {
-      const { outline = false } = options;
+    getStyle(info, options = {}) {
+      const { variant: variantKey = 'normal' } = options;
+      const variant = ROUTE_STYLES[variantKey];
       const color = ROUTE_TYPE_PROPS[info.type].color ?? 'blue';
       return {
         color,
-        opacity: outline ? ROUTE_OUTLINE_OPACITY : 1.0,
-        weight: outline ? ROUTE_OUTLINE_WEIGHT : ROUTE_LINE_WEIGHT,
-        // Set interactive `false` so that we don't have to setup click handlers.
-        interactive: outline ? false : true,
+        opacity: variant.opacity,
+        weight: variant.weight,
+        interactive: variant.interactive,
+        renderer: this.renderer,
       };
     }
 
@@ -179,14 +204,16 @@
 
       await Promise.all(
         data.map(async (info) => {
-          const { line, marker } = await this.loadRoute(info);
+          const { line, coords, fadeLine, marker } = await this.loadRoute(info);
 
           this.routes.set(info.id, {
             info,
             line,
+            coords,
+            fadeLine,
             marker,
             endpoints: undefined,
-            outline: undefined,
+            focusOutline: undefined,
           });
         })
       );
@@ -196,15 +223,23 @@
 
     /**
      * @param {RouteInfo} info
+     * @returns {Promise<{line: L.Layer, coords: L.LatLng[]; fadeLine: L.Layer, marker: L.Marker | null}>}
      */
     async loadRoute(info) {
-      /** @type {L.Marker | undefined} */
-      let marker;
+      /** @type {L.Marker | null} */
+      let marker = null;
+
+      /** @type {L.Polyline | undefined} */
+      let fadeLine_;
+
+      /** @type {L.LatLng[] | undefined} */
+      let coords;
+
       const routeId = info.id;
 
-      /** @type {L.GeoJSONOptions & {renderer: L.Renderer}} */
+      /** @type {L.GeoJSONOptions} */
       const options = {
-        style: UptrackMapManager.getStyle(info),
+        style: this.getStyle(info),
         onEachFeature: (_feature, createdLayer) => {
           if (!(createdLayer instanceof L.Polyline)) {
             log('warn', 'Found non-Polyline feature in route.', {
@@ -214,8 +249,11 @@
             return;
           }
 
+          // Assume we're dealing with a simple LineString.
+          coords = /** @type {L.LatLng[]} */ (createdLayer.getLatLngs());
+
           createdLayer.on('click', (evt) => {
-            this.handleRouteClick(evt, routeId, createdLayer);
+            this.handleRouteClick(evt, routeId);
           });
           // [mobile-mouse] For some reason these are fired on mobile, which prevents the `click` event.
           if (!L.Browser.mobile) {
@@ -223,29 +261,45 @@
               this.handleRouteMouseover(evt, routeId, createdLayer);
             });
             createdLayer.on('mouseout', (evt) => {
-              this.handleRouteMouseout(evt, routeId, createdLayer);
+              this.handleRouteMouseout(evt, routeId);
             });
           }
 
-          marker = UptrackMapManager.createRouteMarker(info, createdLayer);
+          const fadeLine = this.renderFadeLine(info, coords);
+          fadeLine_ = fadeLine;
+
+          fadeLine.on('click', (evt) => {
+            this.handleRouteClick(evt, routeId);
+          });
+          // See [mobile-mouse].
+          if (!L.Browser.mobile) {
+            fadeLine.on('mouseover', (evt) => {
+              this.handleRouteMouseover(evt, routeId, fadeLine);
+            });
+            fadeLine.on('mouseout', (evt) => {
+              this.handleRouteMouseout(evt, routeId);
+            });
+          }
+
+          marker = UptrackMapManager.createRouteMarker(info, coords);
           if (marker) {
             this.map.addLayer(marker);
 
             marker.on('click', (evt) => {
-              this.handleRouteClick(evt, routeId, createdLayer);
+              this.handleRouteClick(evt, routeId);
             });
+            // TODO: Bind popup instead?
             // See [mobile-mouse].
             if (!L.Browser.mobile) {
               marker.on('mouseover', (evt) => {
                 this.handleRouteMouseover(evt, routeId, createdLayer);
               });
               marker.on('mouseout', (evt) => {
-                this.handleRouteMouseout(evt, routeId, createdLayer);
+                this.handleRouteMouseout(evt, routeId);
               });
             }
           }
         },
-        renderer: this.renderer,
       };
 
       const resp = await fetch(info.kml_url);
@@ -254,23 +308,28 @@
       const line = L.geoJSON(geoJson, options);
       this.groupRoot.addLayer(line);
 
-      return { line, marker };
+      if (!fadeLine_) {
+        throw err('Failed to create fade line for route.');
+      }
+      if (!coords) {
+        throw err('Failed to obtain line coords for route.');
+      }
+
+      return { line, coords, fadeLine: fadeLine_, marker };
     }
 
     /**
      * @param {RouteInfo} info
-     * @param {L.Polyline} polyline
-     * @returns {L.Marker | undefined}
+     * @param {LineCoords} lineCoords
+     * @returns {L.Marker | null}
      */
-    static createRouteMarker(info, polyline) {
+    static createRouteMarker(info, lineCoords) {
       if (info.marker_distance_percent < 0) {
-        return undefined;
+        return null;
       }
 
-      // Assume we're dealing with a simple LineString.
-      const lineCoords = /** @type {L.LatLng[]} */ (polyline.getLatLngs());
       if (lineCoords.length === 0) {
-        return undefined;
+        return null;
       }
 
       /** @type {L.LatLng} */
@@ -280,7 +339,7 @@
       } else if (info.marker_distance_percent >= 100) {
         markerCoords = lineCoords[lineCoords.length - 1];
       } else {
-        markerCoords = UptrackMapManager.findMarkerCoords(lineCoords, info);
+        markerCoords = UptrackMapManager.computeMarkerCoords(lineCoords, info);
       }
       const marker = L.marker(markerCoords);
       return marker;
@@ -291,7 +350,7 @@
      * @param {RouteInfo} info
      * @returns {L.LatLng}
      */
-    static findMarkerCoords(lineCoords, info) {
+    static computeMarkerCoords(lineCoords, info) {
       /** @type {number[]} */
       const distances = [0];
       let distanceTotal = 0;
@@ -334,15 +393,9 @@
     /**
      * @param {L.LeafletMouseEvent} evt
      * @param {RouteId} routeId
-     * @param {L.Polyline} polyline
      */
-    handleRouteClick(evt, routeId, polyline) {
-      this.focusRoute(
-        routeId,
-        polyline,
-        'click',
-        this.map.layerPointToLatLng(polyline.closestLayerPoint(evt.layerPoint))
-      );
+    handleRouteClick(evt, routeId) {
+      this.focusRoute(routeId);
     }
 
     /**
@@ -351,13 +404,8 @@
      * @param {L.Polyline} polyline
      */
     handleRouteMouseover(evt, routeId, polyline) {
-      if (this.focus?.type === 'click') {
-        return;
-      }
-      this.focusRoute(
+      this.hoverRoute(
         routeId,
-        polyline,
-        'hover',
         this.map.layerPointToLatLng(polyline.closestLayerPoint(evt.layerPoint))
       );
     }
@@ -365,112 +413,157 @@
     /**
      * @param {L.LeafletMouseEvent} evt
      * @param {RouteId} routeId
-     * @param {L.Polyline} polyline
      */
-    handleRouteMouseout(evt, routeId, polyline) {
-      if (this.focus?.type !== 'hover') {
+    handleRouteMouseout(evt, routeId) {
+      if (!this.hover) {
         return;
       }
-
       // Avoid unfocusing if the mouse is moving into the popup.
-      const popup = this.focus.popup;
-      if (popup) {
-        const relatedTarget = evt.originalEvent.relatedTarget;
-        if (relatedTarget instanceof HTMLElement) {
-          if (popup.getElement()?.contains(relatedTarget)) {
-            return;
-          }
+      const popup = this.hover.popup;
+      const relatedTarget = evt.originalEvent.relatedTarget;
+      if (relatedTarget instanceof HTMLElement) {
+        if (popup.getElement()?.contains(relatedTarget)) {
+          return;
         }
       }
 
-      this.unfocus();
+      this.unhover();
     }
 
     /**
      * @param {RouteId} routeId
-     * @param {L.Polyline} polyline
-     * @param {'hover' | 'click'} type
-     * @param {L.LatLng} coord
      */
-    focusRoute(routeId, polyline, type, coord) {
+    focusRoute(routeId) {
       const route = this.routes.get(routeId);
       if (!route) {
         log('error', 'Could not find route with ID', routeId);
         return;
       }
 
-      if (this.focus) {
-        if (this.focus.id === routeId && this.focus.type === type) {
-          return;
-        }
-        this._hideLayers(this.focus.popup, route.outline, route.endpoints);
+      this.unhover({ applyVisibility: false });
+      if (this.focus?.id === routeId) {
+        return;
       }
 
-      const popup =
-        type === 'hover'
-          ? this.renderHoverPopup(routeId, polyline, coord, route.info)
-          : undefined;
-
       if (route.endpoints === undefined) {
-        route.endpoints = this.renderEndpointMarkers(polyline);
+        route.endpoints = this.renderEndpointMarkers(route.coords);
       }
       this._showLayers(route.endpoints);
 
-      if (route.outline === undefined) {
-        route.outline = this.renderOutline(route, polyline);
+      if (route.focusOutline === undefined) {
+        route.focusOutline = this.renderFocusOutline(route, route.coords);
       }
-      this._showLayers(route.outline);
+      this._showLayers(route.focusOutline);
 
-      this.focus = {
-        id: routeId,
-        type,
-        popup,
-      };
-
-      if (type === 'click') {
-        this.applyVisibility();
-        this.legend.disableInputs(true);
-        this.focusCard.show(this.map, route.info);
-      }
-    }
-
-    unfocus() {
-      if (!this.focus) {
-        return;
-      }
-      const route = this.routes.get(this.focus.id);
-      this._hideLayers(this.focus.popup, route?.outline, route?.endpoints);
-      this.focus = undefined;
+      this.unfocus({ applyVisibility: false });
+      this.focus = { id: routeId };
 
       this.applyVisibility();
-      this.legend.disableInputs(false);
-      this.focusCard.hide(this.map);
+      this.legend.disableInputs(true);
+      this.focusCard.show(this.map, route.info);
     }
 
     /**
-     * @param {Route} route
-     * @param {L.Polyline} polyline
-     * @returns {L.Layer}
+     * @param {{applyVisibility?: boolean}} [options]
      */
-    renderOutline(route, polyline) {
-      const map = this.map;
+    unfocus(options) {
+      if (!this.focus) {
+        return;
+      }
+      const { applyVisibility = true } = options ?? {};
+      const route = this.routes.get(this.focus.id);
+      this._hideLayers(route?.focusOutline, route?.endpoints);
+      this.focus = undefined;
 
-      const coords = polyline.getLatLngs();
-      const outlineLayer = L.polyline(
-        // So weird.
-        /** @type {any} */ (coords),
-        UptrackMapManager.getStyle(route.info, { outline: true })
-      );
-      return outlineLayer;
+      if (applyVisibility) {
+        this.applyVisibility();
+        this.legend.disableInputs(false);
+        this.focusCard.hide(this.map);
+      }
     }
 
     /**
      * @param {RouteId} routeId
-     * @param {L.Polyline} polyline
+     * @param {L.LatLng} coord
+     */
+    hoverRoute(routeId, coord) {
+      if (this.focus?.id === routeId) {
+        return;
+      }
+
+      const route = this.routes.get(routeId);
+      if (!route) {
+        log('error', 'Could not find route with ID', routeId);
+        return;
+      }
+
+      const popup = this.renderHoverPopup(routeId, coord, route.info);
+
+      if (route.endpoints === undefined) {
+        route.endpoints = this.renderEndpointMarkers(route.coords);
+      }
+      this._showLayers(route.endpoints);
+
+      if (route.focusOutline === undefined) {
+        route.focusOutline = this.renderFocusOutline(route, route.coords);
+      }
+      this._showLayers(route.focusOutline);
+
+      this.unhover({ applyVisibility: false });
+      this.hover = { id: routeId, popup };
+
+      this.applyVisibility();
+    }
+
+    /**
+     * @param {{applyVisibility?: boolean}} [options]
+     */
+    unhover(options) {
+      if (!this.hover) {
+        return;
+      }
+      const { applyVisibility = true } = options ?? {};
+
+      const route = this.routes.get(this.hover.id);
+      this._hideLayers(this.hover.popup, route?.focusOutline, route?.endpoints);
+      this.hover = undefined;
+      if (applyVisibility) {
+        this.applyVisibility();
+      }
+    }
+
+    /**
+     * @param {Route} route
+     * @param {LineCoords} coords
+     * @returns {L.Layer}
+     */
+    renderFocusOutline(route, coords) {
+      const focusOutline = L.polyline(
+        coords,
+        this.getStyle(route.info, { variant: 'focus' })
+      );
+      return focusOutline;
+    }
+
+    /**
+     * @param {RouteInfo} info
+     * @param {LineCoords} coords
+     * @returns {L.Polyline}
+     */
+    renderFadeLine(info, coords) {
+      const fadeLine = L.polyline(
+        coords,
+        this.getStyle(info, { variant: 'fade' })
+      );
+      return fadeLine;
+    }
+
+    /**
+     * @param {RouteId} routeId
      * @param {L.LatLng} coord
      * @param {RouteInfo} info
      */
-    renderHoverPopup(routeId, polyline, coord, info) {
+    renderHoverPopup(routeId, coord, info) {
       const popup = L.popup(coord, {
         closeButton: false,
         content: info.post_title,
@@ -479,20 +572,19 @@
         className: 'uptrack-hover-popup',
       }).addTo(this.map);
       popup.getElement()?.addEventListener('click', () => {
-        this.focusRoute(routeId, polyline, 'click', coord);
+        this.focusRoute(routeId);
       });
       popup.getElement()?.addEventListener('mouseleave', () => {
-        this.unfocus();
+        this.unhover();
       });
       return popup;
     }
 
     /**
-     * @param {L.Polyline} polyline
+     * @param {LineCoords} coords
      * @returns {L.FeatureGroup | null}
      */
-    renderEndpointMarkers(polyline) {
-      const coords = /** @type {L.LatLng[]} */ (polyline.getLatLngs());
+    renderEndpointMarkers(coords) {
       if (coords.length === 0) {
         return null;
       }
@@ -520,11 +612,6 @@
         }
       }
 
-      console.info(
-        endMarker
-          ? ROUTE_MARKER_START_FILL_COLOR
-          : ROUTE_MARKER_ROUNDTRIP_FILL_COLOR
-      );
       const startMarker = L.circleMarker(c0, {
         radius: ROUTE_MARKER_RADIUS_PX,
         color: ROUTE_MARKER_COLOR,
@@ -552,28 +639,28 @@
     }
 
     applyVisibility() {
-      const focusedId = this.focus?.id;
-      const focusType = this.focus?.type;
+      const focusId = this.focus?.id;
+      const hoverId = this.hover?.id;
       const routeTypeFilter = this.routeTypeFilter;
       for (const [routeId, route] of this.routes.entries()) {
-        if (focusedId !== undefined) {
-          if (routeId === focusedId) {
-            if (focusType === 'click') {
-              this._showLayers(route.line);
-              this._hideLayers(route.marker);
-            } else {
-              this._showLayers(route.line, route.marker);
-            }
+        const type = route.info.type;
+        if (!routeTypeFilter[type]) {
+          this._hideLayers(route.line, route.marker);
+          this._showLayers(route.fadeLine);
+          continue;
+        }
+
+        if (focusId) {
+          if (routeId === focusId) {
+            this._showLayers(route.line);
+            this._hideLayers(route.marker, route.fadeLine);
           } else {
-            this._hideLayers(route.line, route.marker);
+            this._showLayers(route.fadeLine);
+            this._hideLayers(route.marker, route.line);
           }
         } else {
-          const type = route.info.type;
-          if (routeTypeFilter[type]) {
-            this._showLayers(route.line, route.marker);
-          } else {
-            this._hideLayers(route.line, route.marker);
-          }
+          this._showLayers(route.line, route.marker);
+          this._hideLayers(route.fadeLine);
         }
       }
     }
