@@ -100,7 +100,6 @@ class Leaflet_Geojson_Shortcode extends Leaflet_Shortcode
 
         $options = $this->LM->json_sanitize($options, $args);
 
-        // XXX don't need to have a default, we'll just hard-code it.
         // set the default for onEachFeature
         ob_start();
 ?>

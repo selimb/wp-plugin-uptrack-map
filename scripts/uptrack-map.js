@@ -258,10 +258,10 @@
           // [mobile-mouse] For some reason these are fired on mobile, which prevents the `click` event.
           if (!L.Browser.mobile) {
             createdLayer.on('mouseover', (evt) => {
-              this.handleRouteMouseover(evt, routeId, createdLayer);
+              this.handleRouteLineMouseover(evt, routeId, createdLayer);
             });
             createdLayer.on('mouseout', (evt) => {
-              this.handleRouteMouseout(evt, routeId);
+              this.handleRouteLineMouseout(evt, routeId);
             });
           }
 
@@ -274,10 +274,10 @@
           // See [mobile-mouse].
           if (!L.Browser.mobile) {
             fadeLine.on('mouseover', (evt) => {
-              this.handleRouteMouseover(evt, routeId, fadeLine);
+              this.handleRouteLineMouseover(evt, routeId, fadeLine);
             });
             fadeLine.on('mouseout', (evt) => {
-              this.handleRouteMouseout(evt, routeId);
+              this.handleRouteLineMouseout(evt, routeId);
             });
           }
 
@@ -285,17 +285,20 @@
           if (marker) {
             this.map.addLayer(marker);
 
+            const popupOptions = UptrackMapManager.getPopupOptions(info);
+            marker.bindPopup(popupOptions.content ?? '', popupOptions);
+
             marker.on('click', (evt) => {
               this.handleRouteClick(evt, routeId);
             });
-            // TODO: Bind popup instead?
             // See [mobile-mouse].
             if (!L.Browser.mobile) {
+              const thisMarker = marker;
               marker.on('mouseover', (evt) => {
-                this.handleRouteMouseover(evt, routeId, createdLayer);
+                this.handleRouteMarkerMouseover(evt, routeId, thisMarker);
               });
               marker.on('mouseout', (evt) => {
-                this.handleRouteMouseout(evt, routeId);
+                this.handleRouteLineMouseout(evt, routeId);
               });
             }
           }
@@ -403,30 +406,53 @@
      * @param {RouteId} routeId
      * @param {L.Polyline} polyline
      */
-    handleRouteMouseover(evt, routeId, polyline) {
-      this.hoverRoute(
-        routeId,
-        this.map.layerPointToLatLng(polyline.closestLayerPoint(evt.layerPoint))
-      );
+    handleRouteLineMouseover(evt, routeId, polyline) {
+      this.hoverRoute(routeId, {
+        type: 'coord',
+        coord: this.map.layerPointToLatLng(
+          polyline.closestLayerPoint(evt.layerPoint)
+        ),
+      });
+    }
+
+    /**
+     * @param {L.LeafletMouseEvent} evt
+     * @param {RouteId} routeId
+     * @param {L.Marker} marker
+     */
+    handleRouteMarkerMouseover(evt, routeId, marker) {
+      this.hoverRoute(routeId, { type: 'marker', marker });
     }
 
     /**
      * @param {L.LeafletMouseEvent} evt
      * @param {RouteId} routeId
      */
-    handleRouteMouseout(evt, routeId) {
+    handleRouteLineMouseout(evt, routeId) {
       if (!this.hover) {
         return;
       }
-      // Avoid unfocusing if the mouse is moving into the popup.
-      const popup = this.hover.popup;
-      const relatedTarget = evt.originalEvent.relatedTarget;
-      if (relatedTarget instanceof HTMLElement) {
-        if (popup.getElement()?.contains(relatedTarget)) {
-          return;
-        }
-      }
+      // [popup-click]
+      // // Avoid unfocusing if the mouse is moving into the popup.
+      // const popup = this.hover.popup;
+      // const relatedTarget = evt.originalEvent.relatedTarget;
+      // if (relatedTarget instanceof HTMLElement) {
+      //   if (popup.getElement()?.contains(relatedTarget)) {
+      //     return;
+      //   }
+      // }
 
+      this.unhover();
+    }
+
+    /**
+     * @param {L.LeafletMouseEvent} evt
+     * @param {RouteId} routeId
+     */
+    handleRouteMarkerMouseout(evt, routeId, marker) {
+      if (!this.hover) {
+        return;
+      }
       this.unhover();
     }
 
@@ -484,9 +510,9 @@
 
     /**
      * @param {RouteId} routeId
-     * @param {L.LatLng} coord
+     * @param {{type: 'coord', coord: L.LatLng} | {type: 'marker', marker: L.Marker}} popupOption
      */
-    hoverRoute(routeId, coord) {
+    hoverRoute(routeId, popupOption) {
       if (this.focus?.id === routeId) {
         return;
       }
@@ -497,7 +523,25 @@
         return;
       }
 
-      const popup = this.renderHoverPopup(routeId, coord, route.info);
+      /** @type {L.Popup} */
+      let popup;
+      switch (popupOption.type) {
+        case 'coord': {
+          const { coord } = popupOption;
+          popup = this.renderHoverPopup(coord, route.info);
+          break;
+        }
+        case 'marker':
+          const { marker } = popupOption;
+          marker.openPopup();
+          const popup_ = marker.getPopup();
+          if (!popup_) {
+            throw new Error('Expected marker to have a popup');
+          }
+          popup = popup_;
+          break;
+      }
+      this.addPopupListeners(popup, routeId);
 
       if (route.endpoints === undefined) {
         route.endpoints = this.renderEndpointMarkers(route.coords);
@@ -559,25 +603,43 @@
     }
 
     /**
-     * @param {RouteId} routeId
      * @param {L.LatLng} coord
      * @param {RouteInfo} info
      */
-    renderHoverPopup(routeId, coord, info) {
-      const popup = L.popup(coord, {
+    renderHoverPopup(coord, info) {
+      const popup = L.popup(
+        coord,
+        UptrackMapManager.getPopupOptions(info)
+      ).addTo(this.map);
+      return popup;
+    }
+
+    /**
+     * @param {RouteInfo} info
+     * @returns {L.PopupOptions}
+     */
+    static getPopupOptions(info) {
+      return {
         closeButton: false,
         content: info.post_title,
         // "Higher" `y` offset (default is 7) so that the popup sits above the line.
         offset: [0, 2],
         className: 'uptrack-hover-popup',
-      }).addTo(this.map);
-      popup.getElement()?.addEventListener('click', () => {
-        this.focusRoute(routeId);
-      });
-      popup.getElement()?.addEventListener('mouseleave', () => {
-        this.unhover();
-      });
-      return popup;
+      };
+    }
+
+    /**
+     * @param {L.Popup} popup
+     * @param {RouteId} routeId
+     */
+    addPopupListeners(popup, routeId) {
+      // [popup-click]
+      // popup.getElement()?.addEventListener('click', () => {
+      //   this.focusRoute(routeId);
+      // });
+      // popup.getElement()?.addEventListener('mouseleave', () => {
+      //   this.unhover();
+      // });
     }
 
     /**
@@ -632,6 +694,7 @@
      * @param {UptrackRouteType} type
      */
     updateRouteTypeFilter(type) {
+      // XXX unfocus focused route if type is being disabled
       const typeEnabled = !this.routeTypeFilter[type];
       this.routeTypeFilter[type] = typeEnabled;
 

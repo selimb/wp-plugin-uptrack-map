@@ -72,5 +72,6 @@
  */
 .uptrack-hover-popup {
   font-weight: bold;
-  cursor: pointer;
+  /* [popup-click] */
+  /* cursor: pointer; */
 }
