@@ -38,7 +38,6 @@
 .uptrack-focus-card {
   /* Exactly the same as .leaflet-control-layers */
   box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-  background: white;
   border-radius: 5px;
 
   /* Inspired by https://leafletjs.com/examples/choropleth/ */
@@ -54,6 +53,10 @@
   bottom: 10px;
   z-index: 1000; /* Like in Leaflet Controls */
   pointer-events: auto;
+
+  background-color: #293243;
+  font-family: 'Open Sans';
+  color: white;
 }
 
 .uptrack-focus-card-header {
@@ -65,6 +68,7 @@
 
 .uptrack-focus-card-title {
   font-size: x-large;
+  text-transform: uppercase;
 }
 
 /*
@@ -72,6 +76,14 @@
  */
 .uptrack-hover-popup {
   font-weight: bold;
+  text-transform: uppercase;
   /* [popup-click] */
   /* cursor: pointer; */
+}
+
+/*
+ * Misc
+ */
+.hidden {
+  display: none !important;
 }

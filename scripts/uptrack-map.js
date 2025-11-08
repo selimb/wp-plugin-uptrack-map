@@ -694,7 +694,6 @@
      * @param {UptrackRouteType} type
      */
     updateRouteTypeFilter(type) {
-      // XXX unfocus focused route if type is being disabled
       const typeEnabled = !this.routeTypeFilter[type];
       this.routeTypeFilter[type] = typeEnabled;
 
@@ -708,8 +707,7 @@
       for (const [routeId, route] of this.routes.entries()) {
         const type = route.info.type;
         if (!routeTypeFilter[type]) {
-          this._hideLayers(route.line, route.marker);
-          this._showLayers(route.fadeLine);
+          this._hideLayers(route.line, route.marker, route.fadeLine);
           continue;
         }
 
@@ -827,9 +825,15 @@
      */
     disableInputs(disabled) {
       const container = this.getContainer();
-      container?.querySelectorAll('input').forEach((input) => {
-        input.disabled = disabled;
-      });
+      if (disabled) {
+        container?.classList.add('hidden');
+      } else {
+        container?.classList.remove('hidden');
+      }
+
+      // container?.querySelectorAll('input').forEach((input) => {
+      //   input.disabled = disabled;
+      // });
     }
 
     _checkDisabledLayers() {
