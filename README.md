@@ -1,4 +1,6 @@
-# Leaflet Map WordPress Plugin
+# Uptrack Map Plugin
+
+XXX
 
 ![Leaflet](https://img.shields.io/badge/leaflet-1.7.1-green.svg?style=flat)
 ![WordPress](https://img.shields.io/badge/wordpress-5.6.1-green.svg?style=flat)
@@ -125,7 +127,7 @@ However, you can also just give it an address, and the chosen geocoder (default:
 | `min_zoom`                   | 0                                                |
 | `max_zoom`                   | 20                                               |
 | `subdomains`                 | abc                                              |
-| `attribution`                | ©Leaflet ©OpenStreetMap                          |
+| `attribution`                | ©Leaflet ©OpenStreetMap                        |
 | `closepopuponclick`          | false                                            |
 | `trackresize`                | false                                            |
 | `boxZoom`                    | true                                             |
@@ -171,7 +173,7 @@ Then in the console, check the coordinates when you move the marker (should only
 | `doubleclickzoom` | 0 (false)                        |
 | `min_zoom`        | 0                                |
 | `max_zoom`        | 20                               |
-| `attribution`     | ©Leaflet ©OpenStreetMap          |
+| `attribution`     | ©Leaflet ©OpenStreetMap        |
 | `x`               | 0                                |
 | `y`               | 0                                |
 
@@ -203,7 +205,7 @@ leaflet: EPSG:3857 and EPSG:4326).
 | `doubleclickzoom` | 0 (false)                                  |
 | `min_zoom`        | 0                                          |
 | `max_zoom`        | 20                                         |
-| `attribution`     | ©Leaflet ©OpenStreetMap                    |
+| `attribution`     | ©Leaflet ©OpenStreetMap                  |
 | `lat`             | 0                                          |
 | `lng`             | 0                                          |
 
@@ -395,7 +397,7 @@ function fs_leaflet_loaded() {
 (function () {
   function main() {
     if (!window.WPLeafletMapPlugin) {
-      console.log('no plugin found!');
+      console.log("no plugin found!");
       return;
     }
 
@@ -417,7 +419,7 @@ function fs_leaflet_loaded() {
     }
   }
 
-  window.addEventListener('load', main);
+  window.addEventListener("load", main);
 })();
 ```
 

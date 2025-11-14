@@ -42,14 +42,14 @@ code {
   padding: 1em;
 }
 
-.input-group input[type='number'],
-.input-group input[type='text'],
+.input-group input[type="number"],
+.input-group input[type="text"],
 .input-group textarea,
 .input-group select {
   width: 100%;
 }
 
-.input-group input[type='checkbox'] {
+.input-group input[type="checkbox"] {
   margin: 1.34em;
   margin-right: 0;
   float: right;

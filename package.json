@@ -1,40 +1,32 @@
 {
-  "name": "wp-plugin-leaflet-map",
+  "name": "wp-plugin-uptrack-map",
   "private": true,
-  "version": "3.4.2",
-  "description": "Leaflet Map WordPress Plugin",
+  "version": "0.0",
+  "description": "Uptrack Map Wordpress Plugin",
+  "type": "module",
   "scripts": {
-    "start": "docker compose up && exit 0",
-    "restart": "npm run destroy && npm start",
-    "destroy": "docker compose down -v",
-    "wordpress": "docker compose run wordpress bash",
-    "cli": "docker compose run cli sh",
-    "translate": "cd ./languages && sudo php ../../wp-trunk/tools/i18n/makepot.php wp-plugin ../",
-    "changes": "VERSION=$(npm pkg get version | tr -d '\"') && git log v${VERSION}..HEAD --oneline",
-    "test": "jest",
-    "minify": "rm -rf ./scripts/*.min.js; for file in ./scripts/*.js; do esbuild --minify $file --outfile=\"./scripts/$(basename $file .js).min.js\"; done"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bozdoz/wp-plugin-leaflet-map.git"
-  },
-  "author": "Benjamin J DeLong <ben@bozdoz.com> (https://bozdoz.com)",
-  "license": "GPL-2.0",
-  "bugs": {
-    "url": "https://github.com/bozdoz/wp-plugin-leaflet-map/issues"
-  },
-  "homepage": "https://github.com/bozdoz/wp-plugin-leaflet-map#readme",
-  "prettier": {
-    "tabWidth": 2,
-    "semi": true,
-    "singleQuote": true
-  },
-  "jest": {
-    "testEnvironment": "jsdom"
+    "tsc": "tsc",
+    "prettier": "prettier . --check",
+    "prettier:fix": "prettier . --write",
+    "eslint": "eslint . --max-warnings=0",
+    "eslint:fix": "npm run eslint -- --fix",
+    "lint": "npm run prettier && npm run tsc && npm run eslint",
+    "lint:fix": "npm run prettier:fix && npm run eslint:fix"
   },
   "devDependencies": {
-    "esbuild": "^0.25.2",
-    "jest": "^27.0.5",
-    "prettier": "^2.3.2"
+    "@eslint/compat": "^1.4.1",
+    "@eslint/js": "^9.39.1",
+    "@types/bun": "^1.3.2",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.46.4"
+  },
+  "dependencies": {
+    "geojson": "^0.5.0",
+    "leaflet": "^1.9.4"
   }
 }

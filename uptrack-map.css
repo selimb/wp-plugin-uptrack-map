@@ -37,7 +37,7 @@
  */
 .uptrack-focus-card {
   /* Exactly the same as .leaflet-control-layers */
-  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
   border-radius: 5px;
 
   /* Inspired by https://leafletjs.com/examples/choropleth/ */
@@ -55,7 +55,7 @@
   pointer-events: auto;
 
   background-color: #293243;
-  font-family: 'Open Sans';
+  font-family: "Open Sans";
   color: white;
 }
 

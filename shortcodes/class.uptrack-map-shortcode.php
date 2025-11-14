@@ -91,6 +91,7 @@ class Uptrack_Map_Shortcode extends Leaflet_Shortcode
 ?>/*<script>
     */
     const data = <?php echo json_encode($data); ?>;
+    // See [sync-UptrackMapPlugin].
     window.UptrackMapPlugin.render(data);
 
     <?php
