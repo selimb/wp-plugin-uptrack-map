@@ -294,21 +294,21 @@ class Leaflet_Map_Plugin_Option
                                 } else {
                                     ?>
                                     <tr>
-                                        <td colspan="2">No KML files found in: <?php echo htmlspecialchars($full_path); ?></td>
+                                        <td colspan="7">No KML files found in: <?php echo htmlspecialchars($full_path); ?></td>
                                     </tr>
                                 <?php
                                 }
                             } else {
                                 ?>
                                 <tr>
-                                    <td colspan="2">KML directory not found: <?php echo htmlspecialchars($full_path); ?></td>
+                                    <td colspan="7">KML directory not found: <?php echo htmlspecialchars($full_path); ?></td>
                                 </tr>
                             <?php
                             }
                         } else {
                             ?>
                             <tr>
-                                <td colspan="2">KML directory not set</td>
+                                <td colspan="7">KML directory not set</td>
                             </tr>
                         <?php
                         }
