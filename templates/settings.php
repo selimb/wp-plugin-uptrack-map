@@ -63,7 +63,6 @@ $version = $plugin_data['Version'];
                     $form[$name] = isset($_POST[$name]) ? 1 : 0;
                 }
 
-
                 $value = trim(stripslashes($form[$name]));
 
                 $settings->set($name, $value);
