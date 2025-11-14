@@ -5,4 +5,5 @@ node_modules/
 kml-paths/
 
 # output
-dist/
+dist/*
+!dist/.gitkeep

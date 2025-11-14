@@ -1,27 +1,20 @@
 <?php
 
-/**
- * KML/KMZ Shortcode
- *
- * Use with [uptrack-map]
- *
- * @category Shortcode
- * @author   Selim Belhaouane <selim.belhaouane@gmail.com>
- */
+namespace Uptrack;
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
     exit;
 }
 
-require_once LEAFLET_MAP__PLUGIN_DIR . 'shortcodes/class.shortcode.php';
-require_once LEAFLET_MAP__PLUGIN_DIR . 'shortcodes/class.geojson-shortcode.php';
 
-class Uptrack_Map_Shortcode extends Leaflet_Shortcode
+class UptrackMapShortCode
 {
-    /**
-     * Get uptrack map shortcode
-     */
+    public static function render()
+    {
+        return "hello world";
+    }
+
     protected function getHTML($atts = '', $content = null)
     {
         wp_register_style('uptrack_map_stylesheet', plugins_url('uptrack-map.css', LEAFLET_MAP__PLUGIN_FILE));

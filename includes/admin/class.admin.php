@@ -1,14 +1,5 @@
 <?php
 
-/**
- * Used to generate an admin for Leaflet Map
- *
- * PHP Version 5.5
- *
- * @category Admin
- * @author   Benjamin J DeLong <ben@bozdoz.com>
- */
-
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
     exit;

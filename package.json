@@ -5,13 +5,22 @@
   "description": "Uptrack Map Wordpress Plugin",
   "type": "module",
   "scripts": {
+    "docker:bash": "docker compose exec wordpress bash",
+    "clean": "bun ./scripts/build.ts",
+    "build": "bun ./scripts/build.ts",
+    "build:watch": "bun ./scripts/build.ts --watch",
+    "build:prod": "bun ./scripts/build.ts --prod",
     "tsc": "tsc",
     "prettier": "prettier . --check",
     "prettier:fix": "prettier . --write",
     "eslint": "eslint . --max-warnings=0",
-    "eslint:fix": "npm run eslint -- --fix",
-    "lint": "npm run prettier && npm run tsc && npm run eslint",
-    "lint:fix": "npm run prettier:fix && npm run eslint:fix"
+    "eslint:fix": "bun run eslint -- --fix",
+    "lint": "bun run prettier && bun run tsc && bun run eslint",
+    "lint:fix": "bun run prettier:fix && bun run eslint:fix"
+  },
+  "dependencies": {
+    "geojson": "^0.5.0",
+    "leaflet": "^1.9.4"
   },
   "devDependencies": {
     "@eslint/compat": "^1.4.1",
@@ -23,10 +32,8 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unicorn": "^62.0.0",
     "prettier": "^3.6.2",
+    "rollup": "^4.53.2",
+    "rollup-plugin-esbuild": "^6.2.1",
     "typescript-eslint": "^8.46.4"
-  },
-  "dependencies": {
-    "geojson": "^0.5.0",
-    "leaflet": "^1.9.4"
   }
 }

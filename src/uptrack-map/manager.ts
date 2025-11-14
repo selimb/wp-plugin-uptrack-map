@@ -1,4 +1,4 @@
-import geojson from "geojson";
+import type geojson from "geojson";
 import L from "leaflet";
 
 import { err, log } from "../logging";
