@@ -852,9 +852,9 @@
   </div>
   <div>
     <ul>
-      <li> <span>Duration:</span>  <span data-target="distance"></span>  <span>days</span> </li>
-      <li> <span>Distance:</span>  <span data-target="elevation"></span> <span>km</span> </li>
-      <li> <span>Elevation:</span> <span data-target="duration"></span> <span>m</span> </li>
+      <li> <span>Duration:</span>  <span data-target="duration"></span>  <span>days</span> </li>
+      <li> <span>Distance:</span>  <span data-target="distance"></span> <span>km</span> </li>
+      <li> <span>Elevation:</span> <span data-target="elevation"></span> <span>m</span> </li>
     </ul>
   <div>
 </div>
