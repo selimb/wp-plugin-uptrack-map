@@ -1,5 +1,7 @@
 # CONTRIBUTING
 
+This plugin does **not** leverage [@wordpress/scripts](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-scripts/#build) -- I know my way around Typescript but I'm new to Wordpress.
+
 ## Prerequisites
 
 - [Bun](https://bun.com/) -- see [.tool-versions](./.tool-versions) for version

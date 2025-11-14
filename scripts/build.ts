@@ -7,7 +7,7 @@ import { parseArgs } from "node:util";
 import * as rollup from "rollup";
 import esbuild from "rollup-plugin-esbuild";
 
-const DIST_DIR = "dist";
+const OUT_DIR = "build";
 
 // eslint-disable-next-line no-console -- Need to log somehow!
 const log = console.info;
@@ -15,12 +15,12 @@ const log = console.info;
 async function clean(): Promise<void> {
   log("cleaning...");
   // See [keep-dist].
-  const children = new Set(await fsp.readdir(DIST_DIR));
+  const children = new Set(await fsp.readdir(OUT_DIR));
   children.delete(".gitkeep");
 
   await Promise.all(
     [...children].map(async (child) => {
-      await fsp.rm(path.join(DIST_DIR, child), {
+      await fsp.rm(path.join(OUT_DIR, child), {
         recursive: true,
         force: true,
       });
@@ -29,7 +29,7 @@ async function clean(): Promise<void> {
 }
 
 const JS_SRC_DIR = "src";
-const JS_DIST_DIR = path.join(DIST_DIR, "js");
+const JS_OUT_DIR = path.join(OUT_DIR, "js");
 const JS_ENTRYPOINTS = {
   "src/admin.ts": "admin",
   "src/uptrack-map/index.ts": "uptrack-map",
@@ -48,7 +48,7 @@ async function buildJs(): Promise<void> {
       external: ["leaflet", "geojson"],
     });
 
-    const dst = path.join(JS_DIST_DIR, `${dstBasename}.js`);
+    const dst = path.join(JS_OUT_DIR, `${dstBasename}.js`);
     await bundle.write({
       file: dst,
       format: "iife",
@@ -57,27 +57,16 @@ async function buildJs(): Promise<void> {
       },
     });
     await bundle.close();
-    // await Bun.build({
-    //   entrypoints: [src],
-    //   outdir: JS_DIST_DIR,
-    //   target: "browser",
-    //   format: "iife",
-    //   naming: `[dir]/${dst}.[ext]`,
-    //   splitting: false,
-    //   sourcemap: args.values.prod ? true : false,
-    //   minify: args.values.prod ? true : false,
-    //   packages: "external",
-    // });
   }
 }
 
 const CSS_SRC_DIR = "css";
-const CSS_DIST_DIR = path.join(DIST_DIR, "css");
+const CSS_OUT_DIR = path.join(OUT_DIR, "css");
 
 async function buildCss(): Promise<void> {
   log("building css...");
   const src = CSS_SRC_DIR;
-  const dst = CSS_DIST_DIR;
+  const dst = CSS_OUT_DIR;
   await fsp.mkdir(dst, { recursive: true });
   for (const name of await fsp.readdir(src)) {
     await fsp.cp(path.join(src, name), path.join(dst, name));
@@ -85,13 +74,13 @@ async function buildCss(): Promise<void> {
 }
 
 // TODO: Do we need a README?
-const WP_SRC_PATHS = ["includes", "index.php", "uptrack-map.php"];
+const WP_SRC_PATHS = ["includes", "uptrack-map.php"];
 
 /** PHP + metadata */
 async function buildWordpress(): Promise<void> {
   log("building PHP...");
   for (const src of WP_SRC_PATHS) {
-    const dst = path.join(DIST_DIR, path.basename(src));
+    const dst = path.join(OUT_DIR, path.basename(src));
     await fsp.cp(src, dst, { recursive: true });
   }
 }
