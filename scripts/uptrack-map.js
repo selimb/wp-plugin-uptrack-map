@@ -1080,7 +1080,6 @@
       if (!this.dragState) {
         return;
       }
-      window.alert('touch cancel');
       this._updateDrag(undefined);
     };
 
