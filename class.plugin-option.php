@@ -100,10 +100,11 @@ class Leaflet_Map_Plugin_Option
      *
      * @param string $name  widget name
      * @param varies $value widget value
+     * @param Leaflet_Map_Plugin_Settings $settings all settings
      *
      * @return HTML
      */
-    function widget($name, $value)
+    function widget($name, $value, $settings)
     {
         switch ($this->type) {
             case 'text':
@@ -170,6 +171,150 @@ class Leaflet_Map_Plugin_Option
                     }
                     ?>
                 </select>
+            <?php
+                break;
+
+            case 'kml_map_table':
+            ?>
+                <table class="widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>KML File</th>
+                            <th>Blog Post</th>
+                            <th>Type</th>
+                            <th>Marker Distance (%)</th>
+                            <th>Distance (km)</th>
+                            <th>Elevation (m)</th>
+                            <th>Duration (days)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $kml_directory = $settings->get('uptrack_kml_directory');
+                        if ($kml_directory) {
+                            $full_path = WP_CONTENT_DIR . '/' . ltrim($kml_directory, '/');
+                            // Get all published posts
+                            $posts = get_posts(array(
+                                'numberposts' => -1,
+                                'post_type' => 'post'
+                            ));
+                            if (is_dir($full_path)) {
+                                $files = glob($full_path . '/*.kml');
+                                if ($files) {
+                                    sort($files);
+                                    foreach ($files as $file) {
+                                        $filename = basename($file);
+                                        $base_input_name = $name . '[' . htmlspecialchars($filename) . ']';
+
+                                        $blog_post_input = $base_input_name . '[post_id]';
+                                        $blog_post_value = $value[$filename]["post_id"] ?? '';
+
+                                        $type_input = $base_input_name . '[type]';
+                                        $type_value = $value[$filename]["type"] ?? 'ski_touring';
+
+                                        $marker_distance_percent_input = $base_input_name . '[marker_distance_percent]';
+                                        $marker_distance_percent_value = $value[$filename]["marker_distance_percent"] ?? "0";
+
+                                        $distance_input = $base_input_name . '[distance_km]';
+                                        $distance_value = $value[$filename]["distance_km"] ?? "0";
+
+                                        $elevation_input = $base_input_name . '[elevation_m]';
+                                        $elevation_value = $value[$filename]["elevation_m"] ?? "0";
+
+                                        $duration_input = $base_input_name . '[duration_d]';
+                                        $duration_value = $value[$filename]["duration_d"] ?? "0";
+                        ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($filename); ?></td>
+                                            <td>
+                                                <select name="<?php echo $blog_post_input; ?>" class="required">
+                                                    <option value=""></option>
+                                                    <?php
+                                                    foreach ($posts as $post) {
+                                                        $selected = $blog_post_value == $post->ID ? ' selected' : '';
+                                                    ?>
+                                                        <option value="<?php echo $post->ID; ?>" <?php echo $selected; ?>>
+                                                            <?php echo htmlspecialchars($post->post_title); ?>
+                                                        </option>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select name="<?php echo $type_input; ?>">
+                                                    <?php
+                                                    // [sync-uptrack-RouteType]
+                                                    foreach (["ski_touring", "mountaineering", "hiking"] as $type) {
+                                                        $selected = $type_value == $type ? ' selected' : '';
+                                                    ?>
+                                                        <option value="<?php echo $type; ?>" <?php echo $selected; ?>>
+                                                            <?php echo $type; ?>
+                                                        </option>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                </select>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="-1"
+                                                    max="100"
+                                                    step="1"
+                                                    name="<?php echo htmlspecialchars($marker_distance_percent_input); ?>"
+                                                    value="<?php echo htmlspecialchars($marker_distance_percent_value); ?>" />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    name="<?php echo htmlspecialchars($distance_input); ?>"
+                                                    value="<?php echo htmlspecialchars($distance_value); ?>" />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    name="<?php echo htmlspecialchars($elevation_input); ?>"
+                                                    value="<?php echo htmlspecialchars($elevation_value); ?>" />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    name="<?php echo htmlspecialchars($duration_input); ?>"
+                                                    value="<?php echo htmlspecialchars($duration_value); ?>" />
+                                            </td>
+                                        </tr>
+                                    <?php
+                                    }
+                                } else {
+                                    ?>
+                                    <tr>
+                                        <td colspan="7">No KML files found in: <?php echo htmlspecialchars($full_path); ?></td>
+                                    </tr>
+                                <?php
+                                }
+                            } else {
+                                ?>
+                                <tr>
+                                    <td colspan="7">KML directory not found: <?php echo htmlspecialchars($full_path); ?></td>
+                                </tr>
+                            <?php
+                            }
+                        } else {
+                            ?>
+                            <tr>
+                                <td colspan="7">KML directory not set</td>
+                            </tr>
+                        <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
             <?php
                 break;
             default:

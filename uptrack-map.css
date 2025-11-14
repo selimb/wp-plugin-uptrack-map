@@ -1,0 +1,89 @@
+/*
+ * Legend
+ */
+.leaflet-control-layers-selector {
+  /* hide native checkbox */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #999;
+  margin-right: 6px;
+  vertical-align: middle;
+  cursor: pointer;
+
+  border-color: currentColor;
+}
+
+.leaflet-control-layers-selector:checked {
+  background-color: currentColor;
+}
+
+.leaflet-control-layers-selector:focus {
+  outline: none;
+}
+
+.uptrack-legend-text {
+  text-transform: uppercase;
+  font-weight: bold;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/*
+ * Focus Card
+ */
+.uptrack-focus-card {
+  /* Exactly the same as .leaflet-control-layers */
+  box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  border-radius: 5px;
+
+  /* Inspired by https://leafletjs.com/examples/choropleth/ */
+  padding: 6px 8px;
+
+  /** For the dragging effect */
+  touch-action: none;
+
+  /* Positioning */
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1000; /* Like in Leaflet Controls */
+  pointer-events: auto;
+
+  background-color: #293243;
+  font-family: 'Open Sans';
+  color: white;
+}
+
+.uptrack-focus-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.uptrack-focus-card-title {
+  font-size: x-large;
+  text-transform: uppercase;
+}
+
+/*
+ * Hover Popup
+ */
+.uptrack-hover-popup {
+  font-weight: bold;
+  text-transform: uppercase;
+  /* [popup-click] */
+  /* cursor: pointer; */
+}
+
+/*
+ * Misc
+ */
+.hidden {
+  display: none !important;
+}

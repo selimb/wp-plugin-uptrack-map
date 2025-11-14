@@ -83,6 +83,10 @@ class Leaflet_Map
             'file' => 'class.video-overlay-shortcode.php',
             'class' => 'Leaflet_Video_Overlay_Shortcode'
         ),
+        'uptrack-map' => array(
+            'file' => 'class.uptrack-map-shortcode.php',
+            'class' => 'Uptrack_Map_Shortcode'
+        )
     );
 
     /**
@@ -218,6 +222,7 @@ class Leaflet_Map
         }
 
         wp_register_script('leaflet_ajax_geojson_js', plugins_url(sprintf('scripts/leaflet-ajax-geojson%s.js', $minified), __FILE__), array('tmcw_togeojson', 'leaflet_js'), LEAFLET_MAP__PLUGIN_VERSION, false);
+        wp_register_script('uptrack_map_js', plugins_url(sprintf('scripts/uptrack-map%s.js', $minified), __FILE__), array('leaflet_ajax_geojson_js'), LEAFLET_MAP__PLUGIN_VERSION, false);
 
         wp_register_script('leaflet_svg_icon_js', plugins_url(sprintf('scripts/leaflet-svg-icon%s.js', $minified), __FILE__), array('leaflet_js'), LEAFLET_MAP__PLUGIN_VERSION, false);
 

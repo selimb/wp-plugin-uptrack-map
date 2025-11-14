@@ -50,14 +50,23 @@ $version = $plugin_data['Version'];
         foreach ($settings->options as $name => $option) {
             if (!$option->type) continue;
 
-            /* checkboxes don't get sent if not checked */
-            if ($option->type === 'checkbox') {
-                $form[$name] = isset($_POST[$name]) ? 1 : 0;
+            if ($option->type === 'kml_map_table') {
+                foreach ($form[$name] as $rowKey => $rowData) {
+                    foreach ($rowData as $colKey => $colValue) {
+                        $form[$name][$rowKey][$colKey] = trim(stripslashes($colValue));
+                    }
+                }
+                $settings->set($name, $form[$name]);
+            } else {
+                /* checkboxes don't get sent if not checked */
+                if ($option->type === 'checkbox') {
+                    $form[$name] = isset($_POST[$name]) ? 1 : 0;
+                }
+
+                $value = trim(stripslashes($form[$name]));
+
+                $settings->set($name, $value);
             }
-
-            $value = trim(stripslashes($form[$name]));
-
-            $settings->set($name, $value);
         }
         ?>
         <div class="notice notice-success is-dismissible">
@@ -118,14 +127,23 @@ $version = $plugin_data['Version'];
                     if (!$option->type) continue;
                 ?>
                     <div class="container">
-                        <label>
+                        <?php if ($option->type == 'kml_map_table'): ?>
                             <span class="label"><?php echo $option->display_name; ?></span>
                             <span class="input-group">
                                 <?php
-                                $option->widget($name, $settings->get($name));
+                                $option->widget($name, $settings->get($name), $settings);
                                 ?>
                             </span>
-                        </label>
+                        <?php else: ?>
+                            <label <?php echo $html_for ?>>
+                                <span class="label"><?php echo $option->display_name; ?></span>
+                                <span class="input-group">
+                                    <?php
+                                    $option->widget($name, $settings->get($name), $settings);
+                                    ?>
+                                </span>
+                            </label>
+                        <?php endif; ?>
 
                         <?php
                         if ($option->helptext) {

@@ -61,7 +61,7 @@ code {
   float: right;
 }
 
-/* 
+/*
 * For Flexbox Support
 */
 
@@ -115,4 +115,19 @@ p {
 
 .examples .leaflet-container {
   height: 250px !important;
+}
+
+/* Uptrack Settings */
+.input-group table select {
+  margin: 0;
+}
+
+.input-group table input {
+  padding: 0;
+  padding-left: 4px;
+}
+
+/* Relies on [select-required]. */
+select.invalid {
+  border: 2px solid red;
 }
