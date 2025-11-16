@@ -47,7 +47,7 @@ class Settings
                 ]
             ],
             'autoload' => 'no',
-            'default' => null,
+            'default' => [],
         ]);
     }
 

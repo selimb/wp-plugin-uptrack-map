@@ -1,17 +1,48 @@
+import type geojson from "geojson";
 import type L from "leaflet";
 
+import { log } from "../logging";
 import { UptrackMapManager } from "./manager";
 import type { RouteInfo } from "./types";
 
-function renderUptrackMap(data: RouteInfo[]): void {
-  // @ts-expect-error -- See below.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Modules like it's 1999.
-  const map: L.Map = window.WPLeafletMapPlugin.getCurrentMap();
+// SYNC [UptrackMapShortcodeInput]
+type UptrackMapShortcodeInput = RouteInfo[];
 
-  const mgr = new UptrackMapManager(map);
-  void mgr.loadRoutes(data);
+// Modules like it's 1999.
+declare global {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Need interface augmentation.
+  interface Window {
+    WPLeafletMapPlugin: {
+      getCurrentMap(): L.Map | undefined;
+      push(callback: () => void): void;
+    };
+
+    // Requires [wp-leaflet-toGeoJSON]
+    toGeoJSON: {
+      kml(xml: Document): geojson.GeoJSON;
+    };
+  }
 }
 
-// SYNC [sync-UptrackMapPlugin]
+function renderUptrackMap(input: UptrackMapShortcodeInput): void {
+  // [require-wp-leaflet-map]
+  const map = window.WPLeafletMapPlugin.getCurrentMap();
+
+  if (!map) {
+    log("error", "No Leaflet map instance found");
+    return;
+  }
+
+  const mgr = new UptrackMapManager(map);
+  void mgr.loadRoutes(input);
+}
+
+// SYNC [UptrackMapPlugin]
 // @ts-expect-error -- Good enough.
-window.UptrackMapPlugin = { render: renderUptrackMap };
+window.UptrackMapPlugin = {
+  render(input: UptrackMapShortcodeInput) {
+    window.WPLeafletMapPlugin.push(() => {
+      renderUptrackMap(input);
+    });
+  },
+};

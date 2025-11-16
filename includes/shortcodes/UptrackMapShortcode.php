@@ -12,84 +12,133 @@ class UptrackMapShortCode
 {
     public static function render()
     {
-        return "hello world";
+        $settings = Settings::get_settings();
+        $kml_directory = $settings[Settings::$SETTING_KML_DIRECTORY];
+        $routes = $settings[Settings::$SETTING_ROUTES];
+
+        $post_map = self::collect_posts($routes);
+        $data = self::prepare_data($kml_directory, $routes, $post_map);
+        self::enqueue_assets($data);
+
+        return "";
     }
 
-    protected function getHTML($atts = '', $content = null)
+    private static function collect_posts($routes)
     {
-        wp_register_style('uptrack_map_stylesheet', plugins_url('uptrack-map.css', LEAFLET_MAP__PLUGIN_FILE));
-        wp_enqueue_style('uptrack_map_stylesheet');
+        global $wpdb;
 
-        wp_enqueue_script('leaflet_ajax_geojson_js');
-        wp_enqueue_script('uptrack_map_js');
-
-        $settings = Leaflet_Map_Plugin_Settings::init();
-        $kml_directory = $settings->get('uptrack_kml_directory');
-        $map_table = $settings->get('uptrack_map_table');
-
-        if (empty($kml_directory) || empty($map_table)) {
-            return '<p>Error: uptrack_kml_directory or uptrack_map_table options not configured.</p>';
+        if (empty($routes)) {
+            return [];
         }
 
-        // Collect posts.
+        // Collect post IDs.
         $post_ids = [];
-        foreach ($map_table as $filename => $info) {
-            $post_id = $info["post_id"];
+        foreach ($routes as $info) {
+            $post_id = $info["postId"];
             $post_ids[] = $post_id;
         }
-        $posts = get_posts([
-            'post__in' => $post_ids,
-            'numberposts' => -1
-        ]);
+
+        // Query posts.
+        $posts = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT ID, post_title, post_status
+                 FROM {$wpdb->posts}
+                 WHERE ID IN (" . implode(',', array_fill(0, count($post_ids), '%d')) . ")",
+                ...$post_ids
+            )
+        );
+
+        // Map by ID.
         $post_map = [];
         foreach ($posts as $post) {
             $post_map[$post->ID] = $post;
         }
 
+        return $post_map;
+    }
+
+    private static function prepare_data($kml_directory, $routes, $post_map)
+    {
         $data = [];
-        foreach ($map_table as $filename => $info) {
+        foreach ($routes as $info) {
+            // SYNC [UptrackRoutesSettingItem].
+            $filename = $info["kmlFilename"];
+            $post_id = $info["postId"];
+            $type = $info["type"];
+            $marker = $info["marker"];
+            $distance = $info["distance"];
+            $elevation = $info["elevation"];
+            $duration = $info["duration"];
+
             $relative_path = $kml_directory . '/' . $filename;
             $file_path = WP_CONTENT_DIR . '/' . $relative_path;
             if (!file_exists($file_path)) {
-                echo '<p>Error: File ' . htmlspecialchars($file_path) . ' does not exist.</p>';
                 continue;
             }
-            $kml_url = content_url($relative_path);
+            $kml_url = \content_url($relative_path);
 
-            $post_id = $info["post_id"];
             if (empty($post_id)) {
                 $post_title = '';
                 $post_url = '';
             } else {
                 $post = $post_map[$post_id];
+                if ($post->post_status !== 'publish') {
+                    continue;
+                }
+
                 $post_title = $post->post_title;
-                $post_url = get_permalink($post);
+                $post_url = \get_permalink($post);
             }
 
-            // [sync-uptrack-RouteInfo]
+            // SYNC [RouteInfo].
             $data[] = [
                 'id' => $filename,
-                'kml_url' => $kml_url,
-                'type' => $info["type"],
-                'marker_distance_percent' => (float)$info["marker_distance_percent"],
-                'post_url' => $post_url,
-                'post_title' => $post_title,
-                'distance_km' => (float)$info["distance_km"],
-                'elevation_m' => (float)$info["elevation_m"],
-                'duration_d' => (float)$info["duration_d"],
+                'kmlUrl' => $kml_url,
+                'type' => $type,
+                'marker' => $marker,
+                'postUrl' => $post_url,
+                'postTitle' => $post_title,
+                'distance' => $distance,
+                'elevation' => $elevation,
+                'duration' => $duration,
             ];
         }
+        return $data;
+    }
 
-        ob_start();
-?>/*<script>
-    */
-    const data = <?php echo json_encode($data); ?>;
-    // See [sync-UptrackMapPlugin].
-    window.UptrackMapPlugin.render(data);
+    private static function enqueue_assets($data)
+    {
+        $version    = UPTRACK_MAP__PLUGIN_VERSION;
 
-    <?php
-        $script = ob_get_clean();
+        // [require-wp-leaflet-map] [wp-leaflet-toGeoJSON]
+        \wp_enqueue_script('leaflet_ajax_geojson_js');
 
-        return $this->wrap_script($script, 'UptrackMapShortcode');
+        $script_name = 'uptrack-map';
+        $script_url = \plugins_url('js/uptrack-map.js', UPTRACK_MAP__PLUGIN_FILE);
+        \wp_register_script(
+            $script_name,
+            $script_url,
+            [],
+            $version,
+            true
+        );
+        \wp_enqueue_script($script_name);
+        // SYNC [UptrackMapShortcodeInput]
+        $input = \wp_json_encode($data, JSON_UNESCAPED_SLASHES);
+        \wp_add_inline_script(
+            $script_name,
+            // SYNC [UptrackMapPlugin]
+            'window.UptrackMapPlugin.render(' . $input . ')',
+        );
+
+        $css_name = 'uptrack-map';
+        $css_url = \plugins_url('css/uptrack-map.css', UPTRACK_MAP__PLUGIN_FILE);
+        \wp_register_style(
+            $css_name,
+            $css_url,
+            [],
+            $version
+        );
+        \wp_enqueue_style($css_name);
     }
 }

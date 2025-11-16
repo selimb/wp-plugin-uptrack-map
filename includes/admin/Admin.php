@@ -36,10 +36,10 @@ class Admin
             return;
         }
 
-        $script_name = 'uptrack-map-admin';
-        $script_url = \plugins_url('js/admin.js', UPTRACK_MAP__PLUGIN_FILE);
         $version    = UPTRACK_MAP__PLUGIN_VERSION;
 
+        $script_name = 'uptrack-map-admin';
+        $script_url = \plugins_url('js/admin.js', UPTRACK_MAP__PLUGIN_FILE);
         \wp_register_script(
             $script_name,
             $script_url,
@@ -52,7 +52,7 @@ class Admin
             true
         );
 
-        $css_name = 'uptrack-map-admin-style';
+        $css_name = 'uptrack-map-admin';
         $css_url = \plugins_url('css/admin.css', UPTRACK_MAP__PLUGIN_FILE);
         \wp_register_style(
             $css_name,

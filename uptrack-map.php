@@ -1,7 +1,5 @@
 <?php
 
-namespace Uptrack;
-
 /**
  * Plugin Name: Uptrack Map
  * Author: selimb
@@ -12,6 +10,10 @@ namespace Uptrack;
  * Requires Plugins: leaflet-map
  */
 
+// NOTE: We require leaflet-map becuase of [require-wp-leaflet-map].
+
+namespace Uptrack;
+
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
@@ -21,7 +23,7 @@ if (!defined('ABSPATH')) {
 
 define('UPTRACK_MAP__PLUGIN_VERSION', '3.4.2');
 define('UPTRACK_MAP__PLUGIN_FILE', __FILE__);
-define('UPTRACK_MAP__PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('UPTRACK_MAP__PLUGIN_DIR', \plugin_dir_path(__FILE__));
 
 require_once UPTRACK_MAP__PLUGIN_DIR . 'includes/Settings.php';
 require_once UPTRACK_MAP__PLUGIN_DIR . 'includes/admin/Admin.php';

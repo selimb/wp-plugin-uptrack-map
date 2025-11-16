@@ -42,10 +42,15 @@ bun run build:prod
    docker compose up --detach
    ```
 
-2. Browse to http://localhost:1234, and go through the installation process.
-3. At http://localhost:1234/wp-admin/plugins.php, remove pre-installed plugins, and install/activate `Leaflet Map` and `Uptrack Map`.
-4. Create some posts matching the KML files.
-5. Configure routes at http://localhost:1234/wp-admin/options-general.php?page=uptrack-map-settings.
+2. Provision templates/pages/posts with:
+
+   ```shell
+   bun run docker:provision
+   ```
+
+3. Configure routes at http://localhost:1234/wp-admin/options-general.php?page=uptrack-map-settings.
+
+4. Head over to the Map!
 
 ## Wordpress Debugging
 

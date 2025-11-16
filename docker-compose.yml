@@ -13,11 +13,14 @@ services:
       - db:/var/lib/mysql
 
   wordpress:
-    image: wordpress:latest
+    build:
+      context: docker
+      dockerfile: wordpress.dockerfile
     depends_on:
       - db
     volumes:
       - wordpress:/var/www/html
+      - ./provision/:/var/www/provision/
       - ./build/:/var/www/html/wp-content/plugins/uptrack-map/
       - ./kml-paths:/var/www/html/wp-content/kml-paths
     ports:

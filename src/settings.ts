@@ -9,6 +9,7 @@ export type RouteType = z.infer<typeof zRouteType>;
 export const zMarkerCoords = z.tuple([z.number(), z.number()]);
 export type MarkerCoords = z.infer<typeof zMarkerCoords>;
 
+// SYNC [UptrackRoutesSettingItem]
 export const zUptrackRoutesSettingItem = z.object({
   kmlFilename: z.catch(zKmlFilename, ""),
   postId: z.catch(z.nullable(z.string()), null),
@@ -22,11 +23,11 @@ export type UptrackRoutesSettingItem = z.infer<
   typeof zUptrackRoutesSettingItem
 >;
 
-// [UptrackRoutesSetting]
+// SYNC [UptrackRoutesSetting]
 export const zUptrackRoutesSetting = z.array(zUptrackRoutesSettingItem);
 export type UptrackRoutesSetting = z.infer<typeof zUptrackRoutesSetting>;
 
-// Matches [uptrack-settings].
+// SYNC [uptrack-settings].
 export const zUptrackSettings = z.object({
   uptrack_kml_directory: z.string(),
   uptrack_routes: z.catch(zUptrackRoutesSetting, []),

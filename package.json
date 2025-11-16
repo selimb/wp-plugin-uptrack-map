@@ -5,7 +5,8 @@
   "description": "Uptrack Map Wordpress Plugin",
   "type": "module",
   "scripts": {
-    "docker:bash": "docker compose exec wordpress bash",
+    "docker:provision": "docker compose run --rm --user=www-data wordpress /var/www/provision/provision.sh",
+    "docker:bash": "docker compose exec --user=www-data wordpress bash",
     "clean": "bun ./scripts/build.ts",
     "build": "bun ./scripts/build.ts",
     "build:watch": "bun ./scripts/build.ts --watch",

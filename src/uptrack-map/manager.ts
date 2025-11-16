@@ -539,10 +539,6 @@ export class UptrackMapManager {
 
   static parseKml(kmlText: string): geojson.GeoJSON {
     const xml = new DOMParser().parseFromString(kmlText, "text/xml");
-    // XXX Verify
-    // Modules like it's 1999!
-    // @ts-expect-error -- Ditto.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Ditto.
     return window.toGeoJSON.kml(xml);
   }
 }
