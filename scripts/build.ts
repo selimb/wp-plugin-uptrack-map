@@ -17,7 +17,7 @@ const log = console.info;
 
 async function clean(): Promise<void> {
   log("cleaning...");
-  // See [keep-dist].
+  // See [keep-build].
   const children = new Set(await fsp.readdir(OUT_DIR));
   children.delete(".gitkeep");
 
