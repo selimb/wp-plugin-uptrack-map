@@ -3,10 +3,9 @@
 namespace Uptrack;
 
 // Exit if accessed directly
-if (!defined('ABSPATH')) {
-    exit;
+if (!defined("ABSPATH")) {
+    exit();
 }
-
 
 class UptrackMapShortCode
 {
@@ -43,9 +42,11 @@ class UptrackMapShortCode
             $wpdb->prepare(
                 "SELECT ID, post_title, post_status
                  FROM {$wpdb->posts}
-                 WHERE ID IN (" . implode(',', array_fill(0, count($post_ids), '%d')) . ")",
-                ...$post_ids
-            )
+                 WHERE ID IN (" .
+                    implode(",", array_fill(0, count($post_ids), "%d")) .
+                    ")",
+                ...$post_ids,
+            ),
         );
 
         // Map by ID.
@@ -70,19 +71,19 @@ class UptrackMapShortCode
             $elevation = $info["elevation"];
             $duration = $info["duration"];
 
-            $relative_path = $kml_directory . '/' . $filename;
-            $file_path = WP_CONTENT_DIR . '/' . $relative_path;
+            $relative_path = $kml_directory . "/" . $filename;
+            $file_path = WP_CONTENT_DIR . "/" . $relative_path;
             if (!file_exists($file_path)) {
                 continue;
             }
             $kml_url = \content_url($relative_path);
 
             if (empty($post_id)) {
-                $post_title = '';
-                $post_url = '';
+                $post_title = "";
+                $post_url = "";
             } else {
                 $post = $post_map[$post_id];
-                if ($post->post_status !== 'publish') {
+                if ($post->post_status !== "publish") {
                     continue;
                 }
 
@@ -92,15 +93,15 @@ class UptrackMapShortCode
 
             // SYNC [RouteInfo].
             $data[] = [
-                'id' => $filename,
-                'kmlUrl' => $kml_url,
-                'type' => $type,
-                'marker' => $marker,
-                'postUrl' => $post_url,
-                'postTitle' => $post_title,
-                'distance' => $distance,
-                'elevation' => $elevation,
-                'duration' => $duration,
+                "id" => $filename,
+                "kmlUrl" => $kml_url,
+                "type" => $type,
+                "marker" => $marker,
+                "postUrl" => $post_url,
+                "postTitle" => $post_title,
+                "distance" => $distance,
+                "elevation" => $elevation,
+                "duration" => $duration,
             ];
         }
         return $data;
@@ -108,37 +109,32 @@ class UptrackMapShortCode
 
     private static function enqueue_assets($data)
     {
-        $version    = UPTRACK_MAP__PLUGIN_VERSION;
+        $version = UPTRACK_MAP__PLUGIN_VERSION;
 
         // [require-wp-leaflet-map] [wp-leaflet-toGeoJSON]
-        \wp_enqueue_script('leaflet_ajax_geojson_js');
+        \wp_enqueue_script("leaflet_ajax_geojson_js");
 
-        $script_name = 'uptrack-map';
-        $script_url = \plugins_url('js/uptrack-map.js', UPTRACK_MAP__PLUGIN_FILE);
-        \wp_register_script(
-            $script_name,
-            $script_url,
-            [],
-            $version,
-            true
+        $script_name = "uptrack-map";
+        $script_url = \plugins_url(
+            "js/uptrack-map.js",
+            UPTRACK_MAP__PLUGIN_FILE,
         );
+        \wp_register_script($script_name, $script_url, [], $version, true);
         \wp_enqueue_script($script_name);
         // SYNC [UptrackMapShortcodeInput]
         $input = \wp_json_encode($data, JSON_UNESCAPED_SLASHES);
         \wp_add_inline_script(
             $script_name,
             // SYNC [UptrackMapPlugin]
-            'window.UptrackMapPlugin.render(' . $input . ')',
+            "window.UptrackMapPlugin.render(" . $input . ")",
         );
 
-        $css_name = 'uptrack-map';
-        $css_url = \plugins_url('css/uptrack-map.css', UPTRACK_MAP__PLUGIN_FILE);
-        \wp_register_style(
-            $css_name,
-            $css_url,
-            [],
-            $version
+        $css_name = "uptrack-map";
+        $css_url = \plugins_url(
+            "css/uptrack-map.css",
+            UPTRACK_MAP__PLUGIN_FILE,
         );
+        \wp_register_style($css_name, $css_url, [], $version);
         \wp_enqueue_style($css_name);
     }
 }
