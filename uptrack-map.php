@@ -10,7 +10,7 @@
  * Requires Plugins: leaflet-map
  */
 
-// NOTE: We require leaflet-map becuase of [require-wp-leaflet-map].
+// NOTE: We require leaflet-map because of [require-wp-leaflet-map].
 
 namespace Uptrack;
 
