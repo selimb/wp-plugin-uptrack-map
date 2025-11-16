@@ -18,7 +18,7 @@ services:
       - db
     volumes:
       - wordpress:/var/www/html
-      - ./dist/:/var/www/html/wp-content/plugins/uptrack-map/
+      - ./build/:/var/www/html/wp-content/plugins/uptrack-map/
       - ./kml-paths:/var/www/html/wp-content/kml-paths
     ports:
       - 1234:80

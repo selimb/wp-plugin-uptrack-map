@@ -4,6 +4,9 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 
+import commonjs from "@rollup/plugin-commonjs";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+import replace from "@rollup/plugin-replace";
 import * as rollup from "rollup";
 import esbuild from "rollup-plugin-esbuild";
 
@@ -31,32 +34,74 @@ async function clean(): Promise<void> {
 const JS_SRC_DIR = "src";
 const JS_OUT_DIR = path.join(OUT_DIR, "js");
 const JS_ENTRYPOINTS = {
-  "src/admin.ts": "admin",
+  "src/admin/admin.tsx": "admin",
   "src/uptrack-map/index.ts": "uptrack-map",
 };
 
 async function buildJs(): Promise<void> {
   log("building js...");
   for (const [src, dstBasename] of Object.entries(JS_ENTRYPOINTS)) {
-    const bundle = await rollup.rollup({
-      input: src,
-      plugins: esbuild({
-        minify: args.values.prod ? true : false,
-        sourceMap: args.values.prod ? true : false,
-        target: "es2022",
-      }),
-      external: ["leaflet", "geojson"],
-    });
+    try {
+      const bundle = await rollup.rollup({
+        input: src,
+        plugins: [
+          nodeResolve({
+            browser: true,
+          }),
+          commonjs({}),
+          replace({
+            "process.env.NODE_ENV": args.values.prod
+              ? '"production"'
+              : '"development"',
+            preventAssignment: true,
+          }),
+          esbuild({
+            minify: args.values.prod ? true : false,
+            sourceMap: args.values.prod ? true : false,
+            target: "es2022",
+          }),
+        ],
+        external: [
+          "leaflet",
+          "geojson",
+          "@wordpress/element",
+          "@wordpress/components",
+          "@wordpress/api-fetch",
+          "react",
+        ],
+        onwarn(warning, warn) {
+          if (
+            warning.code === "MODULE_LEVEL_DIRECTIVE" ||
+            warning.code === "CIRCULAR_DEPENDENCY"
+          ) {
+            return;
+          }
+          warn(warning);
+        },
+      });
 
-    const dst = path.join(JS_OUT_DIR, `${dstBasename}.js`);
-    await bundle.write({
-      file: dst,
-      format: "iife",
-      globals: {
-        leaflet: "L",
-      },
-    });
-    await bundle.close();
+      const dst = path.join(JS_OUT_DIR, `${dstBasename}.js`);
+      try {
+        await bundle.write({
+          file: dst,
+          format: "iife",
+          globals: {
+            leaflet: "L",
+            react: "React",
+            "react-dom": "ReactDOM",
+            "@wordpress/element": "wp.element",
+            "@wordpress/components": "wp.components",
+            "@wordpress/data": "wp.data",
+            "@wordpress/api-fetch": "wp.apiFetch",
+          },
+        });
+      } finally {
+        await bundle.close();
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console -- Need to log somehow!
+      console.error(error);
+    }
   }
 }
 

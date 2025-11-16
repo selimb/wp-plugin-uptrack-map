@@ -90,6 +90,11 @@ export default defineConfig(
       //
       // Useless until https://github.com/sindresorhus/eslint-plugin-unicorn/issues/1993 is fixed.
       "unicorn/custom-error-definition": "off",
+      // Allow PascalCase for React files.
+      "unicorn/filename-case": [
+        "warn",
+        { cases: { kebabCase: true, pascalCase: true } },
+      ],
       // Too many false positives, doesn't know when using non-Array.
       // See https://github.com/sindresorhus/eslint-plugin-unicorn/issues/1394.
       "unicorn/no-array-method-this-argument": "off",

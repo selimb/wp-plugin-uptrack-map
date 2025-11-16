@@ -1,5 +1,5 @@
+import type { RouteType } from "../settings";
 import { clamp } from "../utils";
-import type { RouteType } from "./types";
 
 export const CANVAS_TOLERANCE = 14;
 
@@ -38,20 +38,14 @@ export const FOCUS_CARD_SWIPE_DISTANCE_PX = (() => {
   return clamp(distance, 150, 400);
 })();
 
-export const ROUTE_TYPE_PROPS: Record<
-  RouteType,
-  { label: string; color: string }
-> = {
+export const ROUTE_TYPE_PROPS: Record<RouteType, { color: string }> = {
   ski_touring: {
-    label: "Ski Touring",
     color: "blue",
   },
   mountaineering: {
-    label: "Mountaineering",
     color: "red",
   },
   hiking: {
-    label: "Hiking",
     color: "green",
   },
 };

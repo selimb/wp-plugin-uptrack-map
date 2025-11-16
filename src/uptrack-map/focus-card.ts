@@ -140,12 +140,12 @@ export class FocusCard {
     }
     const { $title, $distance, $duration, $elevation } = this._getElements();
 
-    $title.textContent = info.post_title;
-    $title.setAttribute("href", info.post_url);
+    $title.textContent = info.postTitle;
+    $title.setAttribute("href", info.postUrl);
 
-    $distance.textContent = info.distance_km.toFixed(0);
-    $elevation.textContent = info.elevation_m.toFixed(0);
-    $duration.textContent = info.duration_d.toFixed(0);
+    $distance.textContent = info.distance;
+    $elevation.textContent = info.elevation;
+    $duration.textContent = info.duration;
   }
 
   _handleDocumentKeyup = (evt: KeyboardEvent): void => {

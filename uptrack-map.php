@@ -23,6 +23,8 @@ define('UPTRACK_MAP__PLUGIN_VERSION', '3.4.2');
 define('UPTRACK_MAP__PLUGIN_FILE', __FILE__);
 define('UPTRACK_MAP__PLUGIN_DIR', plugin_dir_path(__FILE__));
 
+require_once UPTRACK_MAP__PLUGIN_DIR . 'includes/Settings.php';
+require_once UPTRACK_MAP__PLUGIN_DIR . 'includes/admin/Admin.php';
 require_once UPTRACK_MAP__PLUGIN_DIR . 'includes/shortcodes/UptrackMapShortcode.php';
 
 function add_shortcodes()
@@ -32,6 +34,8 @@ function add_shortcodes()
 
 function init()
 {
+  Settings::init();
+  Admin::init();
   add_shortcodes();
 }
 

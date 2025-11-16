@@ -2,6 +2,7 @@ import type geojson from "geojson";
 import L from "leaflet";
 
 import { err, log } from "../logging";
+import type { RouteType } from "../settings";
 import {
   CANVAS_TOLERANCE,
   ROUNDTRIP_EPSILON,
@@ -18,7 +19,7 @@ import {
 } from "./constants";
 import { FocusCard } from "./focus-card";
 import { Legend } from "./legend";
-import type { LineCoords, RouteId, RouteInfo, RouteType } from "./types";
+import type { LineCoords, RouteId, RouteInfo } from "./types";
 
 // ===============================================================================================
 // Main Man
@@ -182,7 +183,7 @@ export class UptrackMapManager {
           });
         }
 
-        marker = UptrackMapManager.createRouteMarker(info, coords);
+        marker = UptrackMapManager.createRouteMarker(info);
         if (marker) {
           this.map.addLayer(marker);
 
@@ -206,7 +207,7 @@ export class UptrackMapManager {
       },
     };
 
-    const resp = await fetch(info.kml_url);
+    const resp = await fetch(info.kmlUrl);
     const kmlText = await resp.text();
     const geoJson = UptrackMapManager.parseKml(kmlText);
     const line = L.geoJSON(geoJson, options);
@@ -222,69 +223,13 @@ export class UptrackMapManager {
     return { line, coords, fadeLine: fadeLine_, marker };
   }
 
-  static createRouteMarker(
-    info: RouteInfo,
-    lineCoords: LineCoords,
-  ): L.Marker | null {
-    if (info.marker_distance_percent < 0) {
+  static createRouteMarker(info: RouteInfo): L.Marker | null {
+    if (!info.marker) {
       return null;
     }
 
-    if (lineCoords.length === 0) {
-      return null;
-    }
-
-    let markerCoords: L.LatLng;
-    if (info.marker_distance_percent === 0) {
-      markerCoords = lineCoords[0];
-    } else if (info.marker_distance_percent >= 100) {
-      // eslint-disable-next-line unicorn/prefer-at -- No.
-      markerCoords = lineCoords[lineCoords.length - 1];
-    } else {
-      markerCoords = UptrackMapManager.computeMarkerCoords(lineCoords, info);
-    }
-    const marker = L.marker(markerCoords);
+    const marker = L.marker(info.marker);
     return marker;
-  }
-
-  static computeMarkerCoords(
-    lineCoords: L.LatLng[],
-    info: RouteInfo,
-  ): L.LatLng {
-    const distances: number[] = [0];
-    let distanceTotal = 0;
-    let prevCoord = lineCoords[0];
-    for (let i = 1; i < lineCoords.length; i++) {
-      const coord = lineCoords[i];
-      const segmentDistance = prevCoord.distanceTo(coord);
-      distanceTotal += segmentDistance;
-      distances.push(distanceTotal);
-      prevCoord = coord;
-    }
-
-    const targetDistance = (info.marker_distance_percent / 100) * distanceTotal;
-
-    let targetCoords: L.LatLng | undefined;
-
-    for (let i = 1; i < distances.length; i++) {
-      if (distances[i] < targetDistance) {
-        continue;
-      }
-      const start = lineCoords[i - 1];
-      const end = lineCoords[i];
-      const segmentDistance = distances[i] - distances[i - 1];
-      const distanceIntoSegment = targetDistance - distances[i - 1];
-      const ratio = distanceIntoSegment / segmentDistance;
-
-      const lat = start.lat + ratio * (end.lat - start.lat);
-      const lng = start.lng + ratio * (end.lng - start.lng);
-      targetCoords = L.latLng(lat, lng);
-      return targetCoords;
-    }
-
-    log("warn", "Could not determine marker coordinates.", info);
-    // Fallback to start.
-    return lineCoords[0];
   }
 
   handleRouteClick(_evt: L.LeafletMouseEvent, routeId: RouteId): void {
@@ -478,7 +423,7 @@ export class UptrackMapManager {
   static getPopupOptions(info: RouteInfo): L.PopupOptions {
     return {
       closeButton: false,
-      content: info.post_title,
+      content: info.postTitle,
       // "Higher" `y` offset (default is 7) so that the popup sits above the line.
       offset: [0, 2],
       className: "uptrack-hover-popup",

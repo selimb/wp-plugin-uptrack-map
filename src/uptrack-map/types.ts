@@ -1,20 +1,17 @@
 import type L from "leaflet";
 
-// XXX sync anchors
-// SYNC [sync-RouteType]
-export type RouteType = "ski_touring" | "mountaineering" | "hiking";
+import type { MarkerCoords, RouteType } from "../settings";
 
-// SYNC [sync-RouteInfo]
 export type RouteInfo = {
   id: string;
-  kml_url: string;
+  kmlUrl: string;
   type: RouteType;
-  marker_distance_percent: number;
-  post_url: string;
-  post_title: string;
-  distance_km: number;
-  elevation_m: number;
-  duration_d: number;
+  marker: MarkerCoords | null;
+  postUrl: string;
+  postTitle: string;
+  distance: string;
+  elevation: string;
+  duration: string;
 };
 
 export type RouteId = RouteInfo["id"];
