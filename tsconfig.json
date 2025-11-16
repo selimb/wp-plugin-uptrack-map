@@ -1,0 +1,35 @@
+{
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scripts/**/*.ts",
+    "eslint.config.js"
+  ],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    // Enable latest features
+    "lib": ["dom", "DOM.Iterable", "esnext"],
+    "target": "es2022",
+    "moduleDetection": "force",
+
+    // Output
+    "noEmit": true,
+
+    // React
+    "jsx": "preserve",
+
+    // Vanilla JS
+    "checkJs": true,
+    "allowJs": true,
+
+    // Module
+    "module": "es2020",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true
+  }
+}

@@ -1,40 +1,50 @@
 {
-  "name": "wp-plugin-leaflet-map",
+  "name": "wp-plugin-uptrack-map",
   "private": true,
-  "version": "3.4.2",
-  "description": "Leaflet Map WordPress Plugin",
+  "version": "0.0",
+  "description": "Uptrack Map Wordpress Plugin",
+  "type": "module",
   "scripts": {
-    "start": "docker compose up && exit 0",
-    "restart": "npm run destroy && npm start",
-    "destroy": "docker compose down -v",
-    "wordpress": "docker compose run wordpress bash",
-    "cli": "docker compose run cli sh",
-    "translate": "cd ./languages && sudo php ../../wp-trunk/tools/i18n/makepot.php wp-plugin ../",
-    "changes": "VERSION=$(npm pkg get version | tr -d '\"') && git log v${VERSION}..HEAD --oneline",
-    "test": "jest",
-    "minify": "rm -rf ./scripts/*.min.js; for file in ./scripts/*.js; do esbuild --minify $file --outfile=\"./scripts/$(basename $file .js).min.js\"; done"
+    "docker:provision": "docker compose run --rm --user=www-data wordpress /var/www/provision/provision.sh",
+    "docker:bash": "docker compose exec --user=www-data wordpress bash",
+    "clean": "bun ./scripts/build.ts",
+    "build": "bun ./scripts/build.ts",
+    "build:watch": "bun ./scripts/build.ts --watch",
+    "build:prod": "bun ./scripts/build.ts --prod",
+    "tsc": "tsc",
+    "prettier": "prettier . --check",
+    "prettier:fix": "prettier . --write",
+    "eslint": "eslint . --max-warnings=0",
+    "eslint:fix": "bun run eslint -- --fix",
+    "lint": "bun run prettier && bun run tsc && bun run eslint",
+    "lint:fix": "bun run prettier:fix && bun run eslint:fix"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bozdoz/wp-plugin-leaflet-map.git"
-  },
-  "author": "Benjamin J DeLong <ben@bozdoz.com> (https://bozdoz.com)",
-  "license": "GPL-2.0",
-  "bugs": {
-    "url": "https://github.com/bozdoz/wp-plugin-leaflet-map/issues"
-  },
-  "homepage": "https://github.com/bozdoz/wp-plugin-leaflet-map#readme",
-  "prettier": {
-    "tabWidth": 2,
-    "semi": true,
-    "singleQuote": true
-  },
-  "jest": {
-    "testEnvironment": "jsdom"
+  "dependencies": {
+    "@tanstack/react-form": "^1.25.0",
+    "@wordpress/api-fetch": "^7.35.0",
+    "@wordpress/components": "^30.8.0",
+    "@wordpress/element": "^6.35.0",
+    "clsx": "^2.1.1",
+    "geojson": "^0.5.0",
+    "leaflet": "^1.9.4",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
-    "esbuild": "^0.25.2",
-    "jest": "^27.0.5",
-    "prettier": "^2.3.2"
+    "@eslint/compat": "^1.4.1",
+    "@eslint/js": "^9.39.1",
+    "@prettier/plugin-php": "^0.24.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.3",
+    "@types/bun": "^1.3.2",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "prettier": "^3.6.2",
+    "rollup": "^4.53.2",
+    "rollup-plugin-esbuild": "^6.2.1",
+    "typescript-eslint": "^8.46.4"
   }
 }

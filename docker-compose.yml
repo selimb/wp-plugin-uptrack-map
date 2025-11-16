@@ -1,8 +1,6 @@
 services:
-  mysql:
-    image: mariadb:10.10.2-jammy
-    volumes:
-      - wp_db:/var/lib/mysql
+  db:
+    image: mysql:8.0
     restart: always
     ports:
       - 3306:3306
@@ -11,54 +9,29 @@ services:
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wordpress
       MYSQL_PASSWORD: wordpress
-
-  cli:
-    image: bozdoz/wordpress-initialize:2.9-php8.3
-    depends_on:
-      - mysql
     volumes:
-      - wordpress:/var/www/html
-      - .:/var/www/html/wp-content/plugins/leaflet-map
-      - ./docker-initialize.sh:/app/initialize.sh
-      #-------------------------------------------------
-      # Uncomment these along with the wordpress service
-      # to debug themes and plugins
-      #-------------------------------------------------
-      - ./themes:/var/www/html/wp-content/themes
-      # - ./plugins:/var/www/html/wp-content/plugins
-    environment:
-      WP_PLUGINS: leaflet-map
-      WORDPRESS_PORT: ${WP_PORT:-1234}
-      WP_PORT: ${WP_PORT:-1234}
-      WP_URL: ${WP_URL:-localhost:1234}
-      WP_USER: admin
-      WP_PASSWORD: password
-      WP_THEME: twentytwentyfive
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress
+      - db:/var/lib/mysql
 
   wordpress:
-    image: wordpress:6.8-php8.4-apache
+    build:
+      context: docker
+      dockerfile: wordpress.dockerfile
     depends_on:
-      - cli
+      - db
     volumes:
       - wordpress:/var/www/html
-      - .:/var/www/html/wp-content/plugins/leaflet-map
-      #-------------------------------------------------
-      # Uncomment these along with the cli service
-      # to debug themes and plugins
-      #-------------------------------------------------
-      - ./themes:/var/www/html/wp-content/themes
+      - ./provision/:/var/www/provision/
+      - ./build/:/var/www/html/wp-content/plugins/uptrack-map/
       - ./kml-paths:/var/www/html/wp-content/kml-paths
-      # - ./plugins:/var/www/html/wp-content/plugins
     ports:
-      - ${WP_PORT:-1234}:80
+      - 1234:80
     restart: always
     environment:
+      WORDPRESS_DB_HOST: db
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
       WORDPRESS_DEBUG: 1
 
 volumes:
-  wp_db:
   wordpress:
+  db:

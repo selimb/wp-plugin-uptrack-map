@@ -1,0 +1,17 @@
+.w-full {
+  width: 100%;
+}
+
+.invalid,
+.control-invalid input,
+.components-select-control.control-invalid .components-input-control__backdrop {
+  border: solid 1px red !important;
+}
+
+.control-warning input {
+  border: solid 1px orange !important;
+}
+
+.uptrack-route-table td {
+  vertical-align: middle;
+}

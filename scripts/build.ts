@@ -1,0 +1,188 @@
+#!/usr/bin/env bun
+import fs from "node:fs";
+import fsp from "node:fs/promises";
+import path from "node:path";
+import { parseArgs } from "node:util";
+
+import commonjs from "@rollup/plugin-commonjs";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+import replace from "@rollup/plugin-replace";
+import * as rollup from "rollup";
+import esbuild from "rollup-plugin-esbuild";
+
+const OUT_DIR = "build";
+
+// eslint-disable-next-line no-console -- Need to log somehow!
+const log = console.info;
+
+async function clean(): Promise<void> {
+  log("cleaning...");
+  // See [keep-build].
+  const children = new Set(await fsp.readdir(OUT_DIR));
+  children.delete(".gitkeep");
+
+  await Promise.all(
+    [...children].map(async (child) => {
+      await fsp.rm(path.join(OUT_DIR, child), {
+        recursive: true,
+        force: true,
+      });
+    }),
+  );
+}
+
+const JS_SRC_DIR = "src";
+const JS_OUT_DIR = path.join(OUT_DIR, "js");
+const JS_ENTRYPOINTS = {
+  "src/admin/admin.tsx": "admin",
+  "src/uptrack-map/index.ts": "uptrack-map",
+};
+
+async function buildJs(): Promise<void> {
+  log("building js...");
+  for (const [src, dstBasename] of Object.entries(JS_ENTRYPOINTS)) {
+    try {
+      const bundle = await rollup.rollup({
+        input: src,
+        plugins: [
+          nodeResolve({
+            browser: true,
+          }),
+          commonjs({}),
+          replace({
+            "process.env.NODE_ENV": args.values.prod
+              ? '"production"'
+              : '"development"',
+            preventAssignment: true,
+          }),
+          esbuild({
+            minify: args.values.prod ? true : false,
+            sourceMap: args.values.prod ? true : false,
+            target: "es2022",
+          }),
+        ],
+        external: [
+          "leaflet",
+          "geojson",
+          "@wordpress/element",
+          "@wordpress/components",
+          "@wordpress/api-fetch",
+          "react",
+        ],
+        onwarn(warning, warn) {
+          if (
+            warning.code === "MODULE_LEVEL_DIRECTIVE" ||
+            warning.code === "CIRCULAR_DEPENDENCY"
+          ) {
+            return;
+          }
+          warn(warning);
+        },
+      });
+
+      const dst = path.join(JS_OUT_DIR, `${dstBasename}.js`);
+      try {
+        await bundle.write({
+          file: dst,
+          format: "iife",
+          globals: {
+            leaflet: "L",
+            react: "React",
+            "react-dom": "ReactDOM",
+            "@wordpress/element": "wp.element",
+            "@wordpress/components": "wp.components",
+            "@wordpress/data": "wp.data",
+            "@wordpress/api-fetch": "wp.apiFetch",
+          },
+        });
+      } finally {
+        await bundle.close();
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console -- Need to log somehow!
+      console.error(error);
+    }
+  }
+}
+
+const CSS_SRC_DIR = "css";
+const CSS_OUT_DIR = path.join(OUT_DIR, "css");
+
+async function buildCss(): Promise<void> {
+  log("building css...");
+  const src = CSS_SRC_DIR;
+  const dst = CSS_OUT_DIR;
+  await fsp.mkdir(dst, { recursive: true });
+  for (const name of await fsp.readdir(src)) {
+    await fsp.cp(path.join(src, name), path.join(dst, name));
+  }
+}
+
+// TODO: Do we need a README?
+const WP_SRC_PATHS = ["includes", "uptrack-map.php"];
+
+/** PHP + metadata */
+async function buildWordpress(): Promise<void> {
+  log("building PHP...");
+  for (const src of WP_SRC_PATHS) {
+    const dst = path.join(OUT_DIR, path.basename(src));
+    await fsp.cp(src, dst, { recursive: true });
+  }
+}
+
+async function build(): Promise<void> {
+  log("building...");
+
+  await Promise.all([buildJs(), buildCss(), buildWordpress()]);
+}
+
+function watch(): void {
+  fs.watch(JS_SRC_DIR, { recursive: true }, () => {
+    void buildJs();
+  });
+
+  fs.watch(CSS_SRC_DIR, { recursive: true }, () => {
+    void buildCss();
+  });
+
+  for (const src of WP_SRC_PATHS) {
+    fs.watch(src, { recursive: true }, () => {
+      void buildWordpress();
+    });
+  }
+}
+
+async function main(): Promise<void> {
+  if (args.values.clean) {
+    await clean();
+    return;
+  }
+
+  await build();
+
+  if (args.values.watch) {
+    watch();
+  }
+}
+
+const args = parseArgs({
+  options: {
+    clean: {
+      type: "boolean",
+      short: "c",
+      default: false,
+    },
+    watch: {
+      type: "boolean",
+      short: "w",
+      default: false,
+    },
+    prod: {
+      type: "boolean",
+      short: "p",
+      default: false,
+    },
+  },
+});
+
+void main();

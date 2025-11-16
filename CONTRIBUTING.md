@@ -1,41 +1,61 @@
-I believe the purpose of this plugin is to provide **simple** creation of maps on their WordPress sites, using a **basic** Leaflet JS setup. I **will not accept** pull requests that incorporate any other [Leaflet plugin](http://leafletjs.com/plugins.html) into this one, or any copies of them, or any links to them (unless they are completely simplistic and globally usable). Obviously I don't want to load dependencies for every user of this plugin that only a handful of users want.
+# CONTRIBUTING
 
-Also, please keep your pull requests limited to one feature/improvement each, as a courtesy to me who has to look through it trying to figure out what does what (and if it works at all). Any number of bug fixes is completely acceptable. :)
+This plugin does **not** leverage [@wordpress/scripts](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-scripts/#build) -- I know my way around Typescript but I'm new to Wordpress.
+Same goes for `wp-env` (which I've found to be terribly slow and clunky).
 
-For more expectations, please view the project's [Code of Conduct](https://github.com/bozdoz/wp-plugin-leaflet-map/blob/master/CODE_OF_CONDUCT.md)
+## Prerequisites
 
-### New Versions
+- [Bun](https://bun.com/) -- see [.tool-versions](./.tool-versions) for version
+- Docker & Docker Compose
 
-New versions need to be tagged via `git tag`, following a process like this:
+## Setup
 
-1. Check what changed since last tag:
-
-```sh
-npm run changes
+```shell
+bun install
 ```
 
-2. Update the old tag everywhere:
+## Lint
 
-- readme.txt (update the changelog with output from `npm run changes`)
-- package.json
-- package-lock.json
-- leaflet-map.php (2 places)
-
-3. Commit:
-
-```sh
-git commit -am 'v1.2.3: summary of update'
+```shell
+bun run lint
 ```
 
-4. Tag:
+## Build
 
-```sh
-git tag v.1.2.3
+Watch mode:
+
+```shell
+bun run build:watch
 ```
 
-5. Push:
+Production:
 
-```sh
-git push
-git push --tags
+```shell
+bun run build:prod
+```
+
+## Wordpress Setup
+
+1. Start Wordpress:
+
+   ```shell
+   docker compose up --detach
+   ```
+
+2. Provision templates/pages/posts with:
+
+   ```shell
+   bun run docker:provision
+   ```
+
+3. Configure routes at http://localhost:1234/wp-admin/options-general.php?page=uptrack-map-settings.
+
+4. Head over to the Map!
+
+## Wordpress Debugging
+
+To get a shell inside the Wordpress container, run:
+
+```shell
+bun run docker:bash
 ```
