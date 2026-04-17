@@ -24,8 +24,6 @@ class UptrackMapShortCode
 
     private static function collect_posts($routes)
     {
-        global $wpdb;
-
         if (empty($routes)) {
             return [];
         }
@@ -37,17 +35,10 @@ class UptrackMapShortCode
             $post_ids[] = $post_id;
         }
 
-        // Query posts.
-        $posts = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT ID, post_title, post_status
-                 FROM {$wpdb->posts}
-                 WHERE ID IN (" .
-                    implode(",", array_fill(0, count($post_ids), "%d")) .
-                    ")",
-                ...$post_ids,
-            ),
-        );
+        $posts = \get_posts([
+            "include" => $post_ids,
+            "numberposts" => -1,
+        ]);
 
         // Map by ID.
         $post_map = [];
