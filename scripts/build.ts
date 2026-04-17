@@ -7,6 +7,7 @@ import { parseArgs } from "node:util";
 import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
+import { $ } from "bun";
 import * as rollup from "rollup";
 import esbuild from "rollup-plugin-esbuild";
 
@@ -162,6 +163,17 @@ async function main(): Promise<void> {
 
   if (args.values.watch) {
     watch();
+  }
+
+  if (args.values.prod) {
+    const zipPath = path.join("dist", "uptrack-map.zip");
+    await fsp.rm(zipPath, { force: true });
+    await fsp.mkdir(path.dirname(zipPath), { recursive: true });
+
+    await $`zip -r ${path.relative(OUT_DIR, zipPath)} . --exclude .gitkeep`.cwd(
+      OUT_DIR,
+    );
+    log(`zipped to ${path.resolve(zipPath)}`);
   }
 }
 
