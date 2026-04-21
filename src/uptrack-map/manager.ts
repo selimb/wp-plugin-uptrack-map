@@ -120,8 +120,6 @@ export class UptrackMapManager {
         });
       }),
     );
-
-    map.fitBounds(this.groupRoot.getBounds());
   }
 
   async loadRoute(info: RouteInfo): Promise<{
