@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Uptrack Map
  * Author: selimb
- * Version: 0.1.0
+ * Version: 1.0
  * License: GPL2
  * Plugin URI: https://github.com/selimb/wp-plugin-uptrack-map
  * Description: The Uptrack's map
@@ -19,7 +19,7 @@ if (!defined("ABSPATH")) {
     exit();
 }
 
-define("UPTRACK_MAP__PLUGIN_VERSION", "0.1.0");
+define("UPTRACK_MAP__PLUGIN_VERSION", "1.0");
 define("UPTRACK_MAP__PLUGIN_FILE", __FILE__);
 define("UPTRACK_MAP__PLUGIN_DIR", \plugin_dir_path(__FILE__));
 
