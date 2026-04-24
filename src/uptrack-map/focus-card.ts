@@ -141,7 +141,13 @@ export class FocusCard {
     const { $title, $distance, $duration, $elevation } = this._getElements();
 
     $title.textContent = info.postTitle;
-    $title.setAttribute("href", info.postUrl);
+    if (info.postUrl) {
+      $title.setAttribute("href", info.postUrl);
+      $title.classList.remove("no-link");
+    } else {
+      $title.removeAttribute("href");
+      $title.classList.add("no-link");
+    }
 
     $distance.textContent = info.distance;
     $elevation.textContent = info.elevation;

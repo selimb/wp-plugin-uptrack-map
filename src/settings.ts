@@ -13,6 +13,7 @@ export type MarkerCoords = z.infer<typeof zMarkerCoords>;
 export const zUptrackRoutesSettingItem = z.object({
   kmlFilename: z.catch(zKmlFilename, ""),
   postId: z.catch(z.nullable(z.string()), null),
+  title: z.catch(z.string(), ""),
   type: z.catch(zRouteType, "ski_touring"),
   marker: z.catch(z.nullable(zMarkerCoords), null),
   distance: z.catch(z.string(), ""),
