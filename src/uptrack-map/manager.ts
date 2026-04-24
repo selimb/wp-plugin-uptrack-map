@@ -103,8 +103,6 @@ export class UptrackMapManager {
   }
 
   async loadRoutes(data: RouteInfo[]): Promise<void> {
-    const map = this.map;
-
     await Promise.all(
       data.map(async (info) => {
         const { line, coords, fadeLine, marker } = await this.loadRoute(info);
