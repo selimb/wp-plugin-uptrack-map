@@ -19,7 +19,7 @@ if (!defined("ABSPATH")) {
     exit();
 }
 
-define("UPTRACK_MAP__PLUGIN_VERSION", "3.4.2");
+define("UPTRACK_MAP__PLUGIN_VERSION", "0.1.0");
 define("UPTRACK_MAP__PLUGIN_FILE", __FILE__);
 define("UPTRACK_MAP__PLUGIN_DIR", \plugin_dir_path(__FILE__));
 

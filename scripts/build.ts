@@ -153,6 +153,13 @@ function watch(): void {
   }
 }
 
+async function readVersion(): Promise<string> {
+  const packageJsonPath = "package.json";
+  const packageJsonText = await fsp.readFile(packageJsonPath, "utf8");
+  const packageJson = JSON.parse(packageJsonText) as { version: string };
+  return packageJson.version;
+}
+
 async function main(): Promise<void> {
   if (args.values.clean) {
     await clean();
@@ -166,7 +173,9 @@ async function main(): Promise<void> {
   }
 
   if (args.values.prod) {
-    const zipPath = path.join("dist", "uptrack-map.zip");
+    const version = await readVersion();
+    const versionSuffix = version.replaceAll(".", "-");
+    const zipPath = path.join("dist", `uptrack-map_${versionSuffix}.zip`);
     await fsp.rm(zipPath, { force: true });
     await fsp.mkdir(path.dirname(zipPath), { recursive: true });
 
