@@ -56,6 +56,7 @@ class UptrackMapShortCode
             // SYNC [UptrackRoutesSettingItem].
             $filename = $info["kmlFilename"];
             $post_id = $info["postId"];
+            $title = $info["title"];
             $type = $info["type"];
             $marker = $info["marker"];
             $distance = $info["distance"];
@@ -70,7 +71,10 @@ class UptrackMapShortCode
             $kml_url = \content_url($relative_path);
 
             if (empty($post_id)) {
-                $post_title = "";
+                if (empty($title)) {
+                    continue;
+                }
+                $post_title = $title;
                 $post_url = "";
             } else {
                 $post = $post_map[$post_id];

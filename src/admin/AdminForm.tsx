@@ -187,6 +187,7 @@ export function buildDefaultRoutes(
     result.push({
       kmlFilename,
       postId: null,
+      title: "",
       type: "ski_touring",
       marker: null,
       distance: "",

@@ -71,6 +71,10 @@
   text-transform: uppercase;
 }
 
+.uptrack-focus-card-title.no-link {
+  text-decoration: none;
+}
+
 /*
  * Hover Popup
  */

@@ -97,7 +97,7 @@ export class FocusCard {
     const $container = getElem("div", ".uptrack-focus-card", $fragment);
     document.body.append($container);
 
-    const $title = getElem("span", ".uptrack-focus-card-title", $container);
+    const $title = getElem("a", ".uptrack-focus-card-title", $container);
     const $closeButton = getElem(
       "button",
       '[data-target="closeButton"]',
@@ -141,7 +141,13 @@ export class FocusCard {
     const { $title, $distance, $duration, $elevation } = this._getElements();
 
     $title.textContent = info.postTitle;
-    $title.setAttribute("href", info.postUrl);
+    if (info.postUrl) {
+      $title.setAttribute("href", info.postUrl);
+      $title.classList.remove("no-link");
+    } else {
+      $title.removeAttribute("href");
+      $title.classList.add("no-link");
+    }
 
     $distance.textContent = info.distance;
     $elevation.textContent = info.elevation;

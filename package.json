@@ -20,14 +20,14 @@
     "lint:fix": "bun run prettier:fix && bun run eslint:fix"
   },
   "dependencies": {
-    "@tanstack/react-form": "^1.25.0",
-    "@wordpress/api-fetch": "^7.35.0",
-    "@wordpress/components": "^30.8.0",
-    "@wordpress/element": "^6.35.0",
+    "@tanstack/react-form": "^1.29.1",
+    "@wordpress/api-fetch": "^7.44.0",
+    "@wordpress/components": "^32.6.0",
+    "@wordpress/element": "^6.44.0",
     "clsx": "^2.1.1",
     "geojson": "^0.5.0",
     "leaflet": "^1.9.4",
-    "zod": "^4.1.12"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/compat": "^1.4.1",
