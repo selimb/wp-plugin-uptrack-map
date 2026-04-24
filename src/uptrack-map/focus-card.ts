@@ -97,7 +97,7 @@ export class FocusCard {
     const $container = getElem("div", ".uptrack-focus-card", $fragment);
     document.body.append($container);
 
-    const $title = getElem("span", ".uptrack-focus-card-title", $container);
+    const $title = getElem("a", ".uptrack-focus-card-title", $container);
     const $closeButton = getElem(
       "button",
       '[data-target="closeButton"]',
