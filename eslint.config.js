@@ -47,6 +47,11 @@ export default defineConfig(
         "warn",
         { allowExpressions: true },
       ],
+      "@typescript-eslint/no-deprecated": [
+        "warn",
+        // This can only be removed for Wordpress >= 7.
+        { allow: [{ from: "file", name: "__nextHasNoMarginBottom" }] },
+      ],
       "@typescript-eslint/no-import-type-side-effects": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
