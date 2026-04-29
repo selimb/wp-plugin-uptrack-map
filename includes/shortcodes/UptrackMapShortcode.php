@@ -16,8 +16,18 @@ class UptrackMapShortCode
         $routes = $settings[Settings::$SETTING_ROUTES];
 
         $post_map = self::collect_posts($routes);
-        $data = self::prepare_data($kml_directory, $routes, $post_map);
-        self::enqueue_assets($data);
+        $routes_data = self::prepare_routes_data(
+            $kml_directory,
+            $routes,
+            $post_map,
+        );
+        // SYNC [UptrackMapShortcodeInput]
+        $data = [
+            "routes" => $routes_data,
+            "focus_card_html" => $settings[Settings::$SETTING_FOCUS_CARD_HTML],
+        ];
+
+        self::enqueue_assets($settings, $data);
 
         return "";
     }
@@ -49,8 +59,11 @@ class UptrackMapShortCode
         return $post_map;
     }
 
-    private static function prepare_data($kml_directory, $routes, $post_map)
-    {
+    private static function prepare_routes_data(
+        $kml_directory,
+        $routes,
+        $post_map,
+    ) {
         $data = [];
         foreach ($routes as $info) {
             // SYNC [UptrackRoutesSettingItem].
@@ -99,15 +112,25 @@ class UptrackMapShortCode
                 "duration" => $duration,
             ];
         }
+
         return $data;
     }
 
-    private static function enqueue_assets($data)
+    private static function enqueue_assets($settings, $data)
     {
         $version = UPTRACK_MAP__PLUGIN_VERSION;
 
-        // [require-wp-leaflet-map] [wp-leaflet-toGeoJSON]
+        // [require-wp-leaflet-map] [require-toGeoJSON] Includes leaflet and toGeoJSON.
+        // Defined in https://github.com/bozdoz/wp-plugin-leaflet-map/blob/v3.4.5/class.leaflet-map.php#L217
         \wp_enqueue_script("leaflet_ajax_geojson_js");
+        // [uptrack_alpine_js]
+        \wp_enqueue_script(
+            "uptrack_alpine_js",
+            $settings[Settings::$SETTING_ALPINEJS_URL],
+            [],
+            null,
+            ["strategy" => "defer"],
+        );
 
         $script_name = "uptrack-map";
         $script_url = \plugins_url(

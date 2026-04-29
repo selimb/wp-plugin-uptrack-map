@@ -2,7 +2,7 @@ import { err, log } from "../logging";
 import { FOCUS_CARD_SWIPE_DISTANCE_PX } from "./constants";
 import type { RouteInfo } from "./types";
 
-const FOCUS_CARD_HTML = `
+export const FOCUS_CARD_HTML_DEFAULT = `
   <div class="uptrack-focus-card">
     <div class="uptrack-focus-card-header">
       <a class="uptrack-focus-card-title"></a>
@@ -65,7 +65,7 @@ export class FocusCard {
 
   constructor() {
     this.$htmlTemplate = document.createElement("template");
-    this.$htmlTemplate.innerHTML = FOCUS_CARD_HTML.trim();
+    this.$htmlTemplate.innerHTML = FOCUS_CARD_HTML_DEFAULT.trim();
   }
 
   show(info: RouteInfo): void {
