@@ -17,7 +17,8 @@
     "eslint": "eslint . --max-warnings=0",
     "eslint:fix": "bun run eslint -- --fix",
     "lint": "bun run prettier && bun run tsc && bun run eslint",
-    "lint:fix": "bun run prettier:fix && bun run eslint:fix"
+    "lint:fix": "bun run prettier:fix && bun run eslint:fix",
+    "test": "bun test"
   },
   "dependencies": {
     "@tanstack/react-form": "^1.29.1",

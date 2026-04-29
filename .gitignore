@@ -2,6 +2,9 @@
 node_modules/
 
 # output
-build/*
+build/
 !build/.gitkeep
 dist/
+
+# temporary
+xyz/

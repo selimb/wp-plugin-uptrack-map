@@ -9,8 +9,14 @@ if (!defined("ABSPATH")) {
 
 class Settings
 {
-    public static $SETTING_KML_DIRECTORY = "uptrack_kml_directory";
-    public static $SETTING_ROUTES = "uptrack_routes";
+    // Squeeze everything into a single setting for convenience.
+    // SYNC [UptrackSettingsContainer]
+    public static $SETTING_NAME = "uptrack_settings";
+
+    // SYNC [uptrack-settings]
+    public static $SETTING_KML_DIRECTORY = "kml_directory";
+    // SYNC [uptrack-settings]
+    public static $SETTING_ROUTES = "routes";
 
     public static function init()
     {
@@ -18,43 +24,33 @@ class Settings
     }
 
     /**
-     * Registers the settings so that:
-     * - they can be updated through the REST API.
-     * - `get_option` and `\get_options` return the appropriate default.
+     * Registers the settings so that they can be updated through the REST API.
      */
     private static function register_settings()
     {
         $option_group = "uptrack_map_option_group";
 
-        \register_setting($option_group, self::$SETTING_KML_DIRECTORY, [
-            "type" => "string",
-            "show_in_rest" => true,
-            "sanitize_callback" => "sanitize_text_field",
-            "default" => "kml-paths",
-        ]);
-
-        // See [UptrackRoutesSetting] for schema.
-        \register_setting($option_group, self::$SETTING_ROUTES, [
-            "type" => "array",
+        // See [uptrack-settings] for schema.
+        \register_setting($option_group, self::$SETTING_NAME, [
+            "type" => "object",
             "show_in_rest" => [
                 "schema" => [
-                    "type" => "array",
-                    "items" => [
-                        "type" => "object",
-                        "additionalProperties" => true,
-                    ],
+                    "type" => "object",
+                    // This lets us avoid duplicating the schema here.
+                    "additionalProperties" => true,
                 ],
             ],
             "autoload" => "no",
-            "default" => [],
+            "default" => [
+                // SYNC [uptrack-settings]
+                "kml_directory" => "kml-paths",
+                "routes" => [],
+            ],
         ]);
     }
 
     public static function get_settings()
     {
-        return \get_options([
-            self::$SETTING_KML_DIRECTORY,
-            self::$SETTING_ROUTES,
-        ]);
+        return \get_option(self::$SETTING_NAME);
     }
 }

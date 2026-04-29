@@ -4,17 +4,22 @@ import {
   BaseControl,
   Button,
   Notice,
+  PanelBody,
+  PanelRow,
   TextControl,
 } from "@wordpress/components";
 import { useState } from "@wordpress/element";
 
+import { log } from "../logging";
 import type {
   KmlFilename,
   UptrackRoutesSetting,
   UptrackSettings,
+  UptrackSettingsContainer,
 } from "../settings";
 import type { AdminInput } from "./admin";
 import { RoutesTable } from "./RoutesTable";
+import { SettingsJsonEditor } from "./SettingsJsonEditor";
 
 export type Post = AdminInput["posts"][number];
 export type PostId = Post["ID"];
@@ -38,9 +43,11 @@ export const AdminForm: React.FC<AdminFormProps> = ({
   const form = useForm({
     defaultValues: settingsDefault,
     onSubmit: async ({ value }) => {
-      const data: UptrackSettings = {
-        uptrack_kml_directory: value.uptrack_kml_directory,
-        uptrack_routes: value.uptrack_routes,
+      const data: UptrackSettingsContainer = {
+        uptrack_settings: {
+          kml_directory: value.kml_directory,
+          routes: value.routes,
+        },
       };
 
       try {
@@ -50,16 +57,18 @@ export const AdminForm: React.FC<AdminFormProps> = ({
           data,
         });
       } catch (error) {
+        log("error", "Failed to submit settings", error);
         setSubmitResult({
           ok: false,
-          error: error instanceof Error ? error.message : String(error),
+          error:
+            error instanceof Error
+              ? error.message
+              : JSON.stringify(error, null, 2),
         });
         return;
       }
 
-      if (
-        value.uptrack_kml_directory === settingsDefault.uptrack_kml_directory
-      ) {
+      if (value.kml_directory === settingsDefault.kml_directory) {
         setSubmitResult({ ok: true });
       } else {
         // Reload the page to reflect possible changes in KML files.
@@ -85,20 +94,46 @@ export const AdminForm: React.FC<AdminFormProps> = ({
             setSubmitResult(null);
           }}
         >
-          {submitResult.ok
-            ? "Settings saved successfully."
-            : `Error saving settings: ${submitResult.error}`}
+          {submitResult.ok ? (
+            <div>Settings saved successfully</div>
+          ) : (
+            <>
+              <div>Failed to save settings</div>
+              <pre>{submitResult.error}</pre>
+            </>
+          )}
         </Notice>
       )}
+
+      <div style={{ marginTop: "1em" }}>
+        <PanelBody title="JSON" initialOpen={false}>
+          <PanelRow>
+            <form.Subscribe
+              selector={(state) => [state.values]}
+              children={([values]) => (
+                <SettingsJsonEditor
+                  settings={values}
+                  onChange={(settings) => {
+                    for (const [k, v] of Object.entries(settings)) {
+                      form.setFieldValue(k as never, v as never);
+                    }
+                  }}
+                />
+              )}
+            />
+          </PanelRow>
+        </PanelBody>
+      </div>
+
       <div className="form-field">
         <form.Field
-          name="uptrack_kml_directory"
+          name="kml_directory"
           validators={{
             onChange: ({ value }) => (value.trim() ? undefined : "Required"),
           }}
           children={(field) => {
             const kmlDirectoryStillInvalid =
-              field.state.value === settingsDefault.uptrack_kml_directory &&
+              field.state.value === settingsDefault.kml_directory &&
               !kmlDirectoryValid;
             const invalid =
               !field.state.meta.isValid || kmlDirectoryStillInvalid;
@@ -126,7 +161,7 @@ export const AdminForm: React.FC<AdminFormProps> = ({
       </div>
 
       <form.Field
-        name="uptrack_routes"
+        name="routes"
         children={(field) => (
           <BaseControl label="Routes">
             <RoutesTable

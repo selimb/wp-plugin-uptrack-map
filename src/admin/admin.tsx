@@ -4,7 +4,7 @@ import { createRoot } from "@wordpress/element";
 import React from "react";
 import * as z from "zod/mini";
 
-import { zKmlFilename, zUptrackSettings } from "../settings";
+import { zKmlFilename, zUptrackSettingsSafe } from "../settings";
 import {
   AdminForm,
   type AdminFormProps,
@@ -22,7 +22,7 @@ const zAdminInput = z.strictObject({
       post_status: z.string(),
     }),
   ),
-  settings: zUptrackSettings,
+  settings: zUptrackSettingsSafe,
   kmlFilenames: z.array(zKmlFilename),
   kmlDirectoryValid: z.boolean(),
 });
@@ -53,8 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
     apiFetch.use(apiFetch.createNonceMiddleware(nonce));
 
     const postMap = buildPostMap(posts);
-    settings.uptrack_routes = buildDefaultRoutes(
-      settings.uptrack_routes,
+    settings.routes = buildDefaultRoutes(
+      settings.routes,
       new Set(kmlFilenames),
     );
 
@@ -81,7 +81,7 @@ const App: React.FC<AppProps> = ({ inputRaw, formProps }) => {
     <>
       <AdminForm {...formProps} />
 
-      <div style={{ marginTop: "16px" }}>
+      <div style={{ marginTop: "1em" }}>
         <PanelBody title="Debug" initialOpen={false}>
           <PanelRow>
             <Pre>{JSON.stringify(inputRaw, null, 2)}</Pre>

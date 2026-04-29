@@ -24,13 +24,23 @@ export type UptrackRoutesSettingItem = z.infer<
   typeof zUptrackRoutesSettingItem
 >;
 
-// SYNC [UptrackRoutesSetting]
 export const zUptrackRoutesSetting = z.array(zUptrackRoutesSettingItem);
 export type UptrackRoutesSetting = z.infer<typeof zUptrackRoutesSetting>;
 
-// SYNC [uptrack-settings].
+// SYNC [uptrack-settings]
 export const zUptrackSettings = z.object({
-  uptrack_kml_directory: z.string(),
-  uptrack_routes: z.catch(zUptrackRoutesSetting, []),
+  kml_directory: z.catch(z.string(), "kml-paths"),
+  routes: z.catch(zUptrackRoutesSetting, []),
 });
 export type UptrackSettings = z.infer<typeof zUptrackSettings>;
+
+export const zUptrackSettingsSafe = z.catch(
+  zUptrackSettings,
+  // SAFETY: Tested by [uptrack-settings-fallback].
+  () => zUptrackSettings.parse({}),
+);
+
+// SYNC [UptrackSettingsContainer]
+export type UptrackSettingsContainer = {
+  uptrack_settings: UptrackSettings;
+};
