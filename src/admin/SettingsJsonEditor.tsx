@@ -1,5 +1,6 @@
 import { Notice } from "@wordpress/components";
 import { useEffect, useState } from "@wordpress/element";
+import clsx from "clsx";
 
 import { type UptrackSettings, zUptrackSettings } from "../settings";
 
@@ -47,18 +48,10 @@ export const SettingsJsonEditor: React.FC<SettingsJsonEditorProps> = ({
       )}
 
       <textarea
+        className={clsx("code-editor", error && "code-editor-error")}
         value={jsonText}
         onChange={(e) => {
           handleJsonChange(e.currentTarget.value);
-        }}
-        style={{
-          width: "100%",
-          minHeight: "300px",
-          fontFamily: "monospace",
-          fontSize: "12px",
-          padding: "8px",
-          border: error ? "2px solid #dc3232" : "1px solid #ddd",
-          lineHeight: 1.5,
         }}
       />
     </div>

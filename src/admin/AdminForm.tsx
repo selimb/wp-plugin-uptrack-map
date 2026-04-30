@@ -18,6 +18,7 @@ import type {
   UptrackSettingsContainer,
 } from "../settings";
 import type { AdminInput } from "./admin";
+import { FocusCardHtmlEditor } from "./FocusCardHtmlEditor";
 import { RoutesTable } from "./RoutesTable";
 import { SettingsJsonEditor } from "./SettingsJsonEditor";
 
@@ -198,7 +199,22 @@ export const AdminForm: React.FC<AdminFormProps> = ({
         />
       </div>
 
-      {/* TODO: focus_card_html */}
+      {/* focus_card_html */}
+      <div className="form-field">
+        <form.Field
+          name="focus_card_html"
+          children={(field) => (
+            <BaseControl label="Focus Card HTML">
+              <FocusCardHtmlEditor
+                value={field.state.value}
+                onChange={(value) => {
+                  field.handleChange(value);
+                }}
+              />
+            </BaseControl>
+          )}
+        />
+      </div>
 
       {/* Save */}
       <form.Subscribe

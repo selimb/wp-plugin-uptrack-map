@@ -15,3 +15,17 @@
 .uptrack-route-table td {
   vertical-align: middle;
 }
+
+.code-editor {
+  width: 100%;
+  min-height: 300px;
+  font-family: monospace;
+  font-size: 12px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  line-height: 1.5;
+}
+
+.code-editor-error {
+  border: 2px solid #dc3232;
+}

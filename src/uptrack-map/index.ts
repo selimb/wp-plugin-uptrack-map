@@ -35,8 +35,8 @@ function renderUptrackMap(input: UptrackMapShortcodeInput): void {
     return;
   }
 
-  const mgr = new UptrackMapManager(map);
-  void mgr.loadRoutes(input.routes);
+  const mgr = new UptrackMapManager(input, map);
+  void mgr.loadRoutes();
 }
 
 // SYNC [UptrackMapPlugin]

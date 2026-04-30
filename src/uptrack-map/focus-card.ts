@@ -1,50 +1,47 @@
 import { err, log } from "../logging";
 import { FOCUS_CARD_SWIPE_DISTANCE_PX } from "./constants";
-import type { RouteInfo } from "./types";
+import type { RouteInfo, UptrackMapShortcodeInput } from "./types";
+
+function buildAlpineData(routeInfo: RouteInfo): string {
+  return [
+    "{",
+    `route: ${JSON.stringify(routeInfo)},`,
+    // [evt-close-focus-card]
+    `card: { close() { $dispatch('close-focus-card') } },`,
+    "}",
+  ].join(" ");
+}
 
 export const FOCUS_CARD_HTML_DEFAULT = `
   <div class="uptrack-focus-card">
     <div class="uptrack-focus-card-header">
-      <a class="uptrack-focus-card-title"></a>
-      <button data-target="closeButton" type="button" aria-label="Close" class="uptrack-focus-card-close-button">&#10005;</button>
+      <a
+        class="uptrack-focus-card-title"
+        x-bind:href="route.url || false"
+        x-text="route.title"
+        x-bind:class="route.url ? '' : 'no-link'"
+      ></a>
+      <button
+        type="button"
+        aria-label="Close"
+        class="uptrack-focus-card-close-button"
+        x-on:click="card.close()"
+      >&#10005;</button>
     </div>
     <div>
       <ul>
-        <li> <span>Duration:</span>  <span data-target="duration"></span>  <span>days</span> </li>
-        <li> <span>Distance:</span>  <span data-target="distance"></span> <span>km</span> </li>
-        <li> <span>Elevation:</span> <span data-target="elevation"></span> <span>m</span> </li>
+        <li> <span>Duration:</span> <span x-text="route.duration"></span>  <span>days</span> </li>
+        <li> <span>Distance:</span> <span x-text="route.distance"></span> <span>km</span> </li>
+        <li> <span>Elevation:</span> <span x-text="route.elevation"></span> <span>m</span> </li>
       </ul>
     <div>
   </div>
 `;
 
-type FocusCardElements = {
-  $container: HTMLElement;
-  $title: HTMLElement;
-  $closeButton: HTMLButtonElement;
-  $distance: HTMLElement;
-  $duration: HTMLElement;
-  $elevation: HTMLElement;
-};
-
 type DragState = {
   delta: number;
   x0: number;
 };
-
-function getElem<T extends keyof HTMLElementTagNameMap>(
-  _elemType: T,
-  selector: string,
-  $parent: HTMLElement | DocumentFragment,
-): HTMLElementTagNameMap[T] {
-  const $elem = $parent.querySelector(selector);
-  if ($elem) {
-    return $elem as never;
-  } else {
-    log("error", "Missing element for selector", selector, "in", $parent);
-    throw err(`Missing element for selector ${selector}`);
-  }
-}
 
 /**
  * Focus card control.
@@ -58,100 +55,65 @@ export class FocusCard {
 
   private readonly $htmlTemplate: HTMLTemplateElement;
 
-  private $elements: FocusCardElements | undefined = undefined;
+  private $elem: HTMLElement | undefined = undefined;
   private routeInfo: RouteInfo | undefined = undefined;
   private dragState: DragState | undefined = undefined;
-  private shown = false;
 
-  constructor() {
+  constructor(focusCardHtml: UptrackMapShortcodeInput["focus_card_html"]) {
     this.$htmlTemplate = document.createElement("template");
-    this.$htmlTemplate.innerHTML = FOCUS_CARD_HTML_DEFAULT.trim();
+    this.$htmlTemplate.innerHTML = focusCardHtml;
   }
 
   show(info: RouteInfo): void {
+    if (info.id === this.routeInfo?.id) {
+      return;
+    }
+
     this.routeInfo = info;
 
-    if (this.shown) {
-      // No need to call this above, since we call `_update` in `onAdd`.
-      this._update();
-    } else {
-      const $container = this._render();
-      this._correctAdminBarMargin($container);
-    }
+    this.hide();
+    this.$elem = this._render(info);
+    this._correctAdminBarMargin(this.$elem);
   }
 
-  hide(_map: L.Map): void {
-    const { $container } = this.$elements ?? {};
-    if ($container) {
-      $container.remove();
-      this.$elements = undefined;
+  hide(): void {
+    if (this.$elem) {
+      this.$elem.remove();
+      this.$elem = undefined;
     }
-    this.shown = false;
+
     document.removeEventListener("keyup", this._handleDocumentKeyup);
   }
 
-  _render(): HTMLElement {
+  _render(info: RouteInfo): HTMLElement {
     const $fragment = this.$htmlTemplate.content.cloneNode(
       true,
     ) as DocumentFragment;
-    const $container = getElem("div", ".uptrack-focus-card", $fragment);
-    document.body.append($container);
+    const $elem = $fragment.firstElementChild;
+    if (!$elem) {
+      const message = "FocusCard: HTML template must have a root element";
+      log("error", message, $fragment);
+      throw err(message);
+    }
+    const $root = $elem as HTMLElement;
 
-    const $title = getElem("a", ".uptrack-focus-card-title", $container);
-    const $closeButton = getElem(
-      "button",
-      '[data-target="closeButton"]',
-      $container,
-    );
-    const $distance = getElem("span", '[data-target="distance"]', $container);
-    const $elevation = getElem("span", '[data-target="elevation"]', $container);
-    const $duration = getElem("span", '[data-target="duration"]', $container);
+    const xData = buildAlpineData(info);
+    $root.setAttribute("x-data", xData);
 
-    $closeButton.addEventListener("click", () => {
+    document.body.append($root);
+
+    // [evt-close-focus-card]
+    $root.addEventListener("close-focus-card", () => {
       this.onClose?.();
     });
-    $container.addEventListener("touchstart", this._handleTouchStart);
-    $container.addEventListener("touchmove", this._handleTouchMove);
-    $container.addEventListener("touchend", this._handleTouchEnd);
-    $container.addEventListener("touchcancel", this._handleTouchCancel);
-
-    this.$elements = {
-      $container,
-      $title,
-      $closeButton,
-      $distance,
-      $elevation,
-      $duration,
-    };
-    this.shown = true;
-
-    this._update();
+    $root.addEventListener("touchstart", this._handleTouchStart);
+    $root.addEventListener("touchmove", this._handleTouchMove);
+    $root.addEventListener("touchend", this._handleTouchEnd);
+    $root.addEventListener("touchcancel", this._handleTouchCancel);
 
     document.addEventListener("keyup", this._handleDocumentKeyup);
 
-    return $container;
-  }
-
-  /** Updates most DOM elements based on the route info. */
-  _update(): void {
-    const info = this.routeInfo;
-    if (!info) {
-      return;
-    }
-    const { $title, $distance, $duration, $elevation } = this._getElements();
-
-    $title.textContent = info.postTitle;
-    if (info.postUrl) {
-      $title.setAttribute("href", info.postUrl);
-      $title.classList.remove("no-link");
-    } else {
-      $title.removeAttribute("href");
-      $title.classList.add("no-link");
-    }
-
-    $distance.textContent = info.distance;
-    $elevation.textContent = info.elevation;
-    $duration.textContent = info.duration;
+    return $root;
   }
 
   _handleDocumentKeyup = (evt: KeyboardEvent): void => {
@@ -199,10 +161,14 @@ export class FocusCard {
   };
 
   _updateDrag(dragState: DragState | undefined): void {
-    const { $container } = this._getElements();
+    const $root = this.$elem;
+    if (!$root) {
+      return;
+    }
+
     this.dragState = dragState;
 
-    const style = $container.style;
+    const style = $root.style;
     if (dragState) {
       const { delta } = dragState;
       const opacity = 1 - Math.abs(delta) / FOCUS_CARD_SWIPE_DISTANCE_PX;
@@ -215,13 +181,6 @@ export class FocusCard {
       style.transition = "transform 0.3s ease, opacity 0.3s ease";
       style.opacity = "1.0";
     }
-  }
-
-  _getElements(): FocusCardElements {
-    if (!this.$elements) {
-      throw err("FocusCard elements not initialized");
-    }
-    return this.$elements;
   }
 
   _correctAdminBarMargin($container: HTMLElement): void {
