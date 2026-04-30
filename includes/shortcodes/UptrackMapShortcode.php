@@ -149,7 +149,7 @@ class UptrackMapShortCode
 
         $css_name = "uptrack-map";
         $css_url = \plugins_url(
-            "css/uptrack-map.css",
+            "css/uptrack-map-core.css",
             UPTRACK_MAP__PLUGIN_FILE,
         );
         \wp_register_style($css_name, $css_url, [], $version);

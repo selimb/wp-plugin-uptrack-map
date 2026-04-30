@@ -25,7 +25,6 @@ const FocusCardPreview: React.FC<{ htmlText: string }> = ({ htmlText }) => {
     };
   }, [htmlText]);
 
-  // XXX
   return (
     <p style={{ color: "#666", fontStyle: "italic" }}>
       Focus card is rendered at the bottom of the screen.

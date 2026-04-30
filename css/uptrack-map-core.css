@@ -1,0 +1,32 @@
+/*
+ * Legend
+ */
+.leaflet-control-layers-selector {
+  /* hide native checkbox */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #999;
+  margin-right: 6px;
+  vertical-align: middle;
+  cursor: pointer;
+
+  border-color: currentColor;
+}
+
+.leaflet-control-layers-selector:checked {
+  background-color: currentColor;
+}
+
+.leaflet-control-layers-selector:focus {
+  outline: none;
+}
+
+/*
+ * Misc
+ */
+.hidden {
+  display: none !important;
+}

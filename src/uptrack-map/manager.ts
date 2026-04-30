@@ -434,7 +434,7 @@ export class UptrackMapManager {
   }
 
   addPopupListeners(_popup: L.Popup, _routeId: RouteId): void {
-    // [popup-click]
+    // XXX Why do we need this? [popup-click]
     // popup.getElement()?.addEventListener('click', () => {
     //   this.focusRoute(routeId);
     // });
