@@ -16,10 +16,6 @@
   vertical-align: middle;
 }
 
-.code-editor {
-  width: 100%;
-}
-
 .code-editor-container {
   position: relative;
 }
@@ -51,7 +47,7 @@
 .code-editor .cm-editor {
   min-height: 300px;
   font-family: monospace;
-  font-size: 12px;
+  font-size: 0.75rem;
   border: 1px solid #ddd;
   line-height: 1.5;
 }
@@ -60,6 +56,18 @@
   min-height: 300px;
 }
 
-.code-editor-error .cm-editor {
-  border: 2px solid #dc3232;
+.code-editor .cm-panels-bottom {
+  border-top: 1px solid #dcdcde;
+}
+
+.code-editor .cm-panel.cm-panel-lint {
+  background: #fff;
+}
+
+.code-editor:has(.cm-panel.cm-panel-lint) .cm-editor {
+  border: 1px solid #dc3232;
+}
+
+.code-editor .cm-panel-lint [name="close"] {
+  display: none;
 }

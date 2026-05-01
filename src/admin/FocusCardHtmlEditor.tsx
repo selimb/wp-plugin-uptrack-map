@@ -1,12 +1,12 @@
 import { html } from "@codemirror/lang-html";
-import CodeMirror from "@uiw/react-codemirror";
-import { Button, Notice, TabPanel } from "@wordpress/components";
+import { TabPanel } from "@wordpress/components";
 import { useEffect, useState } from "@wordpress/element";
 import * as prettierPluginHtml from "prettier/plugins/html";
 import { format as prettierFormat } from "prettier/standalone";
 
 import { FocusCard } from "../uptrack-map/focus-card";
 import type { RouteInfo } from "../uptrack-map/types";
+import { CodeEditor, type CodeEditorLinter } from "./CodeEditor";
 
 const PREVIEW_ROUTE_INFO: RouteInfo = {
   id: "preview",
@@ -46,14 +46,12 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
   onChange,
 }) => {
   const [htmlText, setHtmlText] = useState(value);
-  const [formatError, setFormatError] = useState<string | null>(null);
 
   useEffect(() => {
     setHtmlText(value);
   }, [value]);
 
   const handleChange = (newText: string): void => {
-    setFormatError(null);
     setHtmlText(newText);
     onChange(newText);
   };
@@ -64,12 +62,9 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
         parser: "html",
         plugins: [prettierPluginHtml],
       });
-      setFormatError(null);
       handleChange(formatted);
-    } catch (error_) {
-      const errorMessage =
-        error_ instanceof Error ? error_.message : "Invalid HTML";
-      setFormatError(errorMessage);
+    } catch {
+      // Lint diagnostics surface formatting/parse errors.
     }
   };
 
@@ -83,36 +78,13 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
       >
         {(tab) =>
           tab.name === "edit" ? (
-            <div>
-              {formatError && (
-                <Notice status="error" isDismissible={false}>
-                  {formatError}
-                </Notice>
-              )}
-
-              <div className="code-editor-container">
-                <Button
-                  className="code-editor-action"
-                  variant="tertiary"
-                  icon={<span aria-hidden="true">✨</span>}
-                  label="Format"
-                  showTooltip={true}
-                  onClick={() => {
-                    void handleFormatHtml();
-                  }}
-                />
-
-                <CodeMirror
-                  className="code-editor"
-                  value={htmlText}
-                  extensions={[html()]}
-                  onChange={(newValue) => {
-                    handleChange(newValue);
-                  }}
-                  basicSetup={true}
-                />
-              </div>
-            </div>
+            <CodeEditor
+              value={htmlText}
+              extensions={[html()]}
+              lint={linter}
+              onChange={handleChange}
+              onFormat={handleFormatHtml}
+            />
           ) : (
             <FocusCardPreview htmlText={htmlText} />
           )
@@ -120,4 +92,28 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
       </TabPanel>
     </div>
   );
+};
+
+const linter: CodeEditorLinter = async (view) => {
+  const text = view.state.doc.toString();
+
+  try {
+    await prettierFormat(text, {
+      parser: "html",
+      plugins: [prettierPluginHtml],
+    });
+    return [];
+  } catch (error_) {
+    const errorMessage =
+      error_ instanceof Error ? error_.message : "Invalid HTML";
+    return [
+      {
+        from: 0,
+        to: Math.min(1, text.length),
+        severity: "error",
+        source: "Prettier",
+        message: errorMessage,
+      },
+    ];
+  }
 };

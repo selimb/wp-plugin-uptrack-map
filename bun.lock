@@ -6,6 +6,7 @@
       "dependencies": {
         "@codemirror/lang-html": "^6.4.11",
         "@codemirror/lang-json": "^6.0.2",
+        "@codemirror/lint": "^6.9.5",
         "@tanstack/react-form": "^1.29.1",
         "@uiw/react-codemirror": "^4.25.9",
         "@wordpress/api-fetch": "^7.44.0",
