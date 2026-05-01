@@ -54,6 +54,8 @@ class Settings
                 self::$SETTING_ROUTES => [],
                 self::$SETTING_ALPINEJS_URL =>
                     "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
+                self::$SETTING_CSS => "",
+                self::$SETTING_FOCUS_CARD_HTML => "",
             ],
         ]);
     }

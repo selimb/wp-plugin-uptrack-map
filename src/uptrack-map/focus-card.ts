@@ -68,15 +68,17 @@ export class FocusCard {
       return;
     }
 
-    this.routeInfo = info;
+    this.hide();
+
     const alpineData = options?.alpineData ?? buildAlpineData(info);
 
-    this.hide();
+    this.routeInfo = info;
     this.elem = this._render(alpineData);
     this._correctAdminBarMargin(this.elem);
   }
 
   hide(): void {
+    this.routeInfo = undefined;
     if (this.elem) {
       this.elem.remove();
       this.elem = undefined;
