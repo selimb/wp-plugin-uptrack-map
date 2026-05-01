@@ -1,18 +1,22 @@
 import * as codeMirrorJs from "@codemirror/lang-javascript";
 
-import { FocusCard } from "../../uptrack-map/focus-card";
 import { CodeEditor } from "../CodeEditor";
-import { SAMPLE_ROUTE_INFO } from "./FocusCardPreview";
 
-const SAMPLE_ALPINE_DATA = FocusCard.buildAlpineData(SAMPLE_ROUTE_INFO, {
-  pretty: true,
-});
+export type FocusCardDataProps = {
+  alpineData: string;
+  onChangeAlpineData: (alpineData: string) => void;
+};
 
-export const FocusCardData: React.FC = () => {
+export const FocusCardData: React.FC<FocusCardDataProps> = ({
+  alpineData,
+  onChangeAlpineData,
+}) => {
+  console.info("onChangeAlpineData", onChangeAlpineData);
   return (
     <div className="w-full">
       <CodeEditor
-        value={SAMPLE_ALPINE_DATA}
+        value={alpineData}
+        onChange={onChangeAlpineData}
         extensions={[codeMirrorJs.javascript()]}
       />
     </div>

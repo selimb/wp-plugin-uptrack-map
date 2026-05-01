@@ -4,18 +4,21 @@ import { useEffect, useRef, useState } from "@wordpress/element";
 import { FocusCard } from "../../uptrack-map/focus-card";
 import type { FocusCardFormProps } from "./FocusCardForm";
 import { SAMPLE_ROUTE_INFO } from "./sample-route";
+import type { FocusCardDataProps } from "./FocusCardData";
 
 type Device = "desktop" | "mobile";
 
 export type FocusCardPreviewProps = Pick<
   FocusCardFormProps,
   "focusCardHtml" | "css" | "alpineJsUrl"
->;
+> &
+  Pick<FocusCardDataProps, "alpineData">;
 
 export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
   focusCardHtml,
   css,
   alpineJsUrl,
+  alpineData,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [device, setDevice] = useState<Device>("desktop");
@@ -45,7 +48,7 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
       }
 
       const card = new FocusCard(focusCardHtml, iframeDoc.body);
-      card.show(SAMPLE_ROUTE_INFO);
+      card.show(SAMPLE_ROUTE_INFO, { alpineData });
     };
 
     if (iframeDoc.readyState === "complete") {
@@ -53,7 +56,7 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
     } else {
       iframe.addEventListener("load", init, { once: true });
     }
-  }, [focusCardHtml, css, alpineJsUrl]);
+  }, [focusCardHtml, css, alpineJsUrl, alpineData]);
 
   return (
     <div
@@ -103,7 +106,6 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
           padding: "1rem",
           backgroundColor: "#f5f1e8",
           border: "1px solid #d6cfc1",
-          borderRadius: "12px",
           boxSizing: "border-box",
           transition: "width 160ms ease",
         }}

@@ -1,8 +1,11 @@
 import { TabPanel } from "@wordpress/components";
+import { useState } from "@wordpress/element";
 
+import { FocusCard } from "../../uptrack-map/focus-card";
 import { FocusCardData } from "./FocusCardData";
 import { FocusCardHtmlEditor } from "./FocusCardHtmlEditor";
 import { FocusCardPreview } from "./FocusCardPreview";
+import { SAMPLE_ROUTE_INFO } from "./sample-route";
 
 const Tab = {
   edit: "edit",
@@ -24,6 +27,10 @@ export type FocusCardFormProps = {
 };
 
 export const FocusCardForm: React.FC<FocusCardFormProps> = (props) => {
+  const [alpineData, onChangeAlpineData] = useState(
+    FocusCard.buildAlpineData(SAMPLE_ROUTE_INFO, { pretty: true }),
+  );
+
   return (
     <div className="w-full">
       <TabPanel tabs={TABS}>
@@ -33,10 +40,15 @@ export const FocusCardForm: React.FC<FocusCardFormProps> = (props) => {
               return <FocusCardHtmlEditor {...props} />;
             }
             case Tab.data: {
-              return <FocusCardData />;
+              return (
+                <FocusCardData
+                  alpineData={alpineData}
+                  onChangeAlpineData={onChangeAlpineData}
+                />
+              );
             }
             case Tab.preview: {
-              return <FocusCardPreview {...props} />;
+              return <FocusCardPreview {...props} alpineData={alpineData} />;
             }
           }
         }}

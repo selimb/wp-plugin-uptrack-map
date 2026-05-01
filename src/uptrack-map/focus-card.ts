@@ -60,15 +60,16 @@ export class FocusCard {
 
   static buildAlpineData = buildAlpineData;
 
-  show(info: RouteInfo): void {
+  show(info: RouteInfo, options?: { alpineData?: string }): void {
     if (info.id === this.routeInfo?.id) {
       return;
     }
 
     this.routeInfo = info;
+    const alpineData = options?.alpineData ?? buildAlpineData(info);
 
     this.hide();
-    this.elem = this._render(info);
+    this.elem = this._render(alpineData);
     this._correctAdminBarMargin(this.elem);
   }
 
@@ -81,7 +82,7 @@ export class FocusCard {
     this.document.removeEventListener("keyup", this._handleDocumentKeyup);
   }
 
-  _render(info: RouteInfo): HTMLElement {
+  _render(alpineData: string): HTMLElement {
     const $fragment = this.templateElem.content.cloneNode(
       true,
     ) as DocumentFragment;
@@ -93,8 +94,7 @@ export class FocusCard {
     }
     const $elem = $child as HTMLElement;
 
-    const xData = buildAlpineData(info);
-    $elem.setAttribute("x-data", xData);
+    $elem.setAttribute("x-data", alpineData);
 
     this.targetElem.append($elem);
 
