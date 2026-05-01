@@ -4,9 +4,14 @@ import { useEffect, useState } from "@wordpress/element";
 import * as prettierPluginHtml from "prettier/plugins/html";
 import { format as prettierFormat } from "prettier/standalone";
 
+import { DEFAULT_FOCUS_CARD_HTML } from "../default-assets/index";
 import { FocusCard } from "../uptrack-map/focus-card";
 import type { RouteInfo } from "../uptrack-map/types";
-import { CodeEditor, type CodeEditorLinter } from "./CodeEditor";
+import {
+  CodeEditor,
+  type CodeEditorButton,
+  type CodeEditorLinter,
+} from "./CodeEditor";
 
 const PREVIEW_ROUTE_INFO: RouteInfo = {
   id: "preview",
@@ -68,6 +73,16 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
     }
   };
 
+  const editorButtons: CodeEditorButton[] = [
+    {
+      icon: "undo",
+      label: "Reset to Default",
+      onClick: () => {
+        handleChange(DEFAULT_FOCUS_CARD_HTML);
+      },
+    },
+  ];
+
   return (
     <div className="w-full">
       <TabPanel
@@ -84,6 +99,7 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
               lint={linter}
               onChange={handleChange}
               onFormat={handleFormatHtml}
+              buttons={editorButtons}
             />
           ) : (
             <FocusCardPreview htmlText={htmlText} />

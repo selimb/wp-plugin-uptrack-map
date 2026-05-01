@@ -2,8 +2,9 @@ import { linter } from "@codemirror/lint";
 import type { Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
-import { Button } from "@wordpress/components";
+import { Button, type IconType } from "@wordpress/components";
 import { useMemo } from "@wordpress/element";
+import React from "react";
 
 export type CodeEditorLintDiagnostic = {
   from: number;
@@ -19,11 +20,18 @@ export type CodeEditorLinter = (
   | readonly CodeEditorLintDiagnostic[]
   | Promise<readonly CodeEditorLintDiagnostic[]>;
 
+export type CodeEditorButton = {
+  icon: IconType;
+  label: string;
+  onClick: () => void | Promise<void>;
+};
+
 export type CodeEditorProps = {
   value: string;
   onChange: (value: string) => void;
   extensions: Extension[];
-  onFormat: () => void | Promise<void>;
+  onFormat?: () => void | Promise<void>;
+  buttons?: CodeEditorButton[];
   lint?: CodeEditorLinter;
 };
 
@@ -32,6 +40,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onChange,
   extensions,
   onFormat,
+  buttons = [],
   lint,
 }) => {
   const allExtensions = useMemo(() => {
@@ -50,19 +59,36 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     ];
   }, [extensions, lint]);
 
+  const allButtons = [
+    ...(onFormat
+      ? [
+          {
+            icon: <span aria-hidden="true">✨</span>,
+            label: "Format",
+            onClick: onFormat,
+          },
+        ]
+      : []),
+    ...buttons,
+  ];
+
   return (
     <div className="code-editor-container">
-      <Button
-        className="code-editor-action"
-        variant="tertiary"
-        icon={<span aria-hidden="true">✨</span>}
-        label="Format"
-        showTooltip={true}
-        onClick={() => {
-          void onFormat();
-        }}
-      />
-
+      <div className="code-editor-action-container">
+        {allButtons.map((btn, idx) => (
+          <Button
+            key={idx}
+            className="code-editor-action"
+            variant="tertiary"
+            icon={btn.icon}
+            label={btn.label}
+            showTooltip={true}
+            onClick={() => {
+              void btn.onClick();
+            }}
+          />
+        ))}
+      </div>
       <CodeMirror
         className="code-editor"
         value={value}
