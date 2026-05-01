@@ -1,45 +1,15 @@
-import { html } from "@codemirror/lang-html";
+import * as codemirrorHtml from "@codemirror/lang-html";
 import { TabPanel } from "@wordpress/components";
-import { useEffect, useState } from "@wordpress/element";
 import * as prettierPluginHtml from "prettier/plugins/html";
 import { format as prettierFormat } from "prettier/standalone";
 
 import { DEFAULT_FOCUS_CARD_HTML } from "../default-assets/index";
-import { FocusCard } from "../uptrack-map/focus-card";
-import type { RouteInfo } from "../uptrack-map/types";
 import {
   CodeEditor,
   type CodeEditorButton,
   type CodeEditorLinter,
 } from "./CodeEditor";
-
-const PREVIEW_ROUTE_INFO: RouteInfo = {
-  id: "preview",
-  kmlUrl: "",
-  type: "ski_touring",
-  marker: null,
-  postUrl: "#",
-  postTitle: "Example Route",
-  distance: "12.5",
-  elevation: "800",
-  duration: "2",
-};
-
-const FocusCardPreview: React.FC<{ htmlText: string }> = ({ htmlText }) => {
-  useEffect(() => {
-    const card = new FocusCard(htmlText);
-    card.show(PREVIEW_ROUTE_INFO);
-    return () => {
-      card.hide();
-    };
-  }, [htmlText]);
-
-  return (
-    <p style={{ color: "#666", fontStyle: "italic" }}>
-      Focus card is rendered at the bottom of the screen.
-    </p>
-  );
-};
+import { FocusCardPreview } from "./FocusCardPreview";
 
 export type FocusCardHtmlEditorProps = {
   value: string;
@@ -50,24 +20,13 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
   value,
   onChange,
 }) => {
-  const [htmlText, setHtmlText] = useState(value);
-
-  useEffect(() => {
-    setHtmlText(value);
-  }, [value]);
-
-  const handleChange = (newText: string): void => {
-    setHtmlText(newText);
-    onChange(newText);
-  };
-
   const handleFormatHtml = async (): Promise<void> => {
     try {
-      const formatted = await prettierFormat(htmlText, {
+      const formatted = await prettierFormat(value, {
         parser: "html",
         plugins: [prettierPluginHtml],
       });
-      handleChange(formatted);
+      onChange(formatted);
     } catch {
       // Lint diagnostics surface formatting/parse errors.
     }
@@ -78,7 +37,7 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
       icon: "undo",
       label: "Reset to Default",
       onClick: () => {
-        handleChange(DEFAULT_FOCUS_CARD_HTML);
+        onChange(DEFAULT_FOCUS_CARD_HTML);
       },
     },
   ];
@@ -94,15 +53,15 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
         {(tab) =>
           tab.name === "edit" ? (
             <CodeEditor
-              value={htmlText}
-              extensions={[html()]}
+              value={value}
+              extensions={[codemirrorHtml.html()]}
               lint={linter}
-              onChange={handleChange}
+              onChange={onChange}
               onFormat={handleFormatHtml}
               buttons={editorButtons}
             />
           ) : (
-            <FocusCardPreview htmlText={htmlText} />
+            <FocusCardPreview htmlText={value} />
           )
         }
       </TabPanel>
