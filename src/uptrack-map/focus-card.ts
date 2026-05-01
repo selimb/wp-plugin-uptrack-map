@@ -9,11 +9,13 @@ function buildAlpineData(
   const pretty = options?.pretty;
   return [
     "{",
-    `route: ${JSON.stringify(routeInfo, null, pretty ? 4 : undefined)},`,
-    // [evt-close-focus-card]
-    `card: { close() { $dispatch('close-focus-card') } },`,
+    `  route: ${JSON.stringify(routeInfo, null, pretty ? 4 : undefined)},`,
+    // [evt-focus-card-close]
+    `  card: { close() { $dispatch('focus-card:close') } },`,
+    // [evt-focus-card-ready]
+    `  init() { this.$nextTick(() => this.$dispatch('focus-card:ready')) },`,
     "}",
-  ].join(pretty ? "\n" : " ");
+  ].join(pretty ? "\n" : "");
 }
 
 type DragState = {
@@ -30,12 +32,13 @@ type DragState = {
  */
 export class FocusCard {
   public onClose: (() => void) | undefined = undefined;
+  public onReady: (() => void) | undefined = undefined;
+  public elem: HTMLElement | undefined = undefined;
 
   private readonly templateElem: HTMLTemplateElement;
   private readonly targetElem: HTMLElement;
   private readonly document: Document;
 
-  private elem: HTMLElement | undefined = undefined;
   private routeInfo: RouteInfo | undefined = undefined;
   private dragState: DragState | undefined = undefined;
 
@@ -98,10 +101,15 @@ export class FocusCard {
 
     this.targetElem.append($elem);
 
-    // [evt-close-focus-card]
-    $elem.addEventListener("close-focus-card", () => {
+    // [evt-focus-card-close]
+    $elem.addEventListener("focus-card:close", () => {
       this.onClose?.();
     });
+    // [evt-focus-card-ready]
+    $elem.addEventListener("focus-card:ready", () => {
+      this.onReady?.();
+    });
+
     $elem.addEventListener("touchstart", this._handleTouchStart);
     $elem.addEventListener("touchmove", this._handleTouchMove);
     $elem.addEventListener("touchend", this._handleTouchEnd);

@@ -11,7 +11,6 @@ export const FocusCardData: React.FC<FocusCardDataProps> = ({
   alpineData,
   onChangeAlpineData,
 }) => {
-  console.info("onChangeAlpineData", onChangeAlpineData);
   return (
     <div className="w-full">
       <CodeEditor

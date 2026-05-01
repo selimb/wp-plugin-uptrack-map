@@ -2,9 +2,9 @@ import { Button } from "@wordpress/components";
 import { useEffect, useRef, useState } from "@wordpress/element";
 
 import { FocusCard } from "../../uptrack-map/focus-card";
+import type { FocusCardDataProps } from "./FocusCardData";
 import type { FocusCardFormProps } from "./FocusCardForm";
 import { SAMPLE_ROUTE_INFO } from "./sample-route";
-import type { FocusCardDataProps } from "./FocusCardData";
 
 type Device = "desktop" | "mobile";
 
@@ -33,6 +33,8 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
       return;
     }
 
+    let cleanupResize: (() => void) | undefined;
+
     const init = (): void => {
       // Inject CSS
       const styleElem = iframeDoc.createElement("style");
@@ -49,6 +51,7 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
 
       const card = new FocusCard(focusCardHtml, iframeDoc.body);
       card.show(SAMPLE_ROUTE_INFO, { alpineData });
+      cleanupResize = setupFocusCardIframeResize({ card, iframe, iframeDoc });
     };
 
     if (iframeDoc.readyState === "complete") {
@@ -56,6 +59,10 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
     } else {
       iframe.addEventListener("load", init, { once: true });
     }
+
+    return () => {
+      cleanupResize?.();
+    };
   }, [focusCardHtml, css, alpineJsUrl, alpineData]);
 
   return (
@@ -103,10 +110,8 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
         style={{
           width: device === "desktop" ? "100%" : "390px",
           maxWidth: "100%",
-          padding: "1rem",
           backgroundColor: "#f5f1e8",
           border: "1px solid #d6cfc1",
-          boxSizing: "border-box",
           transition: "width 160ms ease",
         }}
         title="Focus Card Preview"
@@ -114,3 +119,38 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
     </div>
   );
 };
+
+function setupFocusCardIframeResize(params: {
+  card: FocusCard;
+  iframe: HTMLIFrameElement;
+  iframeDoc: Document;
+}): () => void {
+  const { card, iframe, iframeDoc } = params;
+
+  iframeDoc.body.style.margin = "1rem";
+  iframeDoc.body.style.overflow = "hidden";
+
+  const updateHeight = (): void => {
+    const contentHeight = iframeDoc.body.scrollHeight;
+    iframe.style.height = `${contentHeight}px`;
+  };
+
+  card.onReady = () => {
+    const elem = card.elem;
+    if (elem) {
+      // Undo `position:absolute` to get more predictable height measurement.
+      elem.style.position = "inherit";
+    }
+    updateHeight();
+  };
+
+  const rafId = requestAnimationFrame(updateHeight);
+
+  const observer = new ResizeObserver(updateHeight);
+  observer.observe(iframeDoc.body);
+
+  return () => {
+    observer.disconnect();
+    cancelAnimationFrame(rafId);
+  };
+}
