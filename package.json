@@ -51,7 +51,6 @@
     "eslint-plugin-unicorn": "^62.0.0",
     "rollup": "^4.53.2",
     "rollup-plugin-esbuild": "^6.2.1",
-    "rollup-plugin-string": "^3.0.0",
     "typescript-eslint": "^8.46.4"
   }
 }
