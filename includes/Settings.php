@@ -20,6 +20,8 @@ class Settings
     // SYNC [uptrack-settings]
     public static $SETTING_ALPINEJS_URL = "alpinejs_url";
     // SYNC [uptrack-settings]
+    public static $SETTING_CSS = "css";
+    // SYNC [uptrack-settings]
     public static $SETTING_FOCUS_CARD_HTML = "focus_card_html";
 
     public static function init()

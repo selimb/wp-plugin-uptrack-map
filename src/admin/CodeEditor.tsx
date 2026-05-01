@@ -28,7 +28,7 @@ export type CodeEditorButton = {
 
 export type CodeEditorProps = {
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   extensions: Extension[];
   onFormat?: () => void | Promise<void>;
   buttons?: CodeEditorButton[];
@@ -94,6 +94,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         value={value}
         extensions={allExtensions}
         onChange={onChange}
+        readOnly={onChange == null}
         basicSetup={true}
       />
     </div>

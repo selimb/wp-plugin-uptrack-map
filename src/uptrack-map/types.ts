@@ -9,8 +9,10 @@ export const zRouteInfo = z.object({
   kmlUrl: z.string(),
   type: zRouteType,
   marker: z.nullable(zMarkerCoords),
-  postUrl: z.string(),
-  postTitle: z.string(),
+  /** Post URL */
+  url: z.string(),
+  /** Post title */
+  title: z.string(),
   distance: z.string(),
   elevation: z.string(),
   duration: z.string(),

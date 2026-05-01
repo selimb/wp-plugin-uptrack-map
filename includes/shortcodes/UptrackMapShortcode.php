@@ -105,8 +105,8 @@ class UptrackMapShortCode
                 "kmlUrl" => $kml_url,
                 "type" => $type,
                 "marker" => $marker,
-                "postUrl" => $post_url,
-                "postTitle" => $post_title,
+                "url" => $post_url,
+                "title" => $post_title,
                 "distance" => $distance,
                 "elevation" => $elevation,
                 "duration" => $duration,
@@ -132,27 +132,31 @@ class UptrackMapShortCode
             ["strategy" => "defer"],
         );
 
-        $script_name = "uptrack-map";
-        $script_url = \plugins_url(
-            "js/uptrack-map.js",
-            UPTRACK_MAP__PLUGIN_FILE,
+        $uptrack_map_script_name = "uptrack-map";
+        \wp_enqueue_script(
+            $uptrack_map_script_name,
+            \plugins_url("js/uptrack-map.js", UPTRACK_MAP__PLUGIN_FILE),
+            [],
+            $version,
+            true,
         );
-        \wp_register_script($script_name, $script_url, [], $version, true);
-        \wp_enqueue_script($script_name);
+
         // SYNC [UptrackMapShortcodeInput]
         $input = \wp_json_encode($data, JSON_UNESCAPED_SLASHES);
         \wp_add_inline_script(
-            $script_name,
+            $uptrack_map_script_name,
             // SYNC [UptrackMapPlugin]
             "window.UptrackMapPlugin.render(" . $input . ")",
         );
 
-        $css_name = "uptrack-map";
-        $css_url = \plugins_url(
-            "css/uptrack-map-core.css",
-            UPTRACK_MAP__PLUGIN_FILE,
+        $style_name = "uptrack-map";
+        \wp_enqueue_style(
+            $style_name,
+            \plugins_url("css/uptrack-map-core.css", UPTRACK_MAP__PLUGIN_FILE),
+            [],
+            $version,
         );
-        \wp_register_style($css_name, $css_url, [], $version);
-        \wp_enqueue_style($css_name);
+
+        \wp_add_inline_style($style_name, $settings[Settings::$SETTING_CSS]);
     }
 }

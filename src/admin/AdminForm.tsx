@@ -19,7 +19,7 @@ import type {
 } from "../settings";
 import type { AdminInput } from "./admin";
 import { CssEditor } from "./CssEditor";
-import { FocusCardHtmlEditor } from "./FocusCardHtmlEditor";
+import { FocusCardForm } from "./focus-card/FocusCardForm";
 import { RoutesTable } from "./RoutesTable";
 import { SettingsJsonEditor } from "./SettingsJsonEditor";
 
@@ -197,15 +197,21 @@ export const AdminForm: React.FC<AdminFormProps> = ({
 
       {/* focus_card_html */}
       <div className="form-field">
-        <form.Field
-          name="focus_card_html"
-          children={(field) => (
+        <form.Subscribe
+          selector={(state) => [
+            state.values.focus_card_html,
+            state.values.css,
+            state.values.alpinejs_url,
+          ]}
+          children={([focusCardHtml, css, alpineJsUrl]) => (
             <BaseControl label="Focus Card HTML">
-              <FocusCardHtmlEditor
-                value={field.state.value}
+              <FocusCardForm
+                focusCardHtml={focusCardHtml}
                 onChange={(value) => {
-                  field.handleChange(value);
+                  form.setFieldValue("focus_card_html", value);
                 }}
+                css={css}
+                alpineJsUrl={alpineJsUrl}
               />
             </BaseControl>
           )}

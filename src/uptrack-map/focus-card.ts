@@ -2,14 +2,18 @@ import { err, log } from "../logging";
 import { FOCUS_CARD_SWIPE_DISTANCE_PX } from "./constants";
 import type { RouteInfo, UptrackMapShortcodeInput } from "./types";
 
-function buildAlpineData(routeInfo: RouteInfo): string {
+function buildAlpineData(
+  routeInfo: RouteInfo,
+  options?: { pretty?: boolean },
+): string {
+  const pretty = options?.pretty;
   return [
     "{",
-    `route: ${JSON.stringify(routeInfo)},`,
+    `route: ${JSON.stringify(routeInfo, null, pretty ? 4 : undefined)},`,
     // [evt-close-focus-card]
     `card: { close() { $dispatch('close-focus-card') } },`,
     "}",
-  ].join(" ");
+  ].join(pretty ? "\n" : " ");
 }
 
 type DragState = {
@@ -27,16 +31,34 @@ type DragState = {
 export class FocusCard {
   public onClose: (() => void) | undefined = undefined;
 
-  private readonly $htmlTemplate: HTMLTemplateElement;
+  private readonly templateElem: HTMLTemplateElement;
+  private readonly targetElem: HTMLElement;
+  private readonly document: Document;
 
-  private $elem: HTMLElement | undefined = undefined;
+  private elem: HTMLElement | undefined = undefined;
   private routeInfo: RouteInfo | undefined = undefined;
   private dragState: DragState | undefined = undefined;
 
-  constructor(focusCardHtml: UptrackMapShortcodeInput["focus_card_html"]) {
-    this.$htmlTemplate = document.createElement("template");
-    this.$htmlTemplate.innerHTML = focusCardHtml;
+  constructor(
+    focusCardHtml: UptrackMapShortcodeInput["focus_card_html"],
+    /**
+     * Target element to append the focus card to.
+     * @default document.body
+     */
+    target?: HTMLElement,
+  ) {
+    if (target) {
+      this.targetElem = target;
+      this.document = target.ownerDocument;
+    } else {
+      this.document = window.document;
+      this.targetElem = window.document.body;
+    }
+    this.templateElem = this.document.createElement("template");
+    this.templateElem.innerHTML = focusCardHtml;
   }
+
+  static buildAlpineData = buildAlpineData;
 
   show(info: RouteInfo): void {
     if (info.id === this.routeInfo?.id) {
@@ -46,48 +68,48 @@ export class FocusCard {
     this.routeInfo = info;
 
     this.hide();
-    this.$elem = this._render(info);
-    this._correctAdminBarMargin(this.$elem);
+    this.elem = this._render(info);
+    this._correctAdminBarMargin(this.elem);
   }
 
   hide(): void {
-    if (this.$elem) {
-      this.$elem.remove();
-      this.$elem = undefined;
+    if (this.elem) {
+      this.elem.remove();
+      this.elem = undefined;
     }
 
-    document.removeEventListener("keyup", this._handleDocumentKeyup);
+    this.document.removeEventListener("keyup", this._handleDocumentKeyup);
   }
 
   _render(info: RouteInfo): HTMLElement {
-    const $fragment = this.$htmlTemplate.content.cloneNode(
+    const $fragment = this.templateElem.content.cloneNode(
       true,
     ) as DocumentFragment;
-    const $elem = $fragment.firstElementChild;
-    if (!$elem) {
+    const $child = $fragment.firstElementChild;
+    if (!$child) {
       const message = "FocusCard: HTML template must have a root element";
       log("error", message, $fragment);
       throw err(message);
     }
-    const $root = $elem as HTMLElement;
+    const $elem = $child as HTMLElement;
 
     const xData = buildAlpineData(info);
-    $root.setAttribute("x-data", xData);
+    $elem.setAttribute("x-data", xData);
 
-    document.body.append($root);
+    this.targetElem.append($elem);
 
     // [evt-close-focus-card]
-    $root.addEventListener("close-focus-card", () => {
+    $elem.addEventListener("close-focus-card", () => {
       this.onClose?.();
     });
-    $root.addEventListener("touchstart", this._handleTouchStart);
-    $root.addEventListener("touchmove", this._handleTouchMove);
-    $root.addEventListener("touchend", this._handleTouchEnd);
-    $root.addEventListener("touchcancel", this._handleTouchCancel);
+    $elem.addEventListener("touchstart", this._handleTouchStart);
+    $elem.addEventListener("touchmove", this._handleTouchMove);
+    $elem.addEventListener("touchend", this._handleTouchEnd);
+    $elem.addEventListener("touchcancel", this._handleTouchCancel);
 
-    document.addEventListener("keyup", this._handleDocumentKeyup);
+    this.document.addEventListener("keyup", this._handleDocumentKeyup);
 
-    return $root;
+    return $elem;
   }
 
   _handleDocumentKeyup = (evt: KeyboardEvent): void => {
@@ -135,7 +157,7 @@ export class FocusCard {
   };
 
   _updateDrag(dragState: DragState | undefined): void {
-    const $root = this.$elem;
+    const $root = this.elem;
     if (!$root) {
       return;
     }
@@ -158,7 +180,7 @@ export class FocusCard {
   }
 
   _correctAdminBarMargin($container: HTMLElement): void {
-    const $adminBar = document.querySelector("#wpadminbar");
+    const $adminBar = this.document.querySelector("#wpadminbar");
     if (!$adminBar) {
       return;
     }

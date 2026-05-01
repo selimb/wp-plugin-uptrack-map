@@ -426,7 +426,7 @@ export class UptrackMapManager {
   static getPopupOptions(info: RouteInfo): L.PopupOptions {
     return {
       closeButton: false,
-      content: info.postTitle,
+      content: info.title,
       // "Higher" `y` offset (default is 7) so that the popup sits above the line.
       offset: [0, 2],
       className: "uptrack-hover-popup",
