@@ -18,14 +18,48 @@
 
 .code-editor {
   width: 100%;
+}
+
+.code-editor-container {
+  position: relative;
+}
+
+.code-editor-action {
+  position: absolute !important;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border: 1px solid #c3c4c7 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%) !important;
+}
+
+.code-editor-action:hover {
+  background: #f6f7f7 !important;
+}
+
+.code-editor-action:focus-visible {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #3858e9 !important;
+}
+
+.code-editor .cm-editor {
   min-height: 300px;
   font-family: monospace;
   font-size: 12px;
-  padding: 8px;
   border: 1px solid #ddd;
   line-height: 1.5;
 }
 
-.code-editor-error {
+.code-editor .cm-scroller {
+  min-height: 300px;
+}
+
+.code-editor-error .cm-editor {
   border: 2px solid #dc3232;
 }

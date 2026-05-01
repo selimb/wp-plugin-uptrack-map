@@ -1,4 +1,6 @@
-import { Notice } from "@wordpress/components";
+import * as codemirrorJson from "@codemirror/lang-json";
+import CodeMirror from "@uiw/react-codemirror";
+import { Button, Notice } from "@wordpress/components";
 import { useEffect, useState } from "@wordpress/element";
 import clsx from "clsx";
 
@@ -39,6 +41,21 @@ export const SettingsJsonEditor: React.FC<SettingsJsonEditorProps> = ({
     }
   };
 
+  const handleFormatJson = (): void => {
+    try {
+      const parsed = JSON.parse(jsonText) as unknown;
+      const validated = zUptrackSettings.parse(parsed);
+      const formatted = JSON.stringify(validated, null, 4);
+      setError(null);
+      setJsonText(formatted);
+      onChange(validated);
+    } catch (error_) {
+      const errorMessage =
+        error_ instanceof Error ? error_.message : "Invalid JSON";
+      setError(errorMessage);
+    }
+  };
+
   return (
     <div style={{ width: "100%" }}>
       {error && (
@@ -47,13 +64,26 @@ export const SettingsJsonEditor: React.FC<SettingsJsonEditorProps> = ({
         </Notice>
       )}
 
-      <textarea
-        className={clsx("code-editor", error && "code-editor-error")}
-        value={jsonText}
-        onChange={(e) => {
-          handleJsonChange(e.currentTarget.value);
-        }}
-      />
+      <div className="code-editor-container">
+        <Button
+          className="code-editor-action"
+          variant="tertiary"
+          icon={<span aria-hidden="true">✨</span>}
+          label="Format"
+          showTooltip={true}
+          onClick={handleFormatJson}
+        />
+
+        <CodeMirror
+          className={clsx("code-editor", error && "code-editor-error")}
+          value={jsonText}
+          extensions={[codemirrorJson.json()]}
+          onChange={(newValue) => {
+            handleJsonChange(newValue);
+          }}
+          basicSetup={true}
+        />
+      </div>
     </div>
   );
 };

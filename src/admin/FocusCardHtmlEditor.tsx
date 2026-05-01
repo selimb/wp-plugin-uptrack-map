@@ -1,5 +1,9 @@
-import { TabPanel } from "@wordpress/components";
+import { html } from "@codemirror/lang-html";
+import CodeMirror from "@uiw/react-codemirror";
+import { Button, Notice, TabPanel } from "@wordpress/components";
 import { useEffect, useState } from "@wordpress/element";
+import * as prettierPluginHtml from "prettier/plugins/html";
+import { format as prettierFormat } from "prettier/standalone";
 
 import { FocusCard } from "../uptrack-map/focus-card";
 import type { RouteInfo } from "../uptrack-map/types";
@@ -42,14 +46,31 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
   onChange,
 }) => {
   const [htmlText, setHtmlText] = useState(value);
+  const [formatError, setFormatError] = useState<string | null>(null);
 
   useEffect(() => {
     setHtmlText(value);
   }, [value]);
 
   const handleChange = (newText: string): void => {
+    setFormatError(null);
     setHtmlText(newText);
     onChange(newText);
+  };
+
+  const handleFormatHtml = async (): Promise<void> => {
+    try {
+      const formatted = await prettierFormat(htmlText, {
+        parser: "html",
+        plugins: [prettierPluginHtml],
+      });
+      setFormatError(null);
+      handleChange(formatted);
+    } catch (error_) {
+      const errorMessage =
+        error_ instanceof Error ? error_.message : "Invalid HTML";
+      setFormatError(errorMessage);
+    }
   };
 
   return (
@@ -62,13 +83,36 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
       >
         {(tab) =>
           tab.name === "edit" ? (
-            <textarea
-              className="code-editor"
-              value={htmlText}
-              onChange={(e) => {
-                handleChange(e.currentTarget.value);
-              }}
-            />
+            <div>
+              {formatError && (
+                <Notice status="error" isDismissible={false}>
+                  {formatError}
+                </Notice>
+              )}
+
+              <div className="code-editor-container">
+                <Button
+                  className="code-editor-action"
+                  variant="tertiary"
+                  icon={<span aria-hidden="true">✨</span>}
+                  label="Format"
+                  showTooltip={true}
+                  onClick={() => {
+                    void handleFormatHtml();
+                  }}
+                />
+
+                <CodeMirror
+                  className="code-editor"
+                  value={htmlText}
+                  extensions={[html()]}
+                  onChange={(newValue) => {
+                    handleChange(newValue);
+                  }}
+                  basicSetup={true}
+                />
+              </div>
+            </div>
           ) : (
             <FocusCardPreview htmlText={htmlText} />
           )
