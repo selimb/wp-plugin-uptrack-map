@@ -1,28 +1,21 @@
 import * as codemirrorJson from "@codemirror/lang-json";
-import { useEffect, useState } from "@wordpress/element";
+import { useState } from "@wordpress/element";
 
 import { type UptrackSettings, zUptrackSettings } from "../settings";
 import { CodeEditor, type CodeEditorLinter } from "./CodeEditor";
 
 export type SettingsJsonEditorProps = {
-  settings: UptrackSettings;
+  initial: UptrackSettings;
   onChange: (settings: UptrackSettings) => void;
 };
 
 export const SettingsJsonEditor: React.FC<SettingsJsonEditorProps> = ({
-  settings,
+  initial,
   onChange,
 }) => {
   const [jsonText, setJsonText] = useState<string>(() =>
-    JSON.stringify(settings, null, 2),
+    JSON.stringify(initial, null, 2),
   );
-
-  // Update the JSON display when settings prop changes.
-  // TODO: This is also triggered when editing the JSON, which isn't ideal performance-wise, but I'm not sure
-  //   how to fix that yet.
-  useEffect(() => {
-    setJsonText(JSON.stringify(settings, null, 2));
-  }, [settings]);
 
   const handleJsonChange = (newJsonText: string): void => {
     setJsonText(newJsonText);

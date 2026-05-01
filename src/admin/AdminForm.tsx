@@ -109,18 +109,13 @@ export const AdminForm: React.FC<AdminFormProps> = ({
       <div style={{ marginTop: "1em" }}>
         <PanelBody title="JSON" initialOpen={false}>
           <PanelRow>
-            <form.Subscribe
-              selector={(state) => [state.values]}
-              children={([values]) => (
-                <SettingsJsonEditor
-                  settings={values}
-                  onChange={(settings) => {
-                    for (const [k, v] of Object.entries(settings)) {
-                      form.setFieldValue(k as never, v as never);
-                    }
-                  }}
-                />
-              )}
+            <SettingsJsonEditor
+              initial={settingsDefault}
+              onChange={(settings) => {
+                for (const [k, v] of Object.entries(settings)) {
+                  form.setFieldValue(k as never, v as never);
+                }
+              }}
             />
           </PanelRow>
         </PanelBody>
