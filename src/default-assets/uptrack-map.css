@@ -1,11 +1,3 @@
-.uptrack-legend-text {
-  text-transform: uppercase;
-  font-weight: bold;
-
-  user-select: none;
-  -webkit-user-select: none;
-}
-
 /*
  * Focus Card
  */
@@ -55,6 +47,15 @@
 .uptrack-hover-popup {
   font-weight: bold;
   text-transform: uppercase;
-  /* [popup-click] */
-  /* cursor: pointer; */
+}
+
+/*
+ * Legend
+ */
+.uptrack-legend-text {
+  text-transform: uppercase;
+  font-weight: bold;
+
+  user-select: none;
+  -webkit-user-select: none;
 }

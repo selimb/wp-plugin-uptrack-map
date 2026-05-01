@@ -264,15 +264,6 @@ export class UptrackMapManager {
     if (!this.hover) {
       return;
     }
-    // [popup-click]
-    // // Avoid unfocusing if the mouse is moving into the popup.
-    // const popup = this.hover.popup;
-    // const relatedTarget = evt.originalEvent.relatedTarget;
-    // if (relatedTarget instanceof HTMLElement) {
-    //   if (popup.getElement()?.contains(relatedTarget)) {
-    //     return;
-    //   }
-    // }
 
     this.unhover();
   }
@@ -368,7 +359,6 @@ export class UptrackMapManager {
         break;
       }
     }
-    this.addPopupListeners(popup, routeId);
 
     if (route.endpoints === undefined) {
       route.endpoints = this.renderEndpointMarkers(route.coords);
@@ -431,16 +421,6 @@ export class UptrackMapManager {
       offset: [0, 2],
       className: "uptrack-hover-popup",
     };
-  }
-
-  addPopupListeners(_popup: L.Popup, _routeId: RouteId): void {
-    // XXX Why do we need this? [popup-click]
-    // popup.getElement()?.addEventListener('click', () => {
-    //   this.focusRoute(routeId);
-    // });
-    // popup.getElement()?.addEventListener('mouseleave', () => {
-    //   this.unhover();
-    // });
   }
 
   /**
