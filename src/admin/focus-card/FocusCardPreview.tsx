@@ -2,11 +2,13 @@ import { Button } from "@wordpress/components";
 import { useEffect, useRef, useState } from "@wordpress/element";
 
 import { FocusCard } from "../../uptrack-map/focus-card";
+import { useDebouncedValue } from "../utils/use-debounced-value";
 import type { FocusCardDataProps } from "./FocusCardData";
 import type { FocusCardFormProps } from "./FocusCardForm";
 import { SAMPLE_ROUTE_INFO } from "./sample-route";
 
 type Device = "desktop" | "mobile";
+type CleanupFn = () => void;
 
 export type FocusCardPreviewProps = Pick<
   FocusCardFormProps,
@@ -22,6 +24,8 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [device, setDevice] = useState<Device>("desktop");
+  const debouncedCss = useDebouncedValue(css, 250);
+  const debouncedAlpineJsUrl = useDebouncedValue(alpineJsUrl, 250);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -33,37 +37,57 @@ export const FocusCardPreview: React.FC<FocusCardPreviewProps> = ({
       return;
     }
 
-    let cleanupResize: (() => void) | undefined;
+    const cleanups: CleanupFn[] = [];
 
     const init = (): void => {
       // Inject CSS
       const styleElem = iframeDoc.createElement("style");
-      styleElem.textContent = css;
+      styleElem.textContent = debouncedCss;
       iframeDoc.head.append(styleElem);
+      cleanups.push(() => {
+        styleElem.remove();
+      });
 
       // Inject AlpineJS
-      if (alpineJsUrl) {
+      if (debouncedAlpineJsUrl) {
         const scriptElem = iframeDoc.createElement("script");
-        scriptElem.src = alpineJsUrl;
+        scriptElem.src = debouncedAlpineJsUrl;
         scriptElem.defer = true;
         iframeDoc.head.append(scriptElem);
+        cleanups.push(() => {
+          scriptElem.remove();
+        });
       }
 
       const card = new FocusCard(focusCardHtml, iframeDoc.body);
       card.show(SAMPLE_ROUTE_INFO, { alpineData });
-      cleanupResize = setupFocusCardIframeResize({ card, iframe, iframeDoc });
+      cleanups.push(() => {
+        card.hide();
+      });
+
+      const cleanupResize = setupFocusCardIframeResize({
+        card,
+        iframe,
+        iframeDoc,
+      });
+      cleanups.push(cleanupResize);
     };
 
     if (iframeDoc.readyState === "complete") {
       init();
     } else {
       iframe.addEventListener("load", init, { once: true });
+      cleanups.push(() => {
+        iframe.removeEventListener("load", init);
+      });
     }
 
     return () => {
-      cleanupResize?.();
+      for (const cleanup of cleanups) {
+        cleanup();
+      }
     };
-  }, [focusCardHtml, css, alpineJsUrl, alpineData]);
+  }, [focusCardHtml, debouncedCss, debouncedAlpineJsUrl, alpineData]);
 
   return (
     <div
@@ -124,7 +148,7 @@ function setupFocusCardIframeResize(params: {
   card: FocusCard;
   iframe: HTMLIFrameElement;
   iframeDoc: Document;
-}): () => void {
+}): CleanupFn {
   const { card, iframe, iframeDoc } = params;
 
   iframeDoc.body.style.margin = "1rem";
