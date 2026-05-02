@@ -1,16 +1,15 @@
-import { useForm } from "@tanstack/react-form";
-import { Button, PanelBody, PanelRow } from "@wordpress/components";
+import { PanelBody, PanelRow } from "@wordpress/components";
 import * as z from "zod/mini";
 
-import { zUptrackSettingsSafe } from "../../settings";
+import { zUptrackSettings } from "../../settings";
 import { SettingsJsonEditor } from "../SettingsJsonEditor";
 import { useUpdateSettings } from "../use-update-settings";
-import { FormSubmitNotice, mountAdminPage } from "./shared";
+import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
 
 // SYNC [AdminJsonInput]
 const zAdminJsonInput = z.object({
   nonce: z.string(),
-  settings: zUptrackSettingsSafe,
+  settings: zUptrackSettings,
 });
 type AdminJsonInput = z.infer<typeof zAdminJsonInput>;
 type JsonSettings = AdminJsonInput["settings"];
@@ -27,7 +26,7 @@ function JsonPage({
 }): React.JSX.Element {
   const { result, update } = useUpdateSettings();
 
-  const form = useForm({
+  const form = useAdminForm({
     defaultValues: settingsDefault,
     onSubmit: async ({ value }) => {
       await update(value);
@@ -35,45 +34,34 @@ function JsonPage({
   });
 
   return (
-    <form
-      className="form-wrap"
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-    >
-      <FormSubmitNotice result={result} />
+    <form.AppForm>
+      <form
+        className="form-wrap"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <FormSubmitNotice result={result} />
 
-      <div style={{ marginTop: "1em" }}>
-        <PanelBody title="JSON" initialOpen={true}>
-          <PanelRow>
-            <SettingsJsonEditor
-              initial={settingsDefault}
-              onChange={(settings) => {
-                for (const [key, value] of Object.entries(settings)) {
-                  form.setFieldValue(key as never, value as never);
-                }
-              }}
-            />
-          </PanelRow>
-        </PanelBody>
-      </div>
+        <div style={{ marginTop: "1em" }}>
+          <PanelBody title="JSON" initialOpen={true}>
+            <PanelRow>
+              <SettingsJsonEditor
+                initial={settingsDefault}
+                onChange={(settings) => {
+                  for (const [key, value] of Object.entries(settings)) {
+                    form.setFieldValue(key as never, value as never);
+                  }
+                }}
+              />
+            </PanelRow>
+          </PanelBody>
+        </div>
 
-      <form.Subscribe
-        selector={(state) => [state.canSubmit, state.isSubmitting]}
-        children={([canSubmit, isSubmitting]) => (
-          <Button
-            variant="primary"
-            type="submit"
-            disabled={!canSubmit || isSubmitting}
-            isBusy={isSubmitting}
-            __next40pxDefaultSize
-          >
-            Save
-          </Button>
-        )}
-      />
-    </form>
+        <form.SubmitButton />
+      </form>
+    </form.AppForm>
   );
 }

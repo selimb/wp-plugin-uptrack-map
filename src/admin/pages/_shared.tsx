@@ -1,5 +1,6 @@
+import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import apiFetch from "@wordpress/api-fetch";
-import { Notice } from "@wordpress/components";
+import { Button, Notice } from "@wordpress/components";
 import { createRoot } from "@wordpress/element";
 import type React from "react";
 import * as z from "zod/mini";
@@ -20,6 +21,36 @@ declare global {
     uptrackAdminInput: unknown;
   }
 }
+
+const { fieldContext, formContext, useFormContext } = createFormHookContexts();
+
+export const { useAppForm: useAdminForm } = createFormHook({
+  fieldComponents: {},
+  fieldContext,
+  formComponents: {
+    SubmitButton: function SubmitButton(): React.JSX.Element {
+      const form = useFormContext();
+
+      return (
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+          children={([canSubmit, isSubmitting]) => (
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={!canSubmit || isSubmitting}
+              isBusy={isSubmitting}
+              __next40pxDefaultSize
+            >
+              Save
+            </Button>
+          )}
+        />
+      );
+    },
+  },
+  formContext,
+});
 
 export const FormSubmitNotice: React.FC<{
   result: UpdateSettingsResult | null;

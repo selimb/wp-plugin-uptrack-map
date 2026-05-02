@@ -10,7 +10,14 @@ import {
   zRouteType,
 } from "../settings";
 import { CoordinateInput } from "./CoordinateInput";
-import type { Post, PostId, PostMap } from "./pages/routes";
+
+export type Post = {
+  ID: string;
+  post_title: string;
+  post_status: string;
+};
+export type PostId = Post["ID"];
+export type PostMap = Map<PostId, Post>;
 
 export type RoutesTableProps = {
   postMap: PostMap;

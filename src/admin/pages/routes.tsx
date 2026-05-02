@@ -1,5 +1,4 @@
-import { useForm } from "@tanstack/react-form";
-import { BaseControl, Button, TextControl } from "@wordpress/components";
+import { BaseControl, TextControl } from "@wordpress/components";
 import * as z from "zod/mini";
 
 import {
@@ -8,9 +7,9 @@ import {
   zKmlFilename,
   zUptrackSettings,
 } from "../../settings";
-import { RoutesTable } from "../RoutesTable";
+import { type Post, type PostMap, RoutesTable } from "../RoutesTable";
 import { useUpdateSettings } from "../use-update-settings";
-import { FormSubmitNotice, mountAdminPage } from "./shared";
+import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
 
 // SYNC [AdminRoutesInput]
 const zAdminRoutesInput = z.object({
@@ -30,10 +29,6 @@ const zAdminRoutesInput = z.object({
   kmlDirectoryValid: z.boolean(),
 });
 type AdminRoutesInput = z.infer<typeof zAdminRoutesInput>;
-
-export type Post = AdminRoutesInput["posts"][number];
-export type PostId = Post["ID"];
-export type PostMap = Map<PostId, Post>;
 
 function buildPostMap(posts: Post[]): PostMap {
   const map: PostMap = new Map();
@@ -109,7 +104,7 @@ function RoutesPage({
 }: RoutesPageProps): React.JSX.Element {
   const { result, update } = useUpdateSettings();
 
-  const form = useForm({
+  const form = useAdminForm({
     defaultValues: settingsDefault,
     onSubmit: async ({ value }) => {
       const updateResult = await update(value);
@@ -123,84 +118,73 @@ function RoutesPage({
   });
 
   return (
-    <form
-      className="form-wrap"
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-    >
-      <FormSubmitNotice result={result} />
+    <form.AppForm>
+      <form
+        className="form-wrap"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <FormSubmitNotice result={result} />
 
-      <div className="form-field">
+        <div className="form-field">
+          <form.Field
+            name="uptrack_kml_directory"
+            validators={{
+              onChange: ({ value }) => (value.trim() ? undefined : "Required"),
+            }}
+            children={(field) => {
+              const kmlDirectoryStillInvalid =
+                field.state.value === settingsDefault.uptrack_kml_directory &&
+                !kmlDirectoryValid;
+              const invalid =
+                !field.state.meta.isValid || kmlDirectoryStillInvalid;
+
+              return (
+                <>
+                  <TextControl
+                    label="KML Directory"
+                    help="KML Directory, relative to wp-content"
+                    value={field.state.value}
+                    required
+                    onChange={(value) => {
+                      field.handleChange(value);
+                    }}
+                    className={invalid ? "control-invalid" : undefined}
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                  />
+                  {kmlDirectoryStillInvalid && (
+                    <p style={{ color: "red" }}>Directory does not exist</p>
+                  )}
+                </>
+              );
+            }}
+          />
+        </div>
+
         <form.Field
-          name="uptrack_kml_directory"
-          validators={{
-            onChange: ({ value }) => (value.trim() ? undefined : "Required"),
-          }}
-          children={(field) => {
-            const kmlDirectoryStillInvalid =
-              field.state.value === settingsDefault.uptrack_kml_directory &&
-              !kmlDirectoryValid;
-            const invalid =
-              !field.state.meta.isValid || kmlDirectoryStillInvalid;
-
-            return (
-              <>
-                <TextControl
-                  label="KML Directory"
-                  help="KML Directory, relative to wp-content"
-                  value={field.state.value}
-                  required
-                  onChange={(value) => {
-                    field.handleChange(value);
-                  }}
-                  className={invalid ? "control-invalid" : undefined}
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
-                />
-                {kmlDirectoryStillInvalid && (
-                  <p style={{ color: "red" }}>Directory does not exist</p>
-                )}
-              </>
-            );
-          }}
+          name="uptrack_routes"
+          children={(field) => (
+            <BaseControl label="Routes">
+              <RoutesTable
+                postMap={postMap}
+                routes={field.state.value}
+                onChange={(index, patch) => {
+                  field.replaceValue(index, {
+                    ...field.state.value[index],
+                    ...patch,
+                  });
+                }}
+              />
+            </BaseControl>
+          )}
         />
-      </div>
 
-      <form.Field
-        name="uptrack_routes"
-        children={(field) => (
-          <BaseControl label="Routes">
-            <RoutesTable
-              postMap={postMap}
-              routes={field.state.value}
-              onChange={(index, patch) => {
-                field.replaceValue(index, {
-                  ...field.state.value[index],
-                  ...patch,
-                });
-              }}
-            />
-          </BaseControl>
-        )}
-      />
-
-      <form.Subscribe
-        selector={(state) => [state.canSubmit, state.isSubmitting]}
-        children={([canSubmit, isSubmitting]) => (
-          <Button
-            variant="primary"
-            type="submit"
-            disabled={!canSubmit || isSubmitting}
-            isBusy={isSubmitting}
-            __next40pxDefaultSize
-          >
-            Save
-          </Button>
-        )}
-      />
-    </form>
+        <form.SubmitButton />
+      </form>
+    </form.AppForm>
   );
 }
