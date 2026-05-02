@@ -79,3 +79,77 @@
 .code-editor .cm-panel-lint [name="close"] {
   display: none;
 }
+
+/* Map Styles Fields */
+.map-styles-field-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.map-styles-field-group--compact {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
+  justify-content: start;
+}
+
+.map-styles-field-group--compact .components-base-control {
+  max-width: 220px;
+}
+
+.map-styles-field-group--single-line {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(140px, 220px);
+  grid-template-columns: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+@media (max-width: 782px) {
+  .map-styles-field-group--single-line {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
+    overflow-x: visible;
+  }
+}
+
+.map-styles-field-group-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.map-styles-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.map-styles-table th,
+.map-styles-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.map-styles-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.map-styles-table input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.map-styles-label-with-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-styles-help-icon {
+  display: inline-flex;
+  color: #646970;
+  cursor: help;
+}

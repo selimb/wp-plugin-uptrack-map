@@ -2,6 +2,7 @@ import type L from "leaflet";
 import * as z from "zod/mini";
 
 import { zMarkerCoords, zRouteType } from "../settings";
+import { zMapStyles } from "./map-styles";
 
 // SYNC [RouteInfo]
 export const zRouteInfo = z.object({
@@ -28,6 +29,7 @@ export type LineCoords = L.LatLng[];
 export const zUptrackMapShortcodeInput = z.strictObject({
   routes: z.array(zRouteInfo),
   focus_card_html: z.string(),
+  mapStyles: zMapStyles,
 });
 export type UptrackMapShortcodeInput = z.infer<
   typeof zUptrackMapShortcodeInput
