@@ -4,7 +4,7 @@ import { createRoot } from "@wordpress/element";
 import React from "react";
 import * as z from "zod/mini";
 
-import { zKmlFilename, zUptrackSettingsSafe } from "../settings";
+import { zKmlFilename, zUptrackSettings } from "../settings";
 import {
   AdminForm,
   type AdminFormProps,
@@ -22,7 +22,7 @@ const zAdminInput = z.strictObject({
       post_status: z.string(),
     }),
   ),
-  settings: zUptrackSettingsSafe,
+  settings: zUptrackSettings,
   kmlFilenames: z.array(zKmlFilename),
   kmlDirectoryValid: z.boolean(),
 });

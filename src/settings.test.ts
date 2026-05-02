@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test";
 
-import { zUptrackSettingsSafe } from "./settings";
+import { zUptrackSettings } from "./settings";
 
 /** Tests [uptrack-settings-fallback]. */
-test("zUptrackSettingsSafe", () => {
-  const result = zUptrackSettingsSafe.parse("oopsies");
+test("zUptrackSettings fallback", () => {
+  const result = zUptrackSettings.parse("oopsies");
+  // NOTE: `css` and `focus_card_html` should resolve to the contents of the files in practice, but bun
+  //   doesn't use the same bundling logic as `build.ts`.
   expect(result).toMatchInlineSnapshot(`
     {
       "alpinejs_url": "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
@@ -23,17 +25,14 @@ test("zUptrackSettingsSafe", () => {
         "roundtripEpsilon": 50,
         "routeStyles": {
           "fade": {
-            "interactive": true,
             "opacity": 0.3,
             "weight": 3,
           },
           "focus": {
-            "interactive": false,
             "opacity": 0.2,
             "weight": 12,
           },
           "normal": {
-            "interactive": true,
             "opacity": 1,
             "weight": 3,
           },

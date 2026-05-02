@@ -60,8 +60,9 @@ export class UptrackMapManager {
   constructor(config: UptrackMapShortcodeInput, map: L.Map) {
     this.config = config;
     this.map = map;
+    const { mapStyles } = config;
 
-    this.renderer = L.canvas({ tolerance: config.mapStyles.canvasTolerance });
+    this.renderer = L.canvas({ tolerance: mapStyles.canvasTolerance });
 
     this.groupRoot = L.featureGroup();
     this.groupRoot.addTo(this.map);
@@ -74,7 +75,7 @@ export class UptrackMapManager {
       this.unfocus();
     };
 
-    this.legend = Legend.create(this.map, this.config.mapStyles.routeTypeProps);
+    this.legend = Legend.create(this.map, mapStyles.routeTypeProps);
     this.legend.onInputClick = (routeType) => {
       this.updateRouteTypeFilter(routeType);
     };
@@ -85,8 +86,9 @@ export class UptrackMapManager {
     options: { variant?: RouteStyleVariant } = {},
   ): L.PathOptions {
     const { variant: variantKey = "normal" } = options;
-    const variant = this.config.mapStyles.routeStyles[variantKey];
-    const color = this.config.mapStyles.routeTypeProps[info.type].color;
+    const { mapStyles } = this.config;
+    const variant = mapStyles.routeStyles[variantKey];
+    const color = mapStyles.routeTypeProps[info.type].color;
     return {
       color,
       opacity: variant.opacity,
@@ -418,6 +420,7 @@ export class UptrackMapManager {
     if (coords.length === 0) {
       return null;
     }
+    const { mapStyles } = this.config;
 
     const markers: L.CircleMarker[] = [];
 
@@ -427,14 +430,14 @@ export class UptrackMapManager {
     if (coords.length > 1) {
       // eslint-disable-next-line unicorn/prefer-at -- No need to handle null, we've checked length above.
       const cN = coords[coords.length - 1];
-      const isRoundtrip = c0.distanceTo(cN) <= this.config.mapStyles.roundtripEpsilon;
+      const isRoundtrip = c0.distanceTo(cN) <= mapStyles.roundtripEpsilon;
       if (!isRoundtrip) {
         endMarker = L.circleMarker(cN, {
-          radius: this.config.mapStyles.markerRadiusPx,
-          color: this.config.mapStyles.markerColor,
-          weight: this.config.mapStyles.markerWeightPx,
-          fillColor: this.config.mapStyles.markerEndFillColor,
-          fillOpacity: this.config.mapStyles.markerFillOpacity,
+          radius: mapStyles.markerRadiusPx,
+          color: mapStyles.markerColor,
+          weight: mapStyles.markerWeightPx,
+          fillColor: mapStyles.markerEndFillColor,
+          fillOpacity: mapStyles.markerFillOpacity,
           interactive: false,
         });
         markers.push(endMarker);
@@ -442,13 +445,13 @@ export class UptrackMapManager {
     }
 
     const startMarker = L.circleMarker(c0, {
-      radius: this.config.mapStyles.markerRadiusPx,
-      color: this.config.mapStyles.markerColor,
-      weight: this.config.mapStyles.markerWeightPx,
+      radius: mapStyles.markerRadiusPx,
+      color: mapStyles.markerColor,
+      weight: mapStyles.markerWeightPx,
       fillColor: endMarker
-        ? this.config.mapStyles.markerStartFillColor
-        : this.config.mapStyles.markerRoundtripFillColor,
-      fillOpacity: this.config.mapStyles.markerFillOpacity,
+        ? mapStyles.markerStartFillColor
+        : mapStyles.markerRoundtripFillColor,
+      fillOpacity: mapStyles.markerFillOpacity,
       interactive: false,
     });
     markers.push(startMarker);

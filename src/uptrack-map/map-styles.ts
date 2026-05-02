@@ -1,11 +1,6 @@
 import * as z from "zod/mini";
 
-function zCatchObject<TShape extends z.core.$ZodLooseShape>(
-  shape: TShape,
-): z.ZodMiniCatch<z.ZodMiniObject<TShape>> {
-  const schema = z.object(shape);
-  return z.catch(schema, () => schema.parse({}));
-}
+import { zCatchObject } from "../utils";
 
 export const zMapStyles = zCatchObject({
   canvasTolerance: z.catch(z.number(), 14),
@@ -43,12 +38,6 @@ export const zMapStyles = zCatchObject({
     }),
   }),
 });
-
-export const zMapStylesSafe = z.catch(
-  zMapStyles,
-  // SAFETY: Defaults are defined inline in zMapStyles catches.
-  () => zMapStyles.parse({}),
-);
 
 export type MapStyles = z.infer<typeof zMapStyles>;
 export type RouteStyleVariant = keyof MapStyles["routeStyles"];

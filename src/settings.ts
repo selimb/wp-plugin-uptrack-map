@@ -4,7 +4,8 @@ import {
   DEFAULT_FOCUS_CARD_HTML,
   DEFAULT_UPTRACK_MAP_CSS,
 } from "./default-assets";
-import { zMapStylesSafe } from "./uptrack-map/map-styles";
+import { zMapStyles } from "./uptrack-map/map-styles";
+import { zCatchObject } from "./utils";
 
 export const zKmlFilename = z.string();
 export type KmlFilename = z.infer<typeof zKmlFilename>;
@@ -36,7 +37,8 @@ export type UptrackRoutesSetting = z.infer<typeof zUptrackRoutesSetting>;
 const zTrimString = z.string().check(z.trim());
 
 // SYNC [uptrack-settings]
-export const zUptrackSettings = z.object({
+// [uptrack-settings-fallback] All properties should have fallbacks.
+export const zUptrackSettings = zCatchObject({
   kml_directory: z.catch(zTrimString, "kml-paths"),
   routes: z.catch(zUptrackRoutesSetting, []),
   focus_card_html: z.catch(z.string(), DEFAULT_FOCUS_CARD_HTML),
@@ -45,15 +47,9 @@ export const zUptrackSettings = z.object({
     zTrimString,
     "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
   ),
-  mapStyles: zMapStylesSafe,
+  mapStyles: zMapStyles,
 });
 export type UptrackSettings = z.infer<typeof zUptrackSettings>;
-
-export const zUptrackSettingsSafe = z.catch(
-  zUptrackSettings,
-  // SAFETY: Tested by [uptrack-settings-fallback].
-  () => zUptrackSettings.parse({}),
-);
 
 // SYNC [UptrackSettingsContainer]
 export type UptrackSettingsContainer = {
