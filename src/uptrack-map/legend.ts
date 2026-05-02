@@ -3,7 +3,7 @@ import L from "leaflet";
 import { RouteTypeLabel } from "../enums";
 import { err } from "../logging";
 import type { RouteType } from "../settings";
-import { ROUTE_TYPE_PROPS } from "./constants";
+import type { MapStyles } from "./map-styles";
 
 /**
  * Reuses the built-in Layers control, with some customized styling to get colored checkboxes,
@@ -13,9 +13,12 @@ import { ROUTE_TYPE_PROPS } from "./constants";
 export class Legend extends L.Control.Layers {
   onInputClick: ((routeType: RouteType) => void) | undefined = undefined;
 
-  static create(map: L.Map): Legend {
+  static create(
+    map: L.Map,
+    routeTypeProps: MapStyles["routeTypeProps"],
+  ): Legend {
     const data = Object.fromEntries(
-      Object.entries(ROUTE_TYPE_PROPS).map(([type_, props]) => {
+      Object.entries(routeTypeProps).map(([type_, props]) => {
         const type = type_ as RouteType;
         const html = `<span data-route-type="${type}" data-color="${props.color}" class="uptrack-legend-text">${RouteTypeLabel[type]}</span>`;
         // Create dummy groups to populate the legend.

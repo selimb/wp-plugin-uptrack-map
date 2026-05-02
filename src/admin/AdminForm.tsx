@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import apiFetch from "@wordpress/api-fetch";
 import {
   BaseControl,
@@ -20,6 +19,8 @@ import type {
 import type { AdminInput } from "./admin";
 import { CssEditor } from "./CssEditor";
 import { FocusCardForm } from "./focus-card/FocusCardForm";
+import { useAdminForm } from "./form-hook";
+import { MapStylesFields } from "./MapStylesFields";
 import { RoutesTable } from "./RoutesTable";
 import { SettingsJsonEditor } from "./SettingsJsonEditor";
 
@@ -42,7 +43,7 @@ export const AdminForm: React.FC<AdminFormProps> = ({
     null | { ok: true } | { ok: false; error: string }
   >(null);
 
-  const form = useForm({
+  const form = useAdminForm({
     defaultValues: settingsDefault,
     onSubmit: async ({ value }) => {
       const data: UptrackSettingsContainer = {
@@ -234,6 +235,9 @@ export const AdminForm: React.FC<AdminFormProps> = ({
           )}
         />
       </div>
+
+      {/* mapStyles */}
+      <MapStylesFields form={form} />
 
       {/* Save */}
       <form.Subscribe

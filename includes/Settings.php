@@ -23,6 +23,8 @@ class Settings
     public static $SETTING_CSS = "css";
     // SYNC [uptrack-settings]
     public static $SETTING_FOCUS_CARD_HTML = "focus_card_html";
+    // SYNC [uptrack-settings]
+    public static $SETTING_MAP_STYLES = "mapStyles";
 
     public static function init()
     {
@@ -56,6 +58,7 @@ class Settings
                     "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
                 self::$SETTING_CSS => "",
                 self::$SETTING_FOCUS_CARD_HTML => "",
+                self::$SETTING_MAP_STYLES => [],
             ],
         ]);
     }

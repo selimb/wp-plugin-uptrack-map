@@ -4,6 +4,7 @@ import {
   DEFAULT_FOCUS_CARD_HTML,
   DEFAULT_UPTRACK_MAP_CSS,
 } from "./default-assets";
+import { zMapStylesSafe } from "./uptrack-map/map-styles";
 
 export const zKmlFilename = z.string();
 export type KmlFilename = z.infer<typeof zKmlFilename>;
@@ -44,6 +45,7 @@ export const zUptrackSettings = z.object({
     zTrimString,
     "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
   ),
+  mapStyles: zMapStylesSafe,
 });
 export type UptrackSettings = z.infer<typeof zUptrackSettings>;
 

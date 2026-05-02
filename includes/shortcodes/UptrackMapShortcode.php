@@ -25,6 +25,7 @@ class UptrackMapShortCode
         $data = [
             "routes" => $routes_data,
             "focus_card_html" => $settings[Settings::$SETTING_FOCUS_CARD_HTML],
+            "mapStyles" => $settings[Settings::$SETTING_MAP_STYLES],
         ];
 
         self::enqueue_assets($settings, $data);
