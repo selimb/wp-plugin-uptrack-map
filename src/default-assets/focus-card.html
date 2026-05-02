@@ -1,0 +1,34 @@
+<div class="uptrack-focus-card">
+  <div class="uptrack-focus-card-header">
+    <a
+      class="uptrack-focus-card-title"
+      x-bind:href="route.url || false"
+      x-text="route.title"
+      x-bind:class="route.url ? '' : 'no-link'"
+    ></a>
+    <button
+      type="button"
+      aria-label="Close"
+      class="uptrack-focus-card-close-button"
+      x-on:click="card.close()"
+    >
+      &#10005;
+    </button>
+  </div>
+  <div>
+    <ul>
+      <li>
+        <span>Duration:</span> <span x-text="route.duration"></span>
+        <span>days</span>
+      </li>
+      <li>
+        <span>Distance:</span> <span x-text="route.distance"></span>
+        <span>km</span>
+      </li>
+      <li>
+        <span>Elevation:</span> <span x-text="route.elevation"></span>
+        <span>m</span>
+      </li>
+    </ul>
+  </div>
+</div>

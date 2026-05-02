@@ -18,6 +18,8 @@ import type {
   UptrackSettingsContainer,
 } from "../settings";
 import type { AdminInput } from "./admin";
+import { CssEditor } from "./CssEditor";
+import { FocusCardForm } from "./focus-card/FocusCardForm";
 import { RoutesTable } from "./RoutesTable";
 import { SettingsJsonEditor } from "./SettingsJsonEditor";
 
@@ -44,10 +46,7 @@ export const AdminForm: React.FC<AdminFormProps> = ({
     defaultValues: settingsDefault,
     onSubmit: async ({ value }) => {
       const data: UptrackSettingsContainer = {
-        uptrack_settings: {
-          kml_directory: value.kml_directory,
-          routes: value.routes,
-        },
+        uptrack_settings: value,
       };
 
       try {
@@ -86,6 +85,7 @@ export const AdminForm: React.FC<AdminFormProps> = ({
         void form.handleSubmit();
       }}
     >
+      {/* Submit result */}
       {submitResult && (
         <Notice
           status={submitResult.ok ? "success" : "error"}
@@ -105,26 +105,23 @@ export const AdminForm: React.FC<AdminFormProps> = ({
         </Notice>
       )}
 
+      {/* JSON editor */}
       <div style={{ marginTop: "1em" }}>
         <PanelBody title="JSON" initialOpen={false}>
           <PanelRow>
-            <form.Subscribe
-              selector={(state) => [state.values]}
-              children={([values]) => (
-                <SettingsJsonEditor
-                  settings={values}
-                  onChange={(settings) => {
-                    for (const [k, v] of Object.entries(settings)) {
-                      form.setFieldValue(k as never, v as never);
-                    }
-                  }}
-                />
-              )}
+            <SettingsJsonEditor
+              initial={settingsDefault}
+              onChange={(settings) => {
+                for (const [k, v] of Object.entries(settings)) {
+                  form.setFieldValue(k as never, v as never);
+                }
+              }}
             />
           </PanelRow>
         </PanelBody>
       </div>
 
+      {/* kml_directory */}
       <div className="form-field">
         <form.Field
           name="kml_directory"
@@ -160,6 +157,7 @@ export const AdminForm: React.FC<AdminFormProps> = ({
         />
       </div>
 
+      {/* routes */}
       <form.Field
         name="routes"
         children={(field) => (
@@ -178,6 +176,66 @@ export const AdminForm: React.FC<AdminFormProps> = ({
         )}
       />
 
+      {/* alpinejs_url */}
+      <div className="form-field">
+        <form.Field
+          name="alpinejs_url"
+          children={(field) => (
+            <TextControl
+              label="AlpineJS URL"
+              type="url"
+              value={field.state.value}
+              onChange={(value) => {
+                field.handleChange(value);
+              }}
+              __next40pxDefaultSize
+              __nextHasNoMarginBottom
+            />
+          )}
+        />
+      </div>
+
+      {/* focus_card_html */}
+      <div className="form-field">
+        <form.Subscribe
+          selector={(state) => [
+            state.values.focus_card_html,
+            state.values.css,
+            state.values.alpinejs_url,
+          ]}
+          children={([focusCardHtml, css, alpineJsUrl]) => (
+            <BaseControl label="Focus Card HTML">
+              <FocusCardForm
+                focusCardHtml={focusCardHtml}
+                onChange={(value) => {
+                  form.setFieldValue("focus_card_html", value);
+                }}
+                css={css}
+                alpineJsUrl={alpineJsUrl}
+              />
+            </BaseControl>
+          )}
+        />
+      </div>
+
+      {/* css */}
+      <div className="form-field">
+        <form.Field
+          name="css"
+          children={(field) => (
+            <BaseControl label="CSS">
+              <CssEditor
+                value={field.state.value}
+                onChange={(value) => {
+                  field.handleChange(value);
+                }}
+              />
+            </BaseControl>
+          )}
+        />
+      </div>
+
+      {/* Save */}
       <form.Subscribe
         selector={(state) => [state.canSubmit, state.isSubmitting]}
         children={([canSubmit, isSubmitting]) => (

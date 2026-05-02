@@ -1,5 +1,10 @@
 import * as z from "zod/mini";
 
+import {
+  DEFAULT_FOCUS_CARD_HTML,
+  DEFAULT_UPTRACK_MAP_CSS,
+} from "./default-assets";
+
 export const zKmlFilename = z.string();
 export type KmlFilename = z.infer<typeof zKmlFilename>;
 
@@ -27,10 +32,18 @@ export type UptrackRoutesSettingItem = z.infer<
 export const zUptrackRoutesSetting = z.array(zUptrackRoutesSettingItem);
 export type UptrackRoutesSetting = z.infer<typeof zUptrackRoutesSetting>;
 
+const zTrimString = z.string().check(z.trim());
+
 // SYNC [uptrack-settings]
 export const zUptrackSettings = z.object({
-  kml_directory: z.catch(z.string(), "kml-paths"),
+  kml_directory: z.catch(zTrimString, "kml-paths"),
   routes: z.catch(zUptrackRoutesSetting, []),
+  focus_card_html: z.catch(z.string(), DEFAULT_FOCUS_CARD_HTML),
+  css: z.catch(z.string(), DEFAULT_UPTRACK_MAP_CSS),
+  alpinejs_url: z.catch(
+    zTrimString,
+    "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
+  ),
 });
 export type UptrackSettings = z.infer<typeof zUptrackSettings>;
 

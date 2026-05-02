@@ -16,8 +16,18 @@ class UptrackMapShortCode
         $routes = $settings[Settings::$SETTING_ROUTES];
 
         $post_map = self::collect_posts($routes);
-        $data = self::prepare_data($kml_directory, $routes, $post_map);
-        self::enqueue_assets($data);
+        $routes_data = self::prepare_routes_data(
+            $kml_directory,
+            $routes,
+            $post_map,
+        );
+        // SYNC [UptrackMapShortcodeInput]
+        $data = [
+            "routes" => $routes_data,
+            "focus_card_html" => $settings[Settings::$SETTING_FOCUS_CARD_HTML],
+        ];
+
+        self::enqueue_assets($settings, $data);
 
         return "";
     }
@@ -49,8 +59,11 @@ class UptrackMapShortCode
         return $post_map;
     }
 
-    private static function prepare_data($kml_directory, $routes, $post_map)
-    {
+    private static function prepare_routes_data(
+        $kml_directory,
+        $routes,
+        $post_map,
+    ) {
         $data = [];
         foreach ($routes as $info) {
             // SYNC [UptrackRoutesSettingItem].
@@ -92,44 +105,58 @@ class UptrackMapShortCode
                 "kmlUrl" => $kml_url,
                 "type" => $type,
                 "marker" => $marker,
-                "postUrl" => $post_url,
-                "postTitle" => $post_title,
+                "url" => $post_url,
+                "title" => $post_title,
                 "distance" => $distance,
                 "elevation" => $elevation,
                 "duration" => $duration,
             ];
         }
+
         return $data;
     }
 
-    private static function enqueue_assets($data)
+    private static function enqueue_assets($settings, $data)
     {
         $version = UPTRACK_MAP__PLUGIN_VERSION;
 
-        // [require-wp-leaflet-map] [wp-leaflet-toGeoJSON]
+        // [require-wp-leaflet-map] [require-toGeoJSON] Includes leaflet and toGeoJSON.
+        // Defined in https://github.com/bozdoz/wp-plugin-leaflet-map/blob/v3.4.5/class.leaflet-map.php#L217
         \wp_enqueue_script("leaflet_ajax_geojson_js");
-
-        $script_name = "uptrack-map";
-        $script_url = \plugins_url(
-            "js/uptrack-map.js",
-            UPTRACK_MAP__PLUGIN_FILE,
+        // [uptrack_alpine_js]
+        \wp_enqueue_script(
+            "uptrack_alpine_js",
+            $settings[Settings::$SETTING_ALPINEJS_URL],
+            [],
+            null,
+            ["strategy" => "defer"],
         );
-        \wp_register_script($script_name, $script_url, [], $version, true);
-        \wp_enqueue_script($script_name);
+
+        $uptrack_map_script_name = "uptrack-map";
+        \wp_enqueue_script(
+            $uptrack_map_script_name,
+            \plugins_url("js/uptrack-map.js", UPTRACK_MAP__PLUGIN_FILE),
+            [],
+            $version,
+            true,
+        );
+
         // SYNC [UptrackMapShortcodeInput]
         $input = \wp_json_encode($data, JSON_UNESCAPED_SLASHES);
         \wp_add_inline_script(
-            $script_name,
+            $uptrack_map_script_name,
             // SYNC [UptrackMapPlugin]
             "window.UptrackMapPlugin.render(" . $input . ")",
         );
 
-        $css_name = "uptrack-map";
-        $css_url = \plugins_url(
-            "css/uptrack-map.css",
-            UPTRACK_MAP__PLUGIN_FILE,
+        $style_name = "uptrack-map";
+        \wp_enqueue_style(
+            $style_name,
+            \plugins_url("css/uptrack-map-core.css", UPTRACK_MAP__PLUGIN_FILE),
+            [],
+            $version,
         );
-        \wp_register_style($css_name, $css_url, [], $version);
-        \wp_enqueue_style($css_name);
+
+        \wp_add_inline_style($style_name, $settings[Settings::$SETTING_CSS]);
     }
 }

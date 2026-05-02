@@ -1,38 +1,4 @@
 /*
- * Legend
- */
-.leaflet-control-layers-selector {
-  /* hide native checkbox */
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #999;
-  margin-right: 6px;
-  vertical-align: middle;
-  cursor: pointer;
-
-  border-color: currentColor;
-}
-
-.leaflet-control-layers-selector:checked {
-  background-color: currentColor;
-}
-
-.leaflet-control-layers-selector:focus {
-  outline: none;
-}
-
-.uptrack-legend-text {
-  text-transform: uppercase;
-  font-weight: bold;
-
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/*
  * Focus Card
  */
 .uptrack-focus-card {
@@ -81,13 +47,15 @@
 .uptrack-hover-popup {
   font-weight: bold;
   text-transform: uppercase;
-  /* [popup-click] */
-  /* cursor: pointer; */
 }
 
 /*
- * Misc
+ * Legend
  */
-.hidden {
-  display: none !important;
+.uptrack-legend-text {
+  text-transform: uppercase;
+  font-weight: bold;
+
+  user-select: none;
+  -webkit-user-select: none;
 }

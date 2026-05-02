@@ -15,3 +15,67 @@
 .uptrack-route-table td {
   vertical-align: middle;
 }
+
+.code-editor-container {
+  position: relative;
+}
+
+.code-editor-action-container {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 8px;
+}
+
+.code-editor-action {
+  flex-shrink: 0;
+  z-index: 2;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border: 1px solid #c3c4c7 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%) !important;
+}
+
+.code-editor-action:hover {
+  background: #f6f7f7 !important;
+}
+
+.code-editor-action:focus-visible {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #3858e9 !important;
+}
+
+.code-editor .cm-editor {
+  min-height: 300px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  border: 1px solid #ddd;
+  line-height: 1.5;
+}
+
+.code-editor .cm-scroller {
+  min-height: 300px;
+}
+
+.code-editor .cm-panels-bottom {
+  border-top: 1px solid #dcdcde;
+}
+
+.code-editor .cm-panel.cm-panel-lint {
+  background: #fff;
+}
+
+.code-editor:has(.cm-panel.cm-panel-lint) .cm-editor {
+  border: 1px solid #dc3232;
+}
+
+.code-editor .cm-panel-lint [name="close"] {
+  display: none;
+}

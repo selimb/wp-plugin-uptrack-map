@@ -19,7 +19,12 @@ import {
 } from "./constants";
 import { FocusCard } from "./focus-card";
 import { Legend } from "./legend";
-import type { LineCoords, RouteId, RouteInfo } from "./types";
+import type {
+  LineCoords,
+  RouteId,
+  RouteInfo,
+  UptrackMapShortcodeInput,
+} from "./types";
 
 // ===============================================================================================
 // Main Man
@@ -49,6 +54,7 @@ type HoverState = {
 };
 
 export class UptrackMapManager {
+  private readonly config: UptrackMapShortcodeInput;
   private readonly map: L.Map;
   private readonly renderer: L.Renderer;
   private readonly groupRoot: L.FeatureGroup;
@@ -64,7 +70,8 @@ export class UptrackMapManager {
     mountaineering: true,
   };
 
-  constructor(map: L.Map) {
+  constructor(config: UptrackMapShortcodeInput, map: L.Map) {
+    this.config = config;
     this.map = map;
 
     this.renderer = L.canvas({ tolerance: CANVAS_TOLERANCE });
@@ -75,7 +82,7 @@ export class UptrackMapManager {
     /** @type {Map<RouteInfo['id'], Route>} */
     this.routes = new Map();
 
-    this.focusCard = new FocusCard();
+    this.focusCard = new FocusCard(config.focus_card_html);
     this.focusCard.onClose = () => {
       this.unfocus();
     };
@@ -102,9 +109,9 @@ export class UptrackMapManager {
     };
   }
 
-  async loadRoutes(data: RouteInfo[]): Promise<void> {
+  async loadRoutes(): Promise<void> {
     await Promise.all(
-      data.map(async (info) => {
+      this.config.routes.map(async (info) => {
         const { line, coords, fadeLine, marker } = await this.loadRoute(info);
 
         this.routes.set(info.id, {
@@ -257,15 +264,6 @@ export class UptrackMapManager {
     if (!this.hover) {
       return;
     }
-    // [popup-click]
-    // // Avoid unfocusing if the mouse is moving into the popup.
-    // const popup = this.hover.popup;
-    // const relatedTarget = evt.originalEvent.relatedTarget;
-    // if (relatedTarget instanceof HTMLElement) {
-    //   if (popup.getElement()?.contains(relatedTarget)) {
-    //     return;
-    //   }
-    // }
 
     this.unhover();
   }
@@ -323,7 +321,7 @@ export class UptrackMapManager {
     if (applyVisibility) {
       this.applyVisibility();
       this.legend.disableInputs(false);
-      this.focusCard.hide(this.map);
+      this.focusCard.hide();
     }
   }
 
@@ -361,7 +359,6 @@ export class UptrackMapManager {
         break;
       }
     }
-    this.addPopupListeners(popup, routeId);
 
     if (route.endpoints === undefined) {
       route.endpoints = this.renderEndpointMarkers(route.coords);
@@ -419,21 +416,11 @@ export class UptrackMapManager {
   static getPopupOptions(info: RouteInfo): L.PopupOptions {
     return {
       closeButton: false,
-      content: info.postTitle,
+      content: info.title,
       // "Higher" `y` offset (default is 7) so that the popup sits above the line.
       offset: [0, 2],
       className: "uptrack-hover-popup",
     };
-  }
-
-  addPopupListeners(_popup: L.Popup, _routeId: RouteId): void {
-    // [popup-click]
-    // popup.getElement()?.addEventListener('click', () => {
-    //   this.focusRoute(routeId);
-    // });
-    // popup.getElement()?.addEventListener('mouseleave', () => {
-    //   this.unhover();
-    // });
   }
 
   /**

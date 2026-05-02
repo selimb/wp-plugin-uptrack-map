@@ -17,6 +17,12 @@ class Settings
     public static $SETTING_KML_DIRECTORY = "kml_directory";
     // SYNC [uptrack-settings]
     public static $SETTING_ROUTES = "routes";
+    // SYNC [uptrack-settings]
+    public static $SETTING_ALPINEJS_URL = "alpinejs_url";
+    // SYNC [uptrack-settings]
+    public static $SETTING_CSS = "css";
+    // SYNC [uptrack-settings]
+    public static $SETTING_FOCUS_CARD_HTML = "focus_card_html";
 
     public static function init()
     {
@@ -42,9 +48,14 @@ class Settings
             ],
             "autoload" => "no",
             "default" => [
+                // We only need defaults for things that are consumed in PHP land.
                 // SYNC [uptrack-settings]
-                "kml_directory" => "kml-paths",
-                "routes" => [],
+                self::$SETTING_KML_DIRECTORY => "kml-paths",
+                self::$SETTING_ROUTES => [],
+                self::$SETTING_ALPINEJS_URL =>
+                    "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
+                self::$SETTING_CSS => "",
+                self::$SETTING_FOCUS_CARD_HTML => "",
             ],
         ]);
     }

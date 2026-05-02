@@ -11,6 +11,16 @@ import { $ } from "bun";
 import * as rollup from "rollup";
 import esbuild from "rollup-plugin-esbuild";
 
+const stringPlugin: rollup.Plugin = {
+  name: "string",
+  load(id) {
+    // [rollup-string-plugin]
+    if (id.endsWith(".html") || id.endsWith(".css")) {
+      return `export default ${JSON.stringify(fs.readFileSync(id, "utf8"))};`;
+    }
+  },
+};
+
 const OUT_DIR = "build";
 
 // eslint-disable-next-line no-console -- Need to log somehow!
@@ -46,6 +56,7 @@ async function buildJs(): Promise<void> {
       const bundle = await rollup.rollup({
         input: src,
         plugins: [
+          stringPlugin,
           nodeResolve({
             browser: true,
           }),
