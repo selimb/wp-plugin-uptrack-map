@@ -38,20 +38,17 @@ const zTrimString = z.string().check(z.trim());
 
 // SYNC [uptrack-settings]
 // [uptrack-settings-fallback] All properties should have fallbacks.
-export const zUptrackSettings = zCatchObject({
-  kml_directory: z.catch(zTrimString, "kml-paths"),
-  routes: z.catch(zUptrackRoutesSetting, []),
-  focus_card_html: z.catch(z.string(), DEFAULT_FOCUS_CARD_HTML),
-  css: z.catch(z.string(), DEFAULT_UPTRACK_MAP_CSS),
-  alpinejs_url: z.catch(
+export const zUptrackSettings = z.object({
+  uptrack_kml_directory: z.catch(zTrimString, "kml-paths"),
+  uptrack_routes: z.catch(zUptrackRoutesSetting, []),
+  uptrack_focus_card_html: z.catch(z.string(), DEFAULT_FOCUS_CARD_HTML),
+  uptrack_css: z.catch(z.string(), DEFAULT_UPTRACK_MAP_CSS),
+  uptrack_alpinejs_url: z.catch(
     zTrimString,
     "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
   ),
-  mapStyles: zMapStyles,
+  uptrack_map_styles: zMapStyles,
 });
 export type UptrackSettings = z.infer<typeof zUptrackSettings>;
 
-// SYNC [UptrackSettingsContainer]
-export type UptrackSettingsContainer = {
-  uptrack_settings: UptrackSettings;
-};
+export const zUptrackSettingsSafe = zCatchObject.fromObject(zUptrackSettings);

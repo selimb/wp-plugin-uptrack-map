@@ -60,7 +60,7 @@ export class UptrackMapManager {
   constructor(config: UptrackMapShortcodeInput, map: L.Map) {
     this.config = config;
     this.map = map;
-    const { mapStyles } = config;
+    const mapStyles = config.uptrack_map_styles;
 
     this.renderer = L.canvas({ tolerance: mapStyles.canvasTolerance });
 
@@ -70,7 +70,7 @@ export class UptrackMapManager {
     /** @type {Map<RouteInfo['id'], Route>} */
     this.routes = new Map();
 
-    this.focusCard = new FocusCard(config.focus_card_html);
+    this.focusCard = new FocusCard(config.uptrack_focus_card_html);
     this.focusCard.onClose = () => {
       this.unfocus();
     };
@@ -86,7 +86,7 @@ export class UptrackMapManager {
     options: { variant?: RouteStyleVariant } = {},
   ): L.PathOptions {
     const { variant: variantKey = "normal" } = options;
-    const { mapStyles } = this.config;
+    const mapStyles = this.config.uptrack_map_styles;
     const variant = mapStyles.routeStyles[variantKey];
     const color = mapStyles.routeTypeProps[info.type].color;
     return {
@@ -420,7 +420,7 @@ export class UptrackMapManager {
     if (coords.length === 0) {
       return null;
     }
-    const { mapStyles } = this.config;
+    const mapStyles = this.config.uptrack_map_styles;
 
     const markers: L.CircleMarker[] = [];
 

@@ -1,19 +1,19 @@
 import { expect, test } from "bun:test";
 
-import { zUptrackSettings } from "./settings";
+import { zUptrackSettingsSafe } from "./settings";
 
 /** Tests [uptrack-settings-fallback]. */
 test("zUptrackSettings fallback", () => {
-  const result = zUptrackSettings.parse("oopsies");
-  // NOTE: `css` and `focus_card_html` should resolve to the contents of the files in practice, but bun
-  //   doesn't use the same bundling logic as `build.ts`.
+  const result = zUptrackSettingsSafe.parse("oopsies");
+  // NOTE: `uptrack_css` and `uptrack_focus_card_html` should resolve to the contents of the files in
+  //   practice, but bun doesn't use the same bundling logic as `build.ts`.
   expect(result).toMatchInlineSnapshot(`
     {
-      "alpinejs_url": "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
-      "css": "/home/selimb/dev/personal/wp-plugin-uptrack-map/src/default-assets/uptrack-map.css",
-      "focus_card_html": HTMLBundle {},
-      "kml_directory": "kml-paths",
-      "mapStyles": {
+      "uptrack_alpinejs_url": "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
+      "uptrack_css": "/home/selimb/dev/personal/wp-plugin-uptrack-map/src/default-assets/uptrack-map.css",
+      "uptrack_focus_card_html": HTMLBundle {},
+      "uptrack_kml_directory": "kml-paths",
+      "uptrack_map_styles": {
         "canvasTolerance": 14,
         "markerColor": "black",
         "markerEndFillColor": "orangered",
@@ -49,7 +49,7 @@ test("zUptrackSettings fallback", () => {
           },
         },
       },
-      "routes": [],
+      "uptrack_routes": [],
     }
   `);
 });

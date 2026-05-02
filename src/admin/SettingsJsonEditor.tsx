@@ -1,7 +1,7 @@
 import * as codemirrorJson from "@codemirror/lang-json";
 import { useState } from "@wordpress/element";
 
-import { type UptrackSettings, zUptrackSettings } from "../settings";
+import { type UptrackSettings, zUptrackSettingsSafe } from "../settings";
 import { CodeEditor, type CodeEditorLinter } from "./CodeEditor";
 
 export type SettingsJsonEditorProps = {
@@ -55,7 +55,7 @@ const parseSettingsJson = (
 ): { validated: UptrackSettings | null; error: string | null } => {
   try {
     const parsed = JSON.parse(text) as unknown;
-    const validated = zUptrackSettings.parse(parsed);
+    const validated = zUptrackSettingsSafe.parse(parsed);
     return { validated, error: null };
   } catch (error_) {
     const errorMessage =

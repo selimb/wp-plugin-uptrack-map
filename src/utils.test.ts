@@ -1,10 +1,10 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it, test } from "bun:test";
 import * as z from "zod/mini";
 
 import { zCatchObject } from "./utils";
 
 describe("zCatchObject", () => {
-  test("falls back when top-level input is invalid", () => {
+  it("falls back when top-level input is invalid", () => {
     const schema = zCatchObject({
       count: z.catch(z.number(), 3),
       label: z.catch(z.string(), "default"),
@@ -16,7 +16,7 @@ describe("zCatchObject", () => {
     });
   });
 
-  test("supports nested object fallbacks", () => {
+  it("supports nested object fallbacks", () => {
     const schema = zCatchObject({
       nested: zCatchObject({
         weight: z.catch(z.number(), 10),
@@ -34,7 +34,7 @@ describe("zCatchObject", () => {
     });
   });
 
-  test("preserves valid values", () => {
+  it("preserves valid values", () => {
     const schema = zCatchObject({
       count: z.catch(z.number(), 3),
       name: z.catch(z.string(), "default"),
@@ -47,6 +47,20 @@ describe("zCatchObject", () => {
     ).toEqual({
       count: 9,
       name: "default",
+    });
+  });
+
+  test("fromObject", () => {
+    const schema = zCatchObject.fromObject(
+      z.object({
+        count: z.catch(z.number(), 3),
+        label: z.catch(z.string(), "default"),
+      }),
+    );
+
+    expect(schema.parse("oops")).toEqual({
+      count: 3,
+      label: "default",
     });
   });
 });

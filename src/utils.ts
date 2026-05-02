@@ -9,5 +9,13 @@ export function zCatchObject<TShape extends z.core.$ZodLooseShape>(
   shape: TShape,
 ): z.ZodMiniCatch<z.ZodMiniObject<TShape>> {
   const schema = z.object(shape);
-  return z.catch(schema, () => schema.parse({}));
+  return zCatchObject.fromObject(schema);
 }
+
+zCatchObject.fromObject = <
+  TObject extends z.ZodMiniObject<z.core.$ZodLooseShape>,
+>(
+  schema: TObject,
+): z.ZodMiniCatch<TObject> => {
+  return z.catch(schema, () => schema.parse({}));
+};

@@ -45,7 +45,15 @@ async function clean(): Promise<void> {
 const JS_SRC_DIR = "src";
 const JS_OUT_DIR = path.join(OUT_DIR, "js");
 const JS_ENTRYPOINTS = {
-  "src/admin/admin.tsx": "admin",
+  // SYNC [js-admin-routes]
+  "src/admin/pages/routes.tsx": "admin-routes",
+  // SYNC [js-admin-assets]
+  "src/admin/pages/assets.tsx": "admin-assets",
+  // SYNC [js-admin-map-styles]
+  "src/admin/pages/map-styles.tsx": "admin-map-styles",
+  // SYNC [js-admin-json]
+  "src/admin/pages/json.tsx": "admin-json",
+  // SYNC [js-uptrack-map]
   "src/uptrack-map/index.ts": "uptrack-map",
 };
 

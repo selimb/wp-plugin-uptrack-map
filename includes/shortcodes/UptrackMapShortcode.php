@@ -11,9 +11,9 @@ class UptrackMapShortCode
 {
     public static function render()
     {
-        $settings = Settings::get_settings();
-        $kml_directory = $settings[Settings::$SETTING_KML_DIRECTORY];
-        $routes = $settings[Settings::$SETTING_ROUTES];
+        $settings = \get_options(Settings::ALL);
+        $kml_directory = $settings[Settings::KML_DIRECTORY];
+        $routes = $settings[Settings::ROUTES];
 
         $post_map = self::collect_posts($routes);
         $routes_data = self::prepare_routes_data(
@@ -24,11 +24,11 @@ class UptrackMapShortCode
         // SYNC [UptrackMapShortcodeInput]
         $data = [
             "routes" => $routes_data,
-            "focus_card_html" => $settings[Settings::$SETTING_FOCUS_CARD_HTML],
-            "mapStyles" => $settings[Settings::$SETTING_MAP_STYLES],
+            Settings::FOCUS_CARD_HTML => $settings[Settings::FOCUS_CARD_HTML],
+            Settings::MAP_STYLES => $settings[Settings::MAP_STYLES],
         ];
 
-        self::enqueue_assets($settings, $data);
+        self::enqueue_assets($data, $settings);
 
         return "";
     }
@@ -117,7 +117,7 @@ class UptrackMapShortCode
         return $data;
     }
 
-    private static function enqueue_assets($settings, $data)
+    private static function enqueue_assets($data, $settings)
     {
         $version = UPTRACK_MAP__PLUGIN_VERSION;
 
@@ -127,7 +127,7 @@ class UptrackMapShortCode
         // [uptrack_alpine_js]
         \wp_enqueue_script(
             "uptrack_alpine_js",
-            $settings[Settings::$SETTING_ALPINEJS_URL],
+            $settings[Settings::ALPINEJS_URL],
             [],
             null,
             ["strategy" => "defer"],
@@ -136,13 +136,13 @@ class UptrackMapShortCode
         $uptrack_map_script_name = "uptrack-map";
         \wp_enqueue_script(
             $uptrack_map_script_name,
+            // SYNC [js-uptrack-map]
             \plugins_url("js/uptrack-map.js", UPTRACK_MAP__PLUGIN_FILE),
             [],
             $version,
             true,
         );
 
-        // SYNC [UptrackMapShortcodeInput]
         $input = \wp_json_encode($data, JSON_UNESCAPED_SLASHES);
         \wp_add_inline_script(
             $uptrack_map_script_name,
@@ -158,6 +158,6 @@ class UptrackMapShortCode
             $version,
         );
 
-        \wp_add_inline_style($style_name, $settings[Settings::$SETTING_CSS]);
+        \wp_add_inline_style($style_name, $settings[Settings::CSS]);
     }
 }

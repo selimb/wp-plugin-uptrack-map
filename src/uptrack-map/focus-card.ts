@@ -44,7 +44,7 @@ export class FocusCard {
   private dragState: DragState | undefined = undefined;
 
   constructor(
-    focusCardHtml: UptrackMapShortcodeInput["focus_card_html"],
+    focusCardHtml: UptrackMapShortcodeInput["uptrack_focus_card_html"],
     /**
      * Target element to append the focus card to.
      * @default document.body

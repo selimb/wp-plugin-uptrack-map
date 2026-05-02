@@ -9,8 +9,8 @@ import {
   type UptrackRoutesSettingItem,
   zRouteType,
 } from "../settings";
-import type { Post, PostId, PostMap } from "./AdminForm";
 import { CoordinateInput } from "./CoordinateInput";
+import type { Post, PostId, PostMap } from "./pages/routes";
 
 export type RoutesTableProps = {
   postMap: PostMap;

@@ -9,22 +9,22 @@ if (!defined("ABSPATH")) {
 
 class Settings
 {
-    // Squeeze everything into a single setting for convenience.
-    // SYNC [UptrackSettingsContainer]
-    public static $SETTING_NAME = "uptrack_settings";
+    // SYNC [uptrack-settings]
+    public const KML_DIRECTORY = "uptrack_kml_directory";
+    public const ROUTES = "uptrack_routes";
+    public const FOCUS_CARD_HTML = "uptrack_focus_card_html";
+    public const CSS = "uptrack_css";
+    public const ALPINEJS_URL = "uptrack_alpinejs_url";
+    public const MAP_STYLES = "uptrack_map_styles";
 
-    // SYNC [uptrack-settings]
-    public static $SETTING_KML_DIRECTORY = "kml_directory";
-    // SYNC [uptrack-settings]
-    public static $SETTING_ROUTES = "routes";
-    // SYNC [uptrack-settings]
-    public static $SETTING_ALPINEJS_URL = "alpinejs_url";
-    // SYNC [uptrack-settings]
-    public static $SETTING_CSS = "css";
-    // SYNC [uptrack-settings]
-    public static $SETTING_FOCUS_CARD_HTML = "focus_card_html";
-    // SYNC [uptrack-settings]
-    public static $SETTING_MAP_STYLES = "mapStyles";
+    public const ALL = [
+        self::KML_DIRECTORY,
+        self::ROUTES,
+        self::FOCUS_CARD_HTML,
+        self::CSS,
+        self::ALPINEJS_URL,
+        self::MAP_STYLES,
+    ];
 
     public static function init()
     {
@@ -32,39 +32,67 @@ class Settings
     }
 
     /**
-     * Registers the settings so that they can be updated through the REST API.
+     * Registers individual settings for each zUptrackSettings property.
+     * Each option is independently updateable via REST API.
      */
     private static function register_settings()
     {
         $option_group = "uptrack_map_option_group";
 
-        // See [uptrack-settings] for schema.
-        \register_setting($option_group, self::$SETTING_NAME, [
+        \register_setting($option_group, self::KML_DIRECTORY, [
+            "type" => "string",
+            "show_in_rest" => true,
+            "autoload" => "no",
+            "default" => "kml-paths",
+        ]);
+
+        \register_setting($option_group, self::ROUTES, [
+            "type" => "array",
+            "show_in_rest" => [
+                "schema" => [
+                    "type" => "array",
+                    "items" => [
+                        "type" => "object",
+                        "additionalProperties" => true,
+                    ],
+                ],
+            ],
+            "autoload" => "no",
+            "default" => [],
+        ]);
+
+        \register_setting($option_group, self::FOCUS_CARD_HTML, [
+            "type" => "string",
+            "show_in_rest" => true,
+            "autoload" => "no",
+            "default" => "",
+        ]);
+
+        \register_setting($option_group, self::CSS, [
+            "type" => "string",
+            "show_in_rest" => true,
+            "autoload" => "no",
+            "default" => "",
+        ]);
+
+        \register_setting($option_group, self::ALPINEJS_URL, [
+            "type" => "string",
+            "show_in_rest" => true,
+            "autoload" => "no",
+            "default" =>
+                "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
+        ]);
+
+        \register_setting($option_group, self::MAP_STYLES, [
             "type" => "object",
             "show_in_rest" => [
                 "schema" => [
                     "type" => "object",
-                    // This lets us avoid duplicating the schema here.
                     "additionalProperties" => true,
                 ],
             ],
             "autoload" => "no",
-            "default" => [
-                // We only need defaults for things that are consumed in PHP land.
-                // SYNC [uptrack-settings]
-                self::$SETTING_KML_DIRECTORY => "kml-paths",
-                self::$SETTING_ROUTES => [],
-                self::$SETTING_ALPINEJS_URL =>
-                    "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
-                self::$SETTING_CSS => "",
-                self::$SETTING_FOCUS_CARD_HTML => "",
-                self::$SETTING_MAP_STYLES => [],
-            ],
+            "default" => [],
         ]);
-    }
-
-    public static function get_settings()
-    {
-        return \get_option(self::$SETTING_NAME);
     }
 }

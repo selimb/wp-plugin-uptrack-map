@@ -1,14 +1,17 @@
+import { useForm } from "@tanstack/react-form";
 import {
   BaseControl,
+  Button,
   Icon,
   PanelBody,
   TextControl,
   Tooltip,
 } from "@wordpress/components";
-import type React from "react";
+import * as z from "zod/mini";
 
-import { zUptrackSettings } from "../settings";
-import { withAdminForm } from "./form-hook";
+import { zUptrackSettings } from "../../settings";
+import { useUpdateSettings } from "../use-update-settings";
+import { FormSubmitNotice, mountAdminPage } from "./shared";
 
 const parseNumberInput = (value: string): number =>
   Number.parseFloat(value) || 0;
@@ -29,17 +32,52 @@ const withHelpLabel = (label: string, tooltip: string): React.JSX.Element => (
   </span>
 );
 
-export const MapStylesFields = withAdminForm({
-  defaultValues: zUptrackSettings.parse({}),
-  render: function Render({ form }) {
-    return (
+// SYNC [AdminMapStylesInput]
+const zAdminMapStylesInput = z.object({
+  nonce: z.string(),
+  settings: z.pick(zUptrackSettings, {
+    uptrack_map_styles: true,
+  }),
+});
+type AdminMapStylesInput = z.infer<typeof zAdminMapStylesInput>;
+type MapStylesSettings = AdminMapStylesInput["settings"];
+
+mountAdminPage({
+  schema: zAdminMapStylesInput,
+  render: (input) => <MapStylesPage settingsDefault={input.settings} />,
+});
+
+function MapStylesPage({
+  settingsDefault,
+}: {
+  settingsDefault: MapStylesSettings;
+}): React.JSX.Element {
+  const { result, update } = useUpdateSettings();
+
+  const form = useForm({
+    defaultValues: settingsDefault.uptrack_map_styles,
+    onSubmit: async ({ value }) => {
+      await update({ uptrack_map_styles: value });
+    },
+  });
+
+  return (
+    <form
+      className="form-wrap"
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+    >
+      <FormSubmitNotice result={result} />
+
       <div className="form-field">
         <BaseControl label="Map Styles">
           <PanelBody title="Map Styles" initialOpen={false}>
-            {/* Canvas & Roundtrip Options */}
             <div className="map-styles-field-group">
               <form.Field
-                name="mapStyles.canvasTolerance"
+                name="canvasTolerance"
                 children={(field) => (
                   <TextControl
                     label={withHelpLabel(
@@ -59,7 +97,7 @@ export const MapStylesFields = withAdminForm({
                 )}
               />
               <form.Field
-                name="mapStyles.roundtripEpsilon"
+                name="roundtripEpsilon"
                 children={(field) => (
                   <TextControl
                     label={withHelpLabel(
@@ -80,7 +118,6 @@ export const MapStylesFields = withAdminForm({
               />
             </div>
 
-            {/* Route Styles Table */}
             <div>
               <h4>Route Styles</h4>
               <table className="map-styles-table">
@@ -96,7 +133,7 @@ export const MapStylesFields = withAdminForm({
                     <td>Normal</td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeStyles.normal.opacity"
+                        name="routeStyles.normal.opacity"
                         children={(field) => (
                           <TextControl
                             type="number"
@@ -114,7 +151,7 @@ export const MapStylesFields = withAdminForm({
                     </td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeStyles.normal.weight"
+                        name="routeStyles.normal.weight"
                         children={(field) => (
                           <TextControl
                             type="number"
@@ -135,7 +172,7 @@ export const MapStylesFields = withAdminForm({
                     <td>Focus</td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeStyles.focus.opacity"
+                        name="routeStyles.focus.opacity"
                         children={(field) => (
                           <TextControl
                             type="number"
@@ -153,7 +190,7 @@ export const MapStylesFields = withAdminForm({
                     </td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeStyles.focus.weight"
+                        name="routeStyles.focus.weight"
                         children={(field) => (
                           <TextControl
                             type="number"
@@ -174,7 +211,7 @@ export const MapStylesFields = withAdminForm({
                     <td>Fade</td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeStyles.fade.opacity"
+                        name="routeStyles.fade.opacity"
                         children={(field) => (
                           <TextControl
                             type="number"
@@ -192,7 +229,7 @@ export const MapStylesFields = withAdminForm({
                     </td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeStyles.fade.weight"
+                        name="routeStyles.fade.weight"
                         children={(field) => (
                           <TextControl
                             type="number"
@@ -213,7 +250,6 @@ export const MapStylesFields = withAdminForm({
               </table>
             </div>
 
-            {/* Route Type Colors Table */}
             <div>
               <h4>Route Type Colors</h4>
               <table className="map-styles-table">
@@ -228,7 +264,7 @@ export const MapStylesFields = withAdminForm({
                     <td>Ski Touring</td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeTypeProps.ski_touring.color"
+                        name="routeTypeProps.ski_touring.color"
                         children={(field) => (
                           <TextControl
                             value={field.state.value}
@@ -246,7 +282,7 @@ export const MapStylesFields = withAdminForm({
                     <td>Mountaineering</td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeTypeProps.mountaineering.color"
+                        name="routeTypeProps.mountaineering.color"
                         children={(field) => (
                           <TextControl
                             value={field.state.value}
@@ -264,7 +300,7 @@ export const MapStylesFields = withAdminForm({
                     <td>Hiking</td>
                     <td>
                       <form.Field
-                        name="mapStyles.routeTypeProps.hiking.color"
+                        name="routeTypeProps.hiking.color"
                         children={(field) => (
                           <TextControl
                             value={field.state.value}
@@ -282,12 +318,11 @@ export const MapStylesFields = withAdminForm({
               </table>
             </div>
 
-            {/* Marker Options */}
             <div>
               <h4>Marker Styling</h4>
               <div className="map-styles-field-group map-styles-field-group--compact map-styles-field-group--single-line">
                 <form.Field
-                  name="mapStyles.markerRadiusPx"
+                  name="markerRadiusPx"
                   children={(field) => (
                     <TextControl
                       label="Radius (px)"
@@ -304,7 +339,7 @@ export const MapStylesFields = withAdminForm({
                   )}
                 />
                 <form.Field
-                  name="mapStyles.markerWeightPx"
+                  name="markerWeightPx"
                   children={(field) => (
                     <TextControl
                       label="Weight (px)"
@@ -321,7 +356,7 @@ export const MapStylesFields = withAdminForm({
                   )}
                 />
                 <form.Field
-                  name="mapStyles.markerColor"
+                  name="markerColor"
                   children={(field) => (
                     <TextControl
                       label="Border Color"
@@ -335,7 +370,7 @@ export const MapStylesFields = withAdminForm({
                   )}
                 />
                 <form.Field
-                  name="mapStyles.markerFillOpacity"
+                  name="markerFillOpacity"
                   children={(field) => (
                     <TextControl
                       label="Fill Opacity"
@@ -352,7 +387,7 @@ export const MapStylesFields = withAdminForm({
                   )}
                 />
                 <form.Field
-                  name="mapStyles.markerStartFillColor"
+                  name="markerStartFillColor"
                   children={(field) => (
                     <TextControl
                       label="Start Fill Color"
@@ -366,7 +401,7 @@ export const MapStylesFields = withAdminForm({
                   )}
                 />
                 <form.Field
-                  name="mapStyles.markerEndFillColor"
+                  name="markerEndFillColor"
                   children={(field) => (
                     <TextControl
                       label="End Fill Color"
@@ -380,7 +415,7 @@ export const MapStylesFields = withAdminForm({
                   )}
                 />
                 <form.Field
-                  name="mapStyles.markerRoundtripFillColor"
+                  name="markerRoundtripFillColor"
                   children={(field) => (
                     <TextControl
                       label="Roundtrip Fill Color"
@@ -398,6 +433,21 @@ export const MapStylesFields = withAdminForm({
           </PanelBody>
         </BaseControl>
       </div>
-    );
-  },
-});
+
+      <form.Subscribe
+        selector={(state) => [state.canSubmit, state.isSubmitting]}
+        children={([canSubmit, isSubmitting]) => (
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={!canSubmit || isSubmitting}
+            isBusy={isSubmitting}
+            __next40pxDefaultSize
+          >
+            Save
+          </Button>
+        )}
+      />
+    </form>
+  );
+}
