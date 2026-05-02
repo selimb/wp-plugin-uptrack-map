@@ -28,6 +28,7 @@ class AdminRoutesPage extends AdminPage
     public static function get_input_data()
     {
         $settings = \get_options([Settings::KML_DIRECTORY, Settings::ROUTES]);
+        // Relies on [php-default-kml-directory].
         $kml_dirname = $settings[Settings::KML_DIRECTORY];
         $kml_dirpath = \WP_CONTENT_DIR . "/" . $kml_dirname;
 

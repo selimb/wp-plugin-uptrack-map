@@ -50,6 +50,7 @@ function AssetsPage({
       >
         <FormSubmitNotice result={result} />
 
+        {/* uptrack_alpinejs_url */}
         <div className="form-field">
           <form.Field
             name="uptrack_alpinejs_url"
@@ -68,6 +69,24 @@ function AssetsPage({
           />
         </div>
 
+        {/* uptrack_css */}
+        <div className="form-field">
+          <form.Field
+            name="uptrack_css"
+            children={(field) => (
+              <BaseControl label="CSS">
+                <CssEditor
+                  value={field.state.value}
+                  onChange={(value) => {
+                    field.handleChange(value);
+                  }}
+                />
+              </BaseControl>
+            )}
+          />
+        </div>
+
+        {/* uptrack_focus_card_html */}
         <div className="form-field">
           <form.Subscribe
             selector={(state) => [
@@ -84,22 +103,6 @@ function AssetsPage({
                   }}
                   css={css}
                   alpineJsUrl={alpineJsUrl}
-                />
-              </BaseControl>
-            )}
-          />
-        </div>
-
-        <div className="form-field">
-          <form.Field
-            name="uptrack_css"
-            children={(field) => (
-              <BaseControl label="CSS">
-                <CssEditor
-                  value={field.state.value}
-                  onChange={(value) => {
-                    field.handleChange(value);
-                  }}
                 />
               </BaseControl>
             )}

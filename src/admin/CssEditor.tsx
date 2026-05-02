@@ -38,7 +38,7 @@ export const CssEditor: React.FC<CssEditorProps> = ({ value, onChange }) => {
   ];
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className="w-full">
       <CodeEditor
         value={value}
         extensions={[codemirrorCss.css()]}

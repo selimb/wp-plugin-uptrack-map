@@ -12,6 +12,7 @@ class UptrackMapShortCode
     public static function render()
     {
         $settings = \get_options(Settings::ALL);
+        // Relies on [php-default-kml-directory].
         $kml_directory = $settings[Settings::KML_DIRECTORY];
         $routes = $settings[Settings::ROUTES];
 

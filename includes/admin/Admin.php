@@ -58,8 +58,6 @@ class Admin
             );
             self::$hook_to_page_class[$submenu_hook] = $page_class;
         }
-
-        \remove_submenu_page($first_page::get_slug(), $first_page::get_slug());
     }
 
     public static function on_admin_enqueue_scripts($hook_suffix)

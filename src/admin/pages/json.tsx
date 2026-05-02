@@ -1,4 +1,3 @@
-import { PanelBody, PanelRow } from "@wordpress/components";
 import * as z from "zod/mini";
 
 import { zUptrackSettings } from "../../settings";
@@ -45,19 +44,15 @@ function JsonPage({
       >
         <FormSubmitNotice result={result} />
 
-        <div style={{ marginTop: "1em" }}>
-          <PanelBody title="JSON" initialOpen={true}>
-            <PanelRow>
-              <SettingsJsonEditor
-                initial={settingsDefault}
-                onChange={(settings) => {
-                  for (const [key, value] of Object.entries(settings)) {
-                    form.setFieldValue(key as never, value as never);
-                  }
-                }}
-              />
-            </PanelRow>
-          </PanelBody>
+        <div className="form-field">
+          <SettingsJsonEditor
+            initial={settingsDefault}
+            onChange={(settings) => {
+              for (const [key, value] of Object.entries(settings)) {
+                form.setFieldValue(key as never, value as never);
+              }
+            }}
+          />
         </div>
 
         <form.SubmitButton />

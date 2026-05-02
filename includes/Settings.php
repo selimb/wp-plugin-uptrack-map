@@ -32,8 +32,9 @@ class Settings
     }
 
     /**
-     * Registers individual settings for each zUptrackSettings property.
-     * Each option is independently updateable via REST API.
+     * Registers all settings such that:
+     * - They are updateable via REST API.
+     * - Default values are set where applicable -- these are used by `\get_option()` and `\get_options()`.
      */
     private static function register_settings()
     {
@@ -43,6 +44,7 @@ class Settings
             "type" => "string",
             "show_in_rest" => true,
             "autoload" => "no",
+            // [php-default-kml-directory] Need default for this one, since it's used server-side.
             "default" => "kml-paths",
         ]);
 
@@ -58,29 +60,24 @@ class Settings
                 ],
             ],
             "autoload" => "no",
-            "default" => [],
         ]);
 
         \register_setting($option_group, self::FOCUS_CARD_HTML, [
             "type" => "string",
             "show_in_rest" => true,
             "autoload" => "no",
-            "default" => "",
         ]);
 
         \register_setting($option_group, self::CSS, [
             "type" => "string",
             "show_in_rest" => true,
             "autoload" => "no",
-            "default" => "",
         ]);
 
         \register_setting($option_group, self::ALPINEJS_URL, [
             "type" => "string",
             "show_in_rest" => true,
             "autoload" => "no",
-            "default" =>
-                "https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js",
         ]);
 
         \register_setting($option_group, self::MAP_STYLES, [
@@ -92,7 +89,6 @@ class Settings
                 ],
             ],
             "autoload" => "no",
-            "default" => [],
         ]);
     }
 }

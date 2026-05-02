@@ -1,10 +1,12 @@
+import * as codemirrorJson from "@codemirror/lang-json";
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import apiFetch from "@wordpress/api-fetch";
-import { Button, Notice } from "@wordpress/components";
+import { Button, Notice, PanelBody, PanelRow } from "@wordpress/components";
 import { createRoot } from "@wordpress/element";
 import type React from "react";
 import * as z from "zod/mini";
 
+import { CodeEditor } from "../CodeEditor";
 import type { UpdateSettingsResult } from "../use-update-settings";
 
 // SYNC [uptrack-admin-root-element-id]
@@ -84,15 +86,73 @@ export function mountAdminPage<TInput extends InputWithNonce>(opts: {
     }
 
     const root = createRoot(container);
-    const inputResult = opts.schema.safeParse(window.uptrackAdminInput);
+    const inputRaw = window.uptrackAdminInput;
+    const inputResult = opts.schema.safeParse(inputRaw);
 
     if (!inputResult.success) {
-      root.render(<pre>{inputResult.error.message}</pre>);
+      const error = inputResult.error;
+      root.render(<AppError error={error} inputRaw={inputRaw} />);
       return;
     }
 
     const input = inputResult.data;
     apiFetch.use(apiFetch.createNonceMiddleware(input.nonce));
-    root.render(opts.render(input));
+
+    const page = opts.render(input);
+    root.render(<App inputRaw={inputRaw} page={page} />);
   });
 }
+
+type AppProps = {
+  inputRaw: unknown;
+  page: React.JSX.Element;
+};
+
+const App: React.FC<AppProps> = ({ inputRaw, page }) => {
+  return (
+    <>
+      {page}
+
+      <div style={{ marginTop: "1em" }}>
+        <PanelBody title="Debug" initialOpen={false}>
+          <PanelRow>
+            <div className="w-full">
+              <CodeEditor
+                value={JSON.stringify(inputRaw, null, 2)}
+                extensions={[codemirrorJson.json()]}
+              />
+            </div>
+          </PanelRow>
+        </PanelBody>
+      </div>
+    </>
+  );
+};
+
+const AppError: React.FC<{ error: z.core.$ZodError; inputRaw: unknown }> = ({
+  error,
+  inputRaw,
+}) => {
+  return (
+    <>
+      <h2>ERROR</h2>
+      <Pre>{error.message}</Pre>
+      <h2>RAW INPUT</h2>
+      <Pre>{JSON.stringify(inputRaw, null, 4)}</Pre>
+    </>
+  );
+};
+
+const Pre: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <pre
+      style={{
+        fontFamily: "monospace",
+        border: "solid 1px black",
+        padding: "2px",
+      }}
+    >
+      {children}
+    </pre>
+  );
+};

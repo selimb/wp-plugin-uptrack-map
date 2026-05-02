@@ -38,7 +38,7 @@ export const SettingsJsonEditor: React.FC<SettingsJsonEditorProps> = ({
   };
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className="w-full">
       <CodeEditor
         value={jsonText}
         extensions={[codemirrorJson.json()]}
