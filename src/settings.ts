@@ -67,7 +67,7 @@ export const zUptrackSettings = z.object({
 });
 export type UptrackSettings = z.infer<typeof zUptrackSettings>;
 
-export const UPTRACK_SETTINGS_DEFAULTS: UptrackSettings = {
+const UPTRACK_SETTINGS_DEFAULTS: UptrackSettings = {
   uptrack_kml_directory: "kml-paths",
   uptrack_routes: [],
   uptrack_focus_card_html: DEFAULT_FOCUS_CARD_HTML,
@@ -77,7 +77,32 @@ export const UPTRACK_SETTINGS_DEFAULTS: UptrackSettings = {
   uptrack_map_styles: MAP_STYLES_DEFAULTS,
 };
 
-export const zUptrackSettingsSafe = zFallback(
-  zUptrackSettings,
-  UPTRACK_SETTINGS_DEFAULTS,
-);
+// [uptrack-settings-fallback] All settings should have fallback values.
+// Use `z.object` + `z.catch` (instead of `zFallback`) to enable easy `.pick`-ing.
+// This could be implemented generically, but then we need fancy type-fu to preserve the types, which is not worth it for now.
+export const zUptrackSettingsSafe = z.object({
+  uptrack_kml_directory: z.catch(
+    zUptrackSettings.shape.uptrack_kml_directory,
+    UPTRACK_SETTINGS_DEFAULTS.uptrack_kml_directory,
+  ),
+  uptrack_routes: z.catch(
+    zUptrackSettings.shape.uptrack_routes,
+    UPTRACK_SETTINGS_DEFAULTS.uptrack_routes,
+  ),
+  uptrack_focus_card_html: z.catch(
+    zUptrackSettings.shape.uptrack_focus_card_html,
+    UPTRACK_SETTINGS_DEFAULTS.uptrack_focus_card_html,
+  ),
+  uptrack_css: z.catch(
+    zUptrackSettings.shape.uptrack_css,
+    UPTRACK_SETTINGS_DEFAULTS.uptrack_css,
+  ),
+  uptrack_alpinejs_url: z.catch(
+    zUptrackSettings.shape.uptrack_alpinejs_url,
+    UPTRACK_SETTINGS_DEFAULTS.uptrack_alpinejs_url,
+  ),
+  uptrack_map_styles: z.catch(
+    zUptrackSettings.shape.uptrack_map_styles,
+    UPTRACK_SETTINGS_DEFAULTS.uptrack_map_styles,
+  ),
+} satisfies Record<keyof UptrackSettings, z.ZodMiniCatch<z.ZodMiniType>>);

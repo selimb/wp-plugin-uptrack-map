@@ -1,13 +1,14 @@
 import apiFetch from "@wordpress/api-fetch";
 import { useState } from "@wordpress/element";
+import type z from "zod/mini";
 
-import type { UptrackSettings } from "../settings";
+import type { zUptrackSettings } from "../settings";
 
 export type UpdateSettingsResult = { ok: true } | { ok: false; error: string };
 export type UpdateSettings = {
   result: UpdateSettingsResult | null;
   update: (
-    settingsNew: Partial<UptrackSettings>,
+    settingsNew: Partial<z.input<typeof zUptrackSettings>>,
   ) => Promise<UpdateSettingsResult>;
 };
 

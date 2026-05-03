@@ -1,7 +1,7 @@
 import { BaseControl, TextControl } from "@wordpress/components";
 import * as z from "zod/mini";
 
-import { zUptrackSettings } from "../../settings";
+import { zUptrackSettingsSafe } from "../../settings";
 import { CssEditor } from "../CssEditor";
 import { FocusCardForm } from "../focus-card/FocusCardForm";
 import { useUpdateSettings } from "../use-update-settings";
@@ -10,7 +10,7 @@ import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
 // SYNC [AdminAssetsInput]
 const zAdminAssetsInput = z.object({
   nonce: z.string(),
-  settings: z.pick(zUptrackSettings, {
+  settings: z.pick(zUptrackSettingsSafe, {
     uptrack_focus_card_html: true,
     uptrack_css: true,
     uptrack_alpinejs_url: true,
@@ -59,9 +59,7 @@ function AssetsPage({
                 label="AlpineJS URL"
                 type="url"
                 value={field.state.value}
-                onChange={(value) => {
-                  field.handleChange(value);
-                }}
+                onChange={field.handleChange}
                 __next40pxDefaultSize
                 __nextHasNoMarginBottom
               />

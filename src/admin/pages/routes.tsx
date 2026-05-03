@@ -5,7 +5,7 @@ import {
   type KmlFilename,
   type UptrackRoutesSetting,
   zKmlFilename,
-  zUptrackSettings,
+  zUptrackSettingsSafe,
 } from "../../settings";
 import { type Post, type PostMap, RoutesTable } from "../RoutesTable";
 import { useUpdateSettings } from "../use-update-settings";
@@ -21,7 +21,7 @@ const zAdminRoutesInput = z.object({
       post_status: z.string(),
     }),
   ),
-  settings: z.pick(zUptrackSettings, {
+  settings: z.pick(zUptrackSettingsSafe, {
     uptrack_kml_directory: true,
     uptrack_routes: true,
   }),

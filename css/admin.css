@@ -114,11 +114,6 @@
   }
 }
 
-.map-styles-field-group-item {
-  display: flex;
-  flex-direction: column;
-}
-
 .map-styles-table {
   width: 100%;
   border-collapse: collapse;

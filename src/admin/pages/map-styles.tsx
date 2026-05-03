@@ -1,12 +1,10 @@
 import { Icon, TextControl, Tooltip } from "@wordpress/components";
 import * as z from "zod/mini";
 
-import { zUptrackSettings } from "../../settings";
+import { zUptrackSettingsSafe } from "../../settings";
+import type { zMapStyles } from "../../uptrack-map/map-styles";
 import { useUpdateSettings } from "../use-update-settings";
 import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
-
-const parseNumberInput = (value: string): number =>
-  Number.parseFloat(value) || 0;
 
 const withHelpLabel = (label: string, tooltip: string): React.JSX.Element => (
   <span className="map-styles-label-with-help">
@@ -27,7 +25,7 @@ const withHelpLabel = (label: string, tooltip: string): React.JSX.Element => (
 // SYNC [AdminMapStylesInput]
 const zAdminMapStylesInput = z.object({
   nonce: z.string(),
-  settings: z.pick(zUptrackSettings, {
+  settings: z.pick(zUptrackSettingsSafe, {
     uptrack_map_styles: true,
   }),
 });
@@ -46,8 +44,12 @@ function MapStylesPage({
 }): React.JSX.Element {
   const { result, update } = useUpdateSettings();
 
+  // Use `z.input` to benefit from [zNumber].
+  const defaultValues: z.input<typeof zMapStyles> =
+    settingsDefault.uptrack_map_styles;
+
   const form = useAdminForm({
-    defaultValues: settingsDefault.uptrack_map_styles,
+    defaultValues,
     onSubmit: async ({ value }) => {
       await update({ uptrack_map_styles: value });
     },
@@ -76,12 +78,10 @@ function MapStylesPage({
                   "Pixel tolerance for canvas hit detection. Higher values make line hover/click interactions more forgiving.",
                 )}
                 type="number"
-                min={0}
+                min={1}
                 step="any"
-                value={field.state.value.toString()}
-                onChange={(value) => {
-                  field.handleChange(parseNumberInput(value));
-                }}
+                value={field.state.value}
+                onChange={field.handleChange}
                 __next40pxDefaultSize
                 __nextHasNoMarginBottom
               />
@@ -100,10 +100,8 @@ function MapStylesPage({
                 type="number"
                 min={0}
                 step="any"
-                value={field.state.value.toString()}
-                onChange={(value) => {
-                  field.handleChange(parseNumberInput(value));
-                }}
+                value={field.state.value}
+                onChange={field.handleChange}
                 __next40pxDefaultSize
                 __nextHasNoMarginBottom
               />
@@ -131,11 +129,10 @@ function MapStylesPage({
                       <TextControl
                         type="number"
                         min={0}
+                        max={1}
                         step="any"
-                        value={field.state.value.toString()}
-                        onChange={(value) => {
-                          field.handleChange(parseNumberInput(value));
-                        }}
+                        value={field.state.value}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -148,12 +145,10 @@ function MapStylesPage({
                     children={(field) => (
                       <TextControl
                         type="number"
-                        min={0}
+                        min={1}
                         step="any"
-                        value={field.state.value.toString()}
-                        onChange={(value) => {
-                          field.handleChange(parseNumberInput(value));
-                        }}
+                        value={field.state.value}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -170,11 +165,10 @@ function MapStylesPage({
                       <TextControl
                         type="number"
                         min={0}
+                        max={1}
                         step="any"
-                        value={field.state.value.toString()}
-                        onChange={(value) => {
-                          field.handleChange(parseNumberInput(value));
-                        }}
+                        value={field.state.value}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -187,12 +181,10 @@ function MapStylesPage({
                     children={(field) => (
                       <TextControl
                         type="number"
-                        min={0}
+                        min={1}
                         step="any"
-                        value={field.state.value.toString()}
-                        onChange={(value) => {
-                          field.handleChange(parseNumberInput(value));
-                        }}
+                        value={field.state.value}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -209,11 +201,10 @@ function MapStylesPage({
                       <TextControl
                         type="number"
                         min={0}
+                        max={1}
                         step="any"
-                        value={field.state.value.toString()}
-                        onChange={(value) => {
-                          field.handleChange(parseNumberInput(value));
-                        }}
+                        value={field.state.value}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -226,12 +217,10 @@ function MapStylesPage({
                     children={(field) => (
                       <TextControl
                         type="number"
-                        min={0}
+                        min={1}
                         step="any"
-                        value={field.state.value.toString()}
-                        onChange={(value) => {
-                          field.handleChange(parseNumberInput(value));
-                        }}
+                        value={field.state.value}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -261,9 +250,7 @@ function MapStylesPage({
                     children={(field) => (
                       <TextControl
                         value={field.state.value}
-                        onChange={(value) => {
-                          field.handleChange(value);
-                        }}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -279,9 +266,7 @@ function MapStylesPage({
                     children={(field) => (
                       <TextControl
                         value={field.state.value}
-                        onChange={(value) => {
-                          field.handleChange(value);
-                        }}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -297,9 +282,7 @@ function MapStylesPage({
                     children={(field) => (
                       <TextControl
                         value={field.state.value}
-                        onChange={(value) => {
-                          field.handleChange(value);
-                        }}
+                        onChange={field.handleChange}
                         __next40pxDefaultSize
                         __nextHasNoMarginBottom
                       />
@@ -320,12 +303,10 @@ function MapStylesPage({
                 <TextControl
                   label="Radius (px)"
                   type="number"
-                  min={0}
+                  min={1}
                   step="any"
-                  value={field.state.value.toString()}
-                  onChange={(value) => {
-                    field.handleChange(parseNumberInput(value));
-                  }}
+                  value={field.state.value}
+                  onChange={field.handleChange}
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
                 />
@@ -337,12 +318,10 @@ function MapStylesPage({
                 <TextControl
                   label="Weight (px)"
                   type="number"
-                  min={0}
+                  min={1}
                   step="any"
-                  value={field.state.value.toString()}
-                  onChange={(value) => {
-                    field.handleChange(parseNumberInput(value));
-                  }}
+                  value={field.state.value}
+                  onChange={field.handleChange}
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
                 />
@@ -354,9 +333,7 @@ function MapStylesPage({
                 <TextControl
                   label="Border Color"
                   value={field.state.value}
-                  onChange={(value) => {
-                    field.handleChange(value);
-                  }}
+                  onChange={field.handleChange}
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
                 />
@@ -369,11 +346,10 @@ function MapStylesPage({
                   label="Fill Opacity"
                   type="number"
                   min={0}
+                  max={1}
                   step="any"
-                  value={field.state.value.toString()}
-                  onChange={(value) => {
-                    field.handleChange(parseNumberInput(value));
-                  }}
+                  value={field.state.value}
+                  onChange={field.handleChange}
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
                 />
@@ -385,9 +361,7 @@ function MapStylesPage({
                 <TextControl
                   label="Start Fill Color"
                   value={field.state.value}
-                  onChange={(value) => {
-                    field.handleChange(value);
-                  }}
+                  onChange={field.handleChange}
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
                 />
@@ -399,9 +373,7 @@ function MapStylesPage({
                 <TextControl
                   label="End Fill Color"
                   value={field.state.value}
-                  onChange={(value) => {
-                    field.handleChange(value);
-                  }}
+                  onChange={field.handleChange}
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
                 />
@@ -413,9 +385,7 @@ function MapStylesPage({
                 <TextControl
                   label="Roundtrip Fill Color"
                   value={field.state.value}
-                  onChange={(value) => {
-                    field.handleChange(value);
-                  }}
+                  onChange={field.handleChange}
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
                 />

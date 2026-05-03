@@ -20,7 +20,8 @@ export class Legend extends L.Control.Layers {
     const data = Object.fromEntries(
       Object.entries(routeTypeProps).map(([type_, props]) => {
         const type = type_ as RouteType;
-        const html = `<span data-route-type="${type}" data-color="${props.color}" class="uptrack-legend-text">${RouteTypeLabel[type]}</span>`;
+        const color = props.color.replaceAll('"', "&quot;");
+        const html = `<span data-route-type="${type}" data-color="${color}" class="uptrack-legend-text">${RouteTypeLabel[type]}</span>`;
         // Create dummy groups to populate the legend.
         return [html, L.featureGroup().addTo(map)];
       }),

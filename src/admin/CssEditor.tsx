@@ -3,11 +3,7 @@ import * as prettierPluginPostcss from "prettier/plugins/postcss";
 import { format as prettierFormat } from "prettier/standalone";
 
 import { DEFAULT_UPTRACK_MAP_CSS } from "../default-assets";
-import {
-  CodeEditor,
-  type CodeEditorButton,
-  type CodeEditorLinter,
-} from "./CodeEditor";
+import { CodeEditor, type CodeEditorLinter } from "./CodeEditor";
 
 export type CssEditorProps = {
   value: string;
@@ -27,16 +23,6 @@ export const CssEditor: React.FC<CssEditorProps> = ({ value, onChange }) => {
     }
   };
 
-  const editorButtons: CodeEditorButton[] = [
-    {
-      icon: "undo",
-      label: "Reset to Default",
-      onClick: () => {
-        onChange(DEFAULT_UPTRACK_MAP_CSS);
-      },
-    },
-  ];
-
   return (
     <div className="w-full">
       <CodeEditor
@@ -45,7 +31,7 @@ export const CssEditor: React.FC<CssEditorProps> = ({ value, onChange }) => {
         lint={linter}
         onChange={onChange}
         onFormat={handleFormatCss}
-        buttons={editorButtons}
+        onReset={() => DEFAULT_UPTRACK_MAP_CSS}
       />
     </div>
   );

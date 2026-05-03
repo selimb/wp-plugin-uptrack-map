@@ -1,50 +1,35 @@
 import * as codemirrorJson from "@codemirror/lang-json";
-import { useState } from "@wordpress/element";
 
 import { type UptrackSettings, zUptrackSettings } from "../settings";
 import { CodeEditor, type CodeEditorLinter } from "./CodeEditor";
 
 export type SettingsJsonEditorProps = {
-  initial: UptrackSettings;
-  onChange: (settings: UptrackSettings) => void;
+  text: string;
+  onChange: (textNew: string) => void;
 };
 
 export const SettingsJsonEditor: React.FC<SettingsJsonEditorProps> = ({
-  initial,
+  text,
   onChange,
 }) => {
-  const [jsonText, setJsonText] = useState<string>(() =>
-    JSON.stringify(initial, null, 2),
-  );
-
-  const handleJsonChange = (newJsonText: string): void => {
-    setJsonText(newJsonText);
-
-    const { validated } = parseSettingsJson(newJsonText);
-    if (validated) {
-      onChange(validated);
-    }
-  };
-
-  const handleFormatJson = (): void => {
-    const { validated } = parseSettingsJson(jsonText);
+  const handleFormat = (): void => {
+    const { validated } = parseSettingsJson(text);
     if (!validated) {
       return;
     }
 
     const formatted = JSON.stringify(validated, null, 4);
-    setJsonText(formatted);
-    onChange(validated);
+    onChange(formatted);
   };
 
   return (
     <div className="w-full">
       <CodeEditor
-        value={jsonText}
+        value={text}
         extensions={[codemirrorJson.json()]}
         lint={linter}
-        onChange={handleJsonChange}
-        onFormat={handleFormatJson}
+        onChange={onChange}
+        onFormat={handleFormat}
       />
     </div>
   );
@@ -57,9 +42,9 @@ const parseSettingsJson = (
     const parsed = JSON.parse(text) as unknown;
     const validated = zUptrackSettings.parse(parsed);
     return { validated, error: null };
-  } catch (error_) {
+  } catch (error) {
     const errorMessage =
-      error_ instanceof Error ? error_.message : "Invalid JSON";
+      error instanceof Error ? error.message : "Invalid JSON";
     return { validated: null, error: errorMessage };
   }
 };

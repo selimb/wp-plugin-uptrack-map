@@ -1,5 +1,5 @@
 import { err, log } from "../logging";
-import { clamp } from "../utils";
+import { clamp } from "../utils/math";
 import type { RouteInfo, UptrackMapShortcodeInput } from "./types";
 
 function buildAlpineData(

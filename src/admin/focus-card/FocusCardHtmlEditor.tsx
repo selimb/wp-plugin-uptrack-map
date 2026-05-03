@@ -3,11 +3,7 @@ import * as prettierPluginHtml from "prettier/plugins/html";
 import { format as prettierFormat } from "prettier/standalone";
 
 import { DEFAULT_FOCUS_CARD_HTML } from "../../default-assets/index";
-import {
-  CodeEditor,
-  type CodeEditorButton,
-  type CodeEditorLinter,
-} from "../CodeEditor";
+import { CodeEditor, type CodeEditorLinter } from "../CodeEditor";
 import type { FocusCardFormProps } from "./FocusCardForm";
 
 export type FocusCardHtmlEditorProps = Pick<
@@ -26,16 +22,6 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
     }
   };
 
-  const editorButtons: CodeEditorButton[] = [
-    {
-      icon: "undo",
-      label: "Reset to Default",
-      onClick: () => {
-        onChange(DEFAULT_FOCUS_CARD_HTML);
-      },
-    },
-  ];
-
   return (
     <div className="w-full">
       <CodeEditor
@@ -44,7 +30,7 @@ export const FocusCardHtmlEditor: React.FC<FocusCardHtmlEditorProps> = ({
         lint={linter}
         onChange={onChange}
         onFormat={handleFormat}
-        buttons={editorButtons}
+        onReset={() => DEFAULT_FOCUS_CARD_HTML}
       />
     </div>
   );

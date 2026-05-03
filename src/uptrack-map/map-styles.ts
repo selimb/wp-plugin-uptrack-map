@@ -4,43 +4,62 @@ import { zFallback } from "../utils/zod-fallback";
 
 z.config(z.locales.en());
 
+// [zNumber] Use this instead of `z.coerce.number()` so that `z.input` returns `string | number`, which
+// simplifies form handling:
+// - Intermediate values can be strings, which is what form inputs produce.
+// - Final values are validated numbers.
+const zNumber = z.union([
+  z.number(),
+  z.pipe(
+    z.string(),
+    z.transform((str, ctx) => {
+      const num = Number(str);
+      if (Number.isNaN(num)) {
+        ctx.issues.push({
+          code: "custom",
+          input: str,
+          message: "Invalid number",
+        });
+        return z.NEVER;
+      }
+      return num;
+    }),
+  ),
+]);
+const zOpacity = zNumber.check(z.minimum(0), z.maximum(1));
+
+const zRouteStyle = z.object({
+  opacity: zOpacity,
+  weight: zNumber.check(z.minimum(1)),
+});
+
+const zRouteTypeProps = z.object({
+  color: z.string(),
+});
+
 export const zMapStyles = z.object({
-  canvasTolerance: z.number(),
+  canvasTolerance: zNumber.check(z.minimum(1)),
   routeStyles: z.object({
-    normal: z.object({
-      opacity: z.number(),
-      weight: z.number(),
-    }),
-    focus: z.object({
-      opacity: z.number(),
-      weight: z.number(),
-    }),
-    fade: z.object({
-      opacity: z.number(),
-      weight: z.number(),
-    }),
+    normal: zRouteStyle,
+    focus: zRouteStyle,
+    fade: zRouteStyle,
   }),
-  markerRadiusPx: z.number(),
-  markerWeightPx: z.number(),
+  markerRadiusPx: zNumber.check(z.minimum(1)),
+  markerWeightPx: zNumber.check(z.minimum(1)),
   markerColor: z.string(),
-  markerFillOpacity: z.number(),
+  markerFillOpacity: zOpacity,
   markerStartFillColor: z.string(),
   markerEndFillColor: z.string(),
   markerRoundtripFillColor: z.string(),
-  roundtripEpsilon: z.number(),
+  roundtripEpsilon: zNumber.check(z.minimum(0)),
   routeTypeProps: z.object({
-    ski_touring: z.object({
-      color: z.string(),
-    }),
-    mountaineering: z.object({
-      color: z.string(),
-    }),
-    hiking: z.object({
-      color: z.string(),
-    }),
+    ski_touring: zRouteTypeProps,
+    mountaineering: zRouteTypeProps,
+    hiking: zRouteTypeProps,
   }),
 });
 export type MapStyles = z.infer<typeof zMapStyles>;
+export type RouteStyleVariant = keyof MapStyles["routeStyles"];
 
 export const MAP_STYLES_DEFAULTS: MapStyles = {
   canvasTolerance: 14,
@@ -80,8 +99,6 @@ export const MAP_STYLES_DEFAULTS: MapStyles = {
 };
 
 export const zMapStylesSafe = zFallback(zMapStyles, MAP_STYLES_DEFAULTS);
-
-export type RouteStyleVariant = keyof MapStyles["routeStyles"];
 
 export const ROUTE_STYLE_INTERACTIVE: Record<RouteStyleVariant, boolean> = {
   normal: true,

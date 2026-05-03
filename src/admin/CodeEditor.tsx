@@ -31,6 +31,7 @@ export type CodeEditorProps = {
   onChange?: (value: string) => void;
   extensions: Extension[];
   onFormat?: () => void | Promise<void>;
+  onReset?: () => string;
   buttons?: CodeEditorButton[];
   lint?: CodeEditorLinter;
 };
@@ -40,6 +41,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onChange,
   extensions,
   onFormat,
+  onReset,
   buttons = [],
   lint,
 }) => {
@@ -59,18 +61,24 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     ];
   }, [extensions, lint]);
 
-  const allButtons = [
-    ...(onFormat
-      ? [
-          {
-            icon: <span aria-hidden="true">✨</span>,
-            label: "Format",
-            onClick: onFormat,
-          },
-        ]
-      : []),
-    ...buttons,
-  ];
+  const allButtons: CodeEditorButton[] = [];
+  if (onFormat) {
+    allButtons.push({
+      icon: <span aria-hidden="true">✨</span>,
+      label: "Format",
+      onClick: onFormat,
+    });
+  }
+  if (onReset) {
+    allButtons.push({
+      icon: "undo",
+      label: "Reset to Default",
+      onClick: () => {
+        onChange?.(onReset());
+      },
+    });
+  }
+  allButtons.push(...buttons);
 
   return (
     <div className="code-editor-container">
