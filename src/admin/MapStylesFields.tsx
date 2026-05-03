@@ -10,9 +10,6 @@ import type React from "react";
 import { zUptrackSettings } from "../settings";
 import { withAdminForm } from "./form-hook";
 
-const parseNumberInput = (value: string): number =>
-  Number.parseFloat(value) || 0;
-
 const withHelpLabel = (label: string, tooltip: string): React.JSX.Element => (
   <span className="map-styles-label-with-help">
     <span>{label}</span>
@@ -49,9 +46,9 @@ export const MapStylesFields = withAdminForm({
                     type="number"
                     min={0}
                     step="any"
-                    value={field.state.value.toString()}
-                    onChange={(value) => {
-                      field.handleChange(parseNumberInput(value));
+                    value={field.state.value}
+                    onChange={(_value, { event }) => {
+                      field.handleChange(event.target.value);
                     }}
                     __next40pxDefaultSize
                     __nextHasNoMarginBottom
