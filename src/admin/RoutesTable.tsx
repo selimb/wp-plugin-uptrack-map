@@ -4,9 +4,13 @@ import React from "react";
 
 import { RouteTypeLabel } from "../enums";
 import {
+  type DurationUnit,
+  type RouteDifficulty,
   type RouteType,
   type UptrackRoutesSetting,
   type UptrackRoutesSettingItem,
+  zDurationUnit,
+  zRouteDifficulty,
   zRouteType,
 } from "../settings";
 import { CoordinateInput } from "./CoordinateInput";
@@ -40,9 +44,11 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
           <th>Post</th>
           <th>Title</th>
           <th>Type</th>
-          <th>Distance</th>
-          <th>Elevation</th>
           <th>Duration</th>
+          <th>Elevation Gain (m)</th>
+          <th>Elevation Range (m)</th>
+          <th>Distance (km)</th>
+          <th>Difficulty</th>
           <th>Marker</th>
         </tr>
       </thead>
@@ -101,36 +107,83 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
                   }}
                 />
               </td>
+              {/* Duration */}
+              <td>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <TextControl
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                    type="number"
+                    value={route.durationValue}
+                    onChange={(durationValue) => {
+                      onChange(index, { durationValue });
+                    }}
+                    style={{ minWidth: "4rem" }}
+                  />
+                  <SelectControl
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                    options={DURATION_UNIT_OPTIONS}
+                    value={route.durationUnit}
+                    onChange={(durationUnit) => {
+                      onChange(index, { durationUnit });
+                    }}
+                    style={{ width: "4rem" }}
+                  />
+                </div>
+              </td>
+              {/* Elevation Gain */}
+              <td>
+                <TextControl
+                  __next40pxDefaultSize
+                  __nextHasNoMarginBottom
+                  value={route.elevationGain}
+                  onChange={(elevationGain) => {
+                    onChange(index, { elevationGain });
+                  }}
+                />
+              </td>
+              {/* Elevation Range */}
+              <td>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <TextControl
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                    value={route.elevationRangeStart}
+                    onChange={(elevationRangeStart) => {
+                      onChange(index, { elevationRangeStart });
+                    }}
+                  />
+                  <TextControl
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                    value={route.elevationRangeEnd}
+                    onChange={(elevationRangeEnd) => {
+                      onChange(index, { elevationRangeEnd });
+                    }}
+                  />
+                </div>
+              </td>
               {/* Distance */}
               <td>
                 <TextControl
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
-                  value={route.distance}
-                  onChange={(distance) => {
-                    onChange(index, { distance });
+                  value={route.distanceKm}
+                  onChange={(distanceKm) => {
+                    onChange(index, { distanceKm });
                   }}
                 />
               </td>
-              {/* Elevation */}
+              {/* Difficulty */}
               <td>
-                <TextControl
+                <SelectControl
                   __next40pxDefaultSize
                   __nextHasNoMarginBottom
-                  value={route.elevation}
-                  onChange={(elevation) => {
-                    onChange(index, { elevation });
-                  }}
-                />
-              </td>
-              {/* Duration */}
-              <td>
-                <TextControl
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
-                  value={route.duration}
-                  onChange={(duration) => {
-                    onChange(index, { duration });
+                  options={DIFFICULTY_OPTIONS}
+                  value={route.difficulty}
+                  onChange={(difficulty) => {
+                    onChange(index, { difficulty });
                   }}
                 />
               </td>
@@ -158,6 +211,30 @@ const TYPE_OPTIONS: Array<{ label: string; value: RouteType }> =
       label: RouteTypeLabel[routeType],
     }))
     .toSorted((a, b) => a.label.localeCompare(b.label));
+
+const DURATION_UNIT_LABEL: Record<DurationUnit, string> = {
+  hours: "h",
+  days: "d",
+};
+
+const DURATION_UNIT_OPTIONS: Array<{ label: string; value: DurationUnit }> =
+  zDurationUnit.options.map((durationUnit) => ({
+    value: durationUnit,
+    label: DURATION_UNIT_LABEL[durationUnit],
+  }));
+
+const DIFFICULTY_LABEL: Record<RouteDifficulty, string> = {
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+  expert: "Expert",
+};
+
+const DIFFICULTY_OPTIONS: Array<{ label: string; value: RouteDifficulty }> =
+  zRouteDifficulty.options.map((difficulty) => ({
+    value: difficulty,
+    label: DIFFICULTY_LABEL[difficulty],
+  }));
 
 function computeRemainingPosts(
   postMap: PostMap,

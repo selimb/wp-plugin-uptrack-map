@@ -18,17 +18,26 @@
   <div>
     <ul>
       <li>
-        <span>Duration:</span> <span x-text="route.duration"></span>
-        <span>days</span>
+        <span>Duration:</span>
+        <span x-text="route.durationValue"></span>
+        <span x-text="route.durationUnit"></span>
       </li>
       <li>
-        <span>Distance:</span> <span x-text="route.distance"></span>
-        <span>km</span>
-      </li>
-      <li>
-        <span>Elevation:</span> <span x-text="route.elevation"></span>
+        <span>Elevation Gain:</span> <span x-text="route.elevationGain"></span>
         <span>m</span>
       </li>
+      <li>
+        <span>Elevation Range:</span>
+        <span x-text="route.elevationRangeStart"></span>
+        <span>-</span>
+        <span x-text="route.elevationRangeEnd"></span>
+        <span>m</span>
+      </li>
+      <li>
+        <span>Distance:</span> <span x-text="route.distanceKm"></span>
+        <span>km</span>
+      </li>
+      <li><span>Difficulty:</span> <span x-text="route.difficulty"></span></li>
     </ul>
   </div>
 </div>
