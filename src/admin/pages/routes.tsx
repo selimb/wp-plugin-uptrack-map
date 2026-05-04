@@ -102,7 +102,7 @@ function RoutesPage({
   postMap,
   kmlDirectoryValid,
 }: RoutesPageProps): React.JSX.Element {
-  const { result, update } = useUpdateSettings();
+  const { result, clear, update } = useUpdateSettings();
 
   const form = useAdminForm({
     defaultValues: settingsDefault,
@@ -127,7 +127,7 @@ function RoutesPage({
           void form.handleSubmit();
         }}
       >
-        <FormSubmitNotice result={result} />
+        <FormSubmitNotice result={result} onDismiss={clear} />
 
         <div className="form-field">
           <form.Field

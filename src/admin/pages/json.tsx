@@ -39,7 +39,7 @@ function JsonPage({
   settingsDefault: UptrackSettings;
   textDefault: string;
 }): React.JSX.Element {
-  const { result, update } = useUpdateSettings();
+  const { result, clear, update } = useUpdateSettings();
   const [settings, setSettings] = useState<SettingsResult>(() => ({
     ok: true,
     value: settingsDefault,
@@ -88,7 +88,7 @@ function JsonPage({
           void form.handleSubmit();
         }}
       >
-        <FormSubmitNotice result={result} />
+        <FormSubmitNotice result={result} onDismiss={clear} />
 
         <div className="form-field">
           <div className="w-full">

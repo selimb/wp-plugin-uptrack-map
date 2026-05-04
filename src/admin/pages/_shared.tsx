@@ -58,13 +58,18 @@ export const { useAppForm: useAdminForm } = createFormHook({
 
 export const FormSubmitNotice: React.FC<{
   result: UpdateSettingsResult | null;
-}> = ({ result }) => {
+  onDismiss: () => void;
+}> = ({ result, onDismiss }) => {
   if (!result) {
     return null;
   }
 
   return (
-    <Notice status={result.ok ? "success" : "error"} isDismissible={true}>
+    <Notice
+      status={result.ok ? "success" : "error"}
+      isDismissible={true}
+      onRemove={onDismiss}
+    >
       {result.ok ? (
         <div>Settings saved successfully</div>
       ) : (

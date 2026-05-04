@@ -7,6 +7,7 @@ import type { zUptrackSettings } from "../settings";
 export type UpdateSettingsResult = { ok: true } | { ok: false; error: string };
 export type UpdateSettings = {
   result: UpdateSettingsResult | null;
+  clear: () => void;
   update: (
     settingsNew: Partial<z.input<typeof zUptrackSettings>>,
   ) => Promise<UpdateSettingsResult>;
@@ -17,6 +18,9 @@ export function useUpdateSettings(): UpdateSettings {
 
   return {
     result,
+    clear: () => {
+      setResult(null);
+    },
     update: async (settingsNew) => {
       let result: UpdateSettingsResult;
       try {

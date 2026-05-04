@@ -29,7 +29,7 @@ function AssetsPage({
 }: {
   settingsDefault: AssetsSettings;
 }): React.JSX.Element {
-  const { result, update } = useUpdateSettings();
+  const { result, clear, update } = useUpdateSettings();
 
   const form = useAdminForm({
     defaultValues: settingsDefault,
@@ -48,7 +48,7 @@ function AssetsPage({
           void form.handleSubmit();
         }}
       >
-        <FormSubmitNotice result={result} />
+        <FormSubmitNotice result={result} onDismiss={clear} />
 
         {/* uptrack_alpinejs_url */}
         <div className="form-field">

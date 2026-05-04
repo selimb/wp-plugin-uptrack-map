@@ -3,6 +3,7 @@ import * as z from "zod/mini";
 
 import { zUptrackSettingsSafe } from "../../settings";
 import { zMapStyles } from "../../uptrack-map/map-styles";
+import { ColorControl } from "../ColorControl";
 import { useUpdateSettings } from "../use-update-settings";
 import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
 
@@ -42,7 +43,7 @@ function MapStylesPage({
 }: {
   settingsDefault: MapStylesSettings;
 }): React.JSX.Element {
-  const { result, update } = useUpdateSettings();
+  const { result, clear, update } = useUpdateSettings();
 
   // Use `z.input` to benefit from [zNumber].
   const defaultValues: z.input<typeof zMapStyles> =
@@ -68,7 +69,7 @@ function MapStylesPage({
           void form.handleSubmit();
         }}
       >
-        <FormSubmitNotice result={result} />
+        <FormSubmitNotice result={result} onDismiss={clear} />
 
         <div className="map-styles-field-group">
           {/* canvasTolerance */}
@@ -251,11 +252,9 @@ function MapStylesPage({
                   <form.Field
                     name="routeTypeProps.ski_touring.color"
                     children={(field) => (
-                      <TextControl
+                      <ColorControl
                         value={field.state.value}
                         onChange={field.handleChange}
-                        __next40pxDefaultSize
-                        __nextHasNoMarginBottom
                       />
                     )}
                   />
@@ -267,11 +266,9 @@ function MapStylesPage({
                   <form.Field
                     name="routeTypeProps.mountaineering.color"
                     children={(field) => (
-                      <TextControl
+                      <ColorControl
                         value={field.state.value}
                         onChange={field.handleChange}
-                        __next40pxDefaultSize
-                        __nextHasNoMarginBottom
                       />
                     )}
                   />
@@ -283,11 +280,9 @@ function MapStylesPage({
                   <form.Field
                     name="routeTypeProps.hiking.color"
                     children={(field) => (
-                      <TextControl
+                      <ColorControl
                         value={field.state.value}
                         onChange={field.handleChange}
-                        __next40pxDefaultSize
-                        __nextHasNoMarginBottom
                       />
                     )}
                   />
@@ -333,12 +328,10 @@ function MapStylesPage({
             <form.Field
               name="markerColor"
               children={(field) => (
-                <TextControl
+                <ColorControl
                   label="Border Color"
                   value={field.state.value}
                   onChange={field.handleChange}
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
                 />
               )}
             />
@@ -361,36 +354,30 @@ function MapStylesPage({
             <form.Field
               name="markerStartFillColor"
               children={(field) => (
-                <TextControl
+                <ColorControl
                   label="Start Fill Color"
                   value={field.state.value}
                   onChange={field.handleChange}
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
                 />
               )}
             />
             <form.Field
               name="markerEndFillColor"
               children={(field) => (
-                <TextControl
+                <ColorControl
                   label="End Fill Color"
                   value={field.state.value}
                   onChange={field.handleChange}
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
                 />
               )}
             />
             <form.Field
               name="markerRoundtripFillColor"
               children={(field) => (
-                <TextControl
+                <ColorControl
                   label="Roundtrip Fill Color"
                   value={field.state.value}
                   onChange={field.handleChange}
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
                 />
               )}
             />
