@@ -115,7 +115,7 @@ function MapStylesPage({
 
         <div>
           <h4>Route Styles</h4>
-          <table className="map-styles-table">
+          <table className="widefat fixed striped table-align-middle">
             <thead>
               <tr>
                 <th>Variant</th>
@@ -238,7 +238,7 @@ function MapStylesPage({
 
         <div>
           <h4>Route Type Colors</h4>
-          <table className="map-styles-table">
+          <table className="widefat fixed striped table-align-middle">
             <thead>
               <tr>
                 <th>Route Type</th>

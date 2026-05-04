@@ -33,7 +33,7 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
   const postsRemaining = computeRemainingPosts(postMap, routes);
 
   return (
-    <table className="widefat fixed striped uptrack-route-table">
+    <table className="widefat fixed striped table-align-middle">
       <thead>
         <tr>
           <th>KML File</th>

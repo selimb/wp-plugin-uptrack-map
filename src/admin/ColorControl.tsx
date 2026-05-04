@@ -37,8 +37,6 @@ export function ColorControl({
           onChange={(e) => {
             onChange(e.target.value);
           }}
-          // XXX
-          // className="components-text-control__input"
         />
       </div>
     </BaseControl>

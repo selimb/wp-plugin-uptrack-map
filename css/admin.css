@@ -12,7 +12,7 @@
   border: solid 1px orange !important;
 }
 
-.uptrack-route-table td {
+.table-align-middle td {
   vertical-align: middle;
 }
 
@@ -93,24 +93,6 @@
   grid-auto-flow: row;
   grid-auto-columns: auto;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-.map-styles-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0;
-}
-
-.map-styles-table th,
-.map-styles-table td {
-  padding: 8px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.map-styles-table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
 }
 
 .map-styles-label-with-help {
