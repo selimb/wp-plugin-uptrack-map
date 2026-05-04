@@ -15,9 +15,9 @@ export function ColorControl({
 
   return (
     <BaseControl label={label} id={id} __nextHasNoMarginBottom>
-      <div className="map-styles-color-control">
+      <div className="color-control">
         <label
-          className="map-styles-color-swatch"
+          className="color-control-swatch"
           style={{ backgroundColor: value }}
           title="Pick a color"
         >

@@ -80,7 +80,36 @@
   display: none;
 }
 
-/* Map Styles Fields */
+.color-control {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.color-control-swatch {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #949494;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.color-control-swatch > input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.color-control input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+}
+
 .map-styles-field-group {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -93,46 +122,4 @@
   grid-auto-flow: row;
   grid-auto-columns: auto;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-.map-styles-label-with-help {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.map-styles-help-icon {
-  display: inline-flex;
-  color: #646970;
-  cursor: help;
-}
-
-.map-styles-color-control {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.map-styles-color-swatch {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 1px solid #949494;
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.map-styles-color-swatch > input {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.map-styles-color-control input[type="text"] {
-  flex: 1;
-  min-width: 0;
-  height: 40px;
 }
