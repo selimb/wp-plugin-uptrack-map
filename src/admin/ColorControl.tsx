@@ -11,7 +11,6 @@ export function ColorControl({
   onChange: (value: string) => void;
 }): React.JSX.Element {
   const id = useId();
-  const textInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <BaseControl label={label} id={id} __nextHasNoMarginBottom>
@@ -30,7 +29,6 @@ export function ColorControl({
           />
         </label>
         <input
-          ref={textInputRef}
           id={id}
           type="text"
           value={value}
