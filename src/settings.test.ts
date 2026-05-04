@@ -4,7 +4,7 @@ import { zUptrackSettingsSafe } from "./settings";
 
 /** Tests [uptrack-settings-fallback]. */
 test("zUptrackSettings fallback", () => {
-  const result = zUptrackSettingsSafe.parse("oopsies");
+  const result = zUptrackSettingsSafe.parse({});
   // NOTE: `uptrack_css` and `uptrack_focus_card_html` should resolve to the contents of the files in
   //   practice, but bun doesn't use the same bundling logic as `build.ts`.
   expect(result).toMatchInlineSnapshot(`
