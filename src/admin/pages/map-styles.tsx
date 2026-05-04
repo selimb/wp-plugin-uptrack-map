@@ -294,7 +294,7 @@ function MapStylesPage({
 
         <div>
           <h4>Marker Styling</h4>
-          <div className="map-styles-field-group map-styles-field-group--compact map-styles-field-group--single-line">
+          <div className="map-styles-field-group map-styles-field-group--single-line">
             <form.Field
               name="markerRadiusPx"
               children={(field) => (

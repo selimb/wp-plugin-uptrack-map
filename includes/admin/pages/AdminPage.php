@@ -12,13 +12,15 @@ abstract class AdminPage
 
     public static function enqueue_assets()
     {
-        $version = UPTRACK_MAP__PLUGIN_VERSION;
-
         $script_name = "uptrack-map-admin-" . static::get_slug();
         $script_url = \plugins_url(
             "js/" . static::get_script_basename() . ".js",
             UPTRACK_MAP__PLUGIN_FILE,
         );
+        $version =
+            defined("WP_DEBUG") && WP_DEBUG
+                ? time()
+                : UPTRACK_MAP__PLUGIN_VERSION;
 
         \wp_register_script(
             $script_name,

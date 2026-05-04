@@ -121,7 +121,10 @@ class UptrackMapShortCode
 
     private static function enqueue_assets($data, $settings)
     {
-        $version = UPTRACK_MAP__PLUGIN_VERSION;
+        $version =
+            defined("WP_DEBUG") && WP_DEBUG
+                ? time()
+                : UPTRACK_MAP__PLUGIN_VERSION;
 
         // [require-wp-leaflet-map] [require-toGeoJSON] Includes leaflet and toGeoJSON.
         // Defined in https://github.com/bozdoz/wp-plugin-leaflet-map/blob/v3.4.5/class.leaflet-map.php#L217
