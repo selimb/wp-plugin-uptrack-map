@@ -19,6 +19,8 @@ const zAdminRoutesInput = z.object({
       ID: z.string(),
       post_title: z.string(),
       post_status: z.string(),
+      // Not used, but included to be able to compute URL.
+      post_name: z.string(),
     }),
   ),
   settings: z.pick(zUptrackSettingsSafe, {

@@ -54,7 +54,7 @@ class AdminRoutesPage extends AdminPage
     {
         global $wpdb;
         return $wpdb->get_results(
-            "SELECT ID, post_title, post_status
+            "SELECT ID, post_title, post_status, post_name
              FROM {$wpdb->posts}
              WHERE post_type='post'",
         );
