@@ -39,10 +39,7 @@ export const CoordinateInput: React.FC<CoordinateInputProps> = ({
         }
         onChange(coords);
       }}
-      className={clsx(
-        state.type === "invalid" && "control-invalid",
-        state.type === "empty" && "control-warning",
-      )}
+      className={clsx(state.type === "invalid" && "control-invalid")}
     />
   );
 };

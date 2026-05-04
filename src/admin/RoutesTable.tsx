@@ -46,8 +46,7 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
           <th>Type</th>
           <th>Duration</th>
           <th>Elevation Gain (m)</th>
-          <th>Elevation Range Start (m)</th>
-          <th>Elevation Range End (m)</th>
+          <th>Elevation Range (m)</th>
           <th>Distance (km)</th>
           <th>Difficulty</th>
           <th>Marker</th>
@@ -110,14 +109,16 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
               </td>
               {/* Duration */}
               <td>
-                <div style={{ display: "flex", gap: "8px", minWidth: "220px" }}>
+                <div style={{ display: "flex", gap: "8px" }}>
                   <TextControl
                     __next40pxDefaultSize
                     __nextHasNoMarginBottom
+                    type="number"
                     value={route.durationValue}
                     onChange={(durationValue) => {
                       onChange(index, { durationValue });
                     }}
+                    style={{ minWidth: "4rem" }}
                   />
                   <SelectControl
                     __next40pxDefaultSize
@@ -127,6 +128,7 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
                     onChange={(durationUnit) => {
                       onChange(index, { durationUnit });
                     }}
+                    style={{ width: "4rem" }}
                   />
                 </div>
               </td>
@@ -141,27 +143,26 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
                   }}
                 />
               </td>
-              {/* Elevation Range Start */}
+              {/* Elevation Range */}
               <td>
-                <TextControl
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
-                  value={route.elevationRangeStart}
-                  onChange={(elevationRangeStart) => {
-                    onChange(index, { elevationRangeStart });
-                  }}
-                />
-              </td>
-              {/* Elevation Range End */}
-              <td>
-                <TextControl
-                  __next40pxDefaultSize
-                  __nextHasNoMarginBottom
-                  value={route.elevationRangeEnd}
-                  onChange={(elevationRangeEnd) => {
-                    onChange(index, { elevationRangeEnd });
-                  }}
-                />
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <TextControl
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                    value={route.elevationRangeStart}
+                    onChange={(elevationRangeStart) => {
+                      onChange(index, { elevationRangeStart });
+                    }}
+                  />
+                  <TextControl
+                    __next40pxDefaultSize
+                    __nextHasNoMarginBottom
+                    value={route.elevationRangeEnd}
+                    onChange={(elevationRangeEnd) => {
+                      onChange(index, { elevationRangeEnd });
+                    }}
+                  />
+                </div>
               </td>
               {/* Distance */}
               <td>
@@ -212,8 +213,8 @@ const TYPE_OPTIONS: Array<{ label: string; value: RouteType }> =
     .toSorted((a, b) => a.label.localeCompare(b.label));
 
 const DURATION_UNIT_LABEL: Record<DurationUnit, string> = {
-  hours: "hours",
-  days: "days",
+  hours: "h",
+  days: "d",
 };
 
 const DURATION_UNIT_OPTIONS: Array<{ label: string; value: DurationUnit }> =
