@@ -1,5 +1,5 @@
 import { err, log } from "../logging";
-import { FOCUS_CARD_SWIPE_DISTANCE_PX } from "./constants";
+import { clamp } from "../utils/math";
 import type { RouteInfo, UptrackMapShortcodeInput } from "./types";
 
 function buildAlpineData(
@@ -38,12 +38,13 @@ export class FocusCard {
   private readonly templateElem: HTMLTemplateElement;
   private readonly targetElem: HTMLElement;
   private readonly document: Document;
+  private readonly swipeDistancePx: number;
 
   private routeInfo: RouteInfo | undefined = undefined;
   private dragState: DragState | undefined = undefined;
 
   constructor(
-    focusCardHtml: UptrackMapShortcodeInput["focus_card_html"],
+    focusCardHtml: UptrackMapShortcodeInput["uptrack_focus_card_html"],
     /**
      * Target element to append the focus card to.
      * @default document.body
@@ -57,6 +58,7 @@ export class FocusCard {
       this.document = window.document;
       this.targetElem = window.document.body;
     }
+    this.swipeDistancePx = computeFocusCardSwipeDistancePx(window);
     this.templateElem = this.document.createElement("template");
     this.templateElem.innerHTML = focusCardHtml;
   }
@@ -153,7 +155,7 @@ export class FocusCard {
       return;
     }
     const { delta } = this.dragState;
-    if (Math.abs(delta) > FOCUS_CARD_SWIPE_DISTANCE_PX) {
+    if (Math.abs(delta) > this.swipeDistancePx) {
       this.onClose?.();
     }
     this._updateDrag(undefined);
@@ -177,7 +179,7 @@ export class FocusCard {
     const style = $root.style;
     if (dragState) {
       const { delta } = dragState;
-      const opacity = 1 - Math.abs(delta) / FOCUS_CARD_SWIPE_DISTANCE_PX;
+      const opacity = 1 - Math.abs(delta) / this.swipeDistancePx;
 
       style.transform = `translateX(${delta}px)`;
       style.transition = "";
@@ -199,4 +201,10 @@ export class FocusCard {
     const offset = adminBarHeight + 10;
     $container.style.marginBottom = `${offset}px`;
   }
+}
+
+function computeFocusCardSwipeDistancePx(win: Window): number {
+  const smallestDimension = Math.min(win.innerWidth, win.innerHeight);
+  const distance = smallestDimension * 0.4;
+  return clamp(distance, 150, 400);
 }

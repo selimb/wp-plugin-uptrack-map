@@ -9,8 +9,15 @@ import {
   type UptrackRoutesSettingItem,
   zRouteType,
 } from "../settings";
-import type { Post, PostId, PostMap } from "./AdminForm";
 import { CoordinateInput } from "./CoordinateInput";
+
+export type Post = {
+  ID: string;
+  post_title: string;
+  post_status: string;
+};
+export type PostId = Post["ID"];
+export type PostMap = Map<PostId, Post>;
 
 export type RoutesTableProps = {
   postMap: PostMap;
@@ -26,7 +33,7 @@ export const RoutesTable: React.FC<RoutesTableProps> = ({
   const postsRemaining = computeRemainingPosts(postMap, routes);
 
   return (
-    <table className="widefat fixed striped uptrack-route-table">
+    <table className="widefat fixed striped table-align-middle">
       <thead>
         <tr>
           <th>KML File</th>

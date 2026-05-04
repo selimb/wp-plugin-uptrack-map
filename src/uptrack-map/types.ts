@@ -1,7 +1,7 @@
 import type L from "leaflet";
 import * as z from "zod/mini";
 
-import { zMarkerCoords, zRouteType } from "../settings";
+import { zMarkerCoords, zRouteType, zUptrackSettings } from "../settings";
 
 // SYNC [RouteInfo]
 export const zRouteInfo = z.object({
@@ -24,11 +24,13 @@ export type RouteId = RouteInfo["id"];
 export type LineCoords = L.LatLng[];
 
 // SYNC [UptrackMapShortcodeInput]
-// Use `strictObject` so we can catch divergences.
-export const zUptrackMapShortcodeInput = z.strictObject({
-  routes: z.array(zRouteInfo),
-  focus_card_html: z.string(),
-});
+export const zUptrackMapShortcodeInput = z.extend(
+  z.pick(zUptrackSettings, {
+    uptrack_focus_card_html: true,
+    uptrack_map_styles: true,
+  }),
+  { routes: z.array(zRouteInfo) },
+);
 export type UptrackMapShortcodeInput = z.infer<
   typeof zUptrackMapShortcodeInput
 >;

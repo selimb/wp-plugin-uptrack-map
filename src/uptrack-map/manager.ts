@@ -3,22 +3,9 @@ import L from "leaflet";
 
 import { err, log } from "../logging";
 import type { RouteType } from "../settings";
-import {
-  CANVAS_TOLERANCE,
-  ROUNDTRIP_EPSILON,
-  ROUTE_MARKER_COLOR,
-  ROUTE_MARKER_END_FILL_COLOR,
-  ROUTE_MARKER_FILL_OPACITY,
-  ROUTE_MARKER_RADIUS_PX,
-  ROUTE_MARKER_ROUNDTRIP_FILL_COLOR,
-  ROUTE_MARKER_START_FILL_COLOR,
-  ROUTE_MARKER_WEIGHT_PX,
-  ROUTE_STYLES,
-  ROUTE_TYPE_PROPS,
-  type RouteStyleVariant,
-} from "./constants";
 import { FocusCard } from "./focus-card";
 import { Legend } from "./legend";
+import { ROUTE_STYLE_INTERACTIVE, type RouteStyleVariant } from "./map-styles";
 import type {
   LineCoords,
   RouteId,
@@ -73,8 +60,9 @@ export class UptrackMapManager {
   constructor(config: UptrackMapShortcodeInput, map: L.Map) {
     this.config = config;
     this.map = map;
+    const mapStyles = config.uptrack_map_styles;
 
-    this.renderer = L.canvas({ tolerance: CANVAS_TOLERANCE });
+    this.renderer = L.canvas({ tolerance: mapStyles.canvasTolerance });
 
     this.groupRoot = L.featureGroup();
     this.groupRoot.addTo(this.map);
@@ -82,12 +70,12 @@ export class UptrackMapManager {
     /** @type {Map<RouteInfo['id'], Route>} */
     this.routes = new Map();
 
-    this.focusCard = new FocusCard(config.focus_card_html);
+    this.focusCard = new FocusCard(config.uptrack_focus_card_html);
     this.focusCard.onClose = () => {
       this.unfocus();
     };
 
-    this.legend = Legend.create(this.map);
+    this.legend = Legend.create(this.map, mapStyles.routeTypeProps);
     this.legend.onInputClick = (routeType) => {
       this.updateRouteTypeFilter(routeType);
     };
@@ -98,13 +86,14 @@ export class UptrackMapManager {
     options: { variant?: RouteStyleVariant } = {},
   ): L.PathOptions {
     const { variant: variantKey = "normal" } = options;
-    const variant = ROUTE_STYLES[variantKey];
-    const color = ROUTE_TYPE_PROPS[info.type].color;
+    const mapStyles = this.config.uptrack_map_styles;
+    const variant = mapStyles.routeStyles[variantKey];
+    const color = mapStyles.routeTypeProps[info.type].color;
     return {
       color,
       opacity: variant.opacity,
       weight: variant.weight,
-      interactive: variant.interactive,
+      interactive: ROUTE_STYLE_INTERACTIVE[variantKey],
       renderer: this.renderer,
     };
   }
@@ -431,6 +420,7 @@ export class UptrackMapManager {
     if (coords.length === 0) {
       return null;
     }
+    const mapStyles = this.config.uptrack_map_styles;
 
     const markers: L.CircleMarker[] = [];
 
@@ -440,14 +430,14 @@ export class UptrackMapManager {
     if (coords.length > 1) {
       // eslint-disable-next-line unicorn/prefer-at -- No need to handle null, we've checked length above.
       const cN = coords[coords.length - 1];
-      const isRoundtrip = c0.distanceTo(cN) <= ROUNDTRIP_EPSILON;
+      const isRoundtrip = c0.distanceTo(cN) <= mapStyles.roundtripEpsilon;
       if (!isRoundtrip) {
         endMarker = L.circleMarker(cN, {
-          radius: ROUTE_MARKER_RADIUS_PX,
-          color: ROUTE_MARKER_COLOR,
-          weight: ROUTE_MARKER_WEIGHT_PX,
-          fillColor: ROUTE_MARKER_END_FILL_COLOR,
-          fillOpacity: ROUTE_MARKER_FILL_OPACITY,
+          radius: mapStyles.markerRadiusPx,
+          color: mapStyles.markerColor,
+          weight: mapStyles.markerWeightPx,
+          fillColor: mapStyles.markerEndFillColor,
+          fillOpacity: mapStyles.markerFillOpacity,
           interactive: false,
         });
         markers.push(endMarker);
@@ -455,13 +445,13 @@ export class UptrackMapManager {
     }
 
     const startMarker = L.circleMarker(c0, {
-      radius: ROUTE_MARKER_RADIUS_PX,
-      color: ROUTE_MARKER_COLOR,
-      weight: ROUTE_MARKER_WEIGHT_PX,
+      radius: mapStyles.markerRadiusPx,
+      color: mapStyles.markerColor,
+      weight: mapStyles.markerWeightPx,
       fillColor: endMarker
-        ? ROUTE_MARKER_START_FILL_COLOR
-        : ROUTE_MARKER_ROUNDTRIP_FILL_COLOR,
-      fillOpacity: ROUTE_MARKER_FILL_OPACITY,
+        ? mapStyles.markerStartFillColor
+        : mapStyles.markerRoundtripFillColor,
+      fillOpacity: mapStyles.markerFillOpacity,
       interactive: false,
     });
     markers.push(startMarker);

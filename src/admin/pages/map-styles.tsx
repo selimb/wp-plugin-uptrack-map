@@ -1,0 +1,371 @@
+import { TextControl } from "@wordpress/components";
+import * as z from "zod/mini";
+
+import { zUptrackSettingsSafe } from "../../settings";
+import { zMapStyles } from "../../uptrack-map/map-styles";
+import { ColorControl } from "../ColorControl";
+import { useUpdateSettings } from "../use-update-settings";
+import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
+
+// SYNC [AdminMapStylesInput]
+const zAdminMapStylesInput = z.object({
+  nonce: z.string(),
+  settings: z.pick(zUptrackSettingsSafe, {
+    uptrack_map_styles: true,
+  }),
+});
+type AdminMapStylesInput = z.infer<typeof zAdminMapStylesInput>;
+type MapStylesSettings = AdminMapStylesInput["settings"];
+
+mountAdminPage({
+  schema: zAdminMapStylesInput,
+  render: (input) => <MapStylesPage settingsDefault={input.settings} />,
+});
+
+function MapStylesPage({
+  settingsDefault,
+}: {
+  settingsDefault: MapStylesSettings;
+}): React.JSX.Element {
+  const { result, clear, update } = useUpdateSettings();
+
+  // Use `z.input` to benefit from [zNumber].
+  const defaultValues: z.input<typeof zMapStyles> =
+    settingsDefault.uptrack_map_styles;
+
+  const form = useAdminForm({
+    defaultValues,
+    validators: {
+      onChange: zMapStyles,
+    },
+    onSubmit: async ({ value }) => {
+      await update({ uptrack_map_styles: value });
+    },
+  });
+
+  return (
+    <form.AppForm>
+      <form
+        className="form-wrap"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <FormSubmitNotice result={result} onDismiss={clear} />
+
+        <div className="map-styles-field-group">
+          {/* canvasTolerance */}
+          <form.Field
+            name="canvasTolerance"
+            children={(field) => (
+              <TextControl
+                label="Canvas Tolerance (px)"
+                help="Pixel tolerance for canvas hit detection. Higher values make line hover/click interactions more forgiving."
+                type="number"
+                min={1}
+                step="any"
+                value={field.state.value}
+                onChange={field.handleChange}
+                __next40pxDefaultSize
+                __nextHasNoMarginBottom
+              />
+            )}
+          />
+
+          {/* roundtripEpsilon */}
+          <form.Field
+            name="roundtripEpsilon"
+            children={(field) => (
+              <TextControl
+                label="Roundtrip Epsilon"
+                help="Distance threshold used to treat route start and end points as the same location."
+                type="number"
+                min={0}
+                step="any"
+                value={field.state.value}
+                onChange={field.handleChange}
+                __next40pxDefaultSize
+                __nextHasNoMarginBottom
+              />
+            )}
+          />
+        </div>
+
+        <div>
+          <h4>Route Styles</h4>
+          <table className="widefat fixed striped table-align-middle">
+            <thead>
+              <tr>
+                <th>Variant</th>
+                <th>Opacity</th>
+                <th>Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Normal</td>
+                <td>
+                  <form.Field
+                    name="routeStyles.normal.opacity"
+                    children={(field) => (
+                      <TextControl
+                        type="number"
+                        min={0}
+                        max={1}
+                        step="any"
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                      />
+                    )}
+                  />
+                </td>
+                <td>
+                  <form.Field
+                    name="routeStyles.normal.weight"
+                    children={(field) => (
+                      <TextControl
+                        type="number"
+                        min={1}
+                        step="any"
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                      />
+                    )}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Focus</td>
+                <td>
+                  <form.Field
+                    name="routeStyles.focus.opacity"
+                    children={(field) => (
+                      <TextControl
+                        type="number"
+                        min={0}
+                        max={1}
+                        step="any"
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                      />
+                    )}
+                  />
+                </td>
+                <td>
+                  <form.Field
+                    name="routeStyles.focus.weight"
+                    children={(field) => (
+                      <TextControl
+                        type="number"
+                        min={1}
+                        step="any"
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                      />
+                    )}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Fade</td>
+                <td>
+                  <form.Field
+                    name="routeStyles.fade.opacity"
+                    children={(field) => (
+                      <TextControl
+                        type="number"
+                        min={0}
+                        max={1}
+                        step="any"
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                      />
+                    )}
+                  />
+                </td>
+                <td>
+                  <form.Field
+                    name="routeStyles.fade.weight"
+                    children={(field) => (
+                      <TextControl
+                        type="number"
+                        min={1}
+                        step="any"
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        __next40pxDefaultSize
+                        __nextHasNoMarginBottom
+                      />
+                    )}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h4>Route Type Colors</h4>
+          <table className="widefat fixed striped table-align-middle">
+            <thead>
+              <tr>
+                <th>Route Type</th>
+                <th>Color</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Ski Touring</td>
+                <td>
+                  <form.Field
+                    name="routeTypeProps.ski_touring.color"
+                    children={(field) => (
+                      <ColorControl
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                      />
+                    )}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Mountaineering</td>
+                <td>
+                  <form.Field
+                    name="routeTypeProps.mountaineering.color"
+                    children={(field) => (
+                      <ColorControl
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                      />
+                    )}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Hiking</td>
+                <td>
+                  <form.Field
+                    name="routeTypeProps.hiking.color"
+                    children={(field) => (
+                      <ColorControl
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                      />
+                    )}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h4>Marker Styling</h4>
+          <div className="map-styles-field-group map-styles-field-group--single-line">
+            <form.Field
+              name="markerRadiusPx"
+              children={(field) => (
+                <TextControl
+                  label="Radius (px)"
+                  type="number"
+                  min={1}
+                  step="any"
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  __next40pxDefaultSize
+                  __nextHasNoMarginBottom
+                />
+              )}
+            />
+            <form.Field
+              name="markerWeightPx"
+              children={(field) => (
+                <TextControl
+                  label="Weight (px)"
+                  type="number"
+                  min={1}
+                  step="any"
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  __next40pxDefaultSize
+                  __nextHasNoMarginBottom
+                />
+              )}
+            />
+            <form.Field
+              name="markerColor"
+              children={(field) => (
+                <ColorControl
+                  label="Border Color"
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            />
+            <form.Field
+              name="markerFillOpacity"
+              children={(field) => (
+                <TextControl
+                  label="Fill Opacity"
+                  type="number"
+                  min={0}
+                  max={1}
+                  step="any"
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  __next40pxDefaultSize
+                  __nextHasNoMarginBottom
+                />
+              )}
+            />
+            <form.Field
+              name="markerStartFillColor"
+              children={(field) => (
+                <ColorControl
+                  label="Start Fill Color"
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            />
+            <form.Field
+              name="markerEndFillColor"
+              children={(field) => (
+                <ColorControl
+                  label="End Fill Color"
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            />
+            <form.Field
+              name="markerRoundtripFillColor"
+              children={(field) => (
+                <ColorControl
+                  label="Roundtrip Fill Color"
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            />
+          </div>
+        </div>
+
+        <form.SubmitButton />
+      </form>
+    </form.AppForm>
+  );
+}
