@@ -1,4 +1,4 @@
-import { Icon, TextControl, Tooltip } from "@wordpress/components";
+import { TextControl } from "@wordpress/components";
 import * as z from "zod/mini";
 
 import { zUptrackSettingsSafe } from "../../settings";
@@ -6,22 +6,6 @@ import { zMapStyles } from "../../uptrack-map/map-styles";
 import { ColorControl } from "../ColorControl";
 import { useUpdateSettings } from "../use-update-settings";
 import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
-
-const withHelpLabel = (label: string, tooltip: string): React.JSX.Element => (
-  <span className="map-styles-label-with-help">
-    <span>{label}</span>
-    <Tooltip text={tooltip}>
-      <span
-        aria-label={tooltip}
-        className="map-styles-help-icon"
-        role="img"
-        tabIndex={0}
-      >
-        <Icon icon="editor-help" size={16} />
-      </span>
-    </Tooltip>
-  </span>
-);
 
 // SYNC [AdminMapStylesInput]
 const zAdminMapStylesInput = z.object({
@@ -77,10 +61,8 @@ function MapStylesPage({
             name="canvasTolerance"
             children={(field) => (
               <TextControl
-                label={withHelpLabel(
-                  "Canvas Tolerance (px)",
-                  "Pixel tolerance for canvas hit detection. Higher values make line hover/click interactions more forgiving.",
-                )}
+                label="Canvas Tolerance (px)"
+                help="Pixel tolerance for canvas hit detection. Higher values make line hover/click interactions more forgiving."
                 type="number"
                 min={1}
                 step="any"
@@ -97,10 +79,8 @@ function MapStylesPage({
             name="roundtripEpsilon"
             children={(field) => (
               <TextControl
-                label={withHelpLabel(
-                  "Roundtrip Epsilon",
-                  "Distance threshold used to treat route start and end points as the same location.",
-                )}
+                label="Roundtrip Epsilon"
+                help="Distance threshold used to treat route start and end points as the same location."
                 type="number"
                 min={0}
                 step="any"
