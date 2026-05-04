@@ -1,7 +1,13 @@
 import type L from "leaflet";
 import * as z from "zod/mini";
 
-import { zMarkerCoords, zRouteType, zUptrackSettings } from "../settings";
+import {
+  zDurationUnit,
+  zMarkerCoords,
+  zRouteDifficulty,
+  zRouteType,
+  zUptrackSettings,
+} from "../settings";
 
 // SYNC [RouteInfo]
 export const zRouteInfo = z.object({
@@ -13,9 +19,13 @@ export const zRouteInfo = z.object({
   url: z.string(),
   /** Post title */
   title: z.string(),
-  distance: z.string(),
-  elevation: z.string(),
-  duration: z.string(),
+  durationValue: z.string(),
+  durationUnit: zDurationUnit,
+  elevationGain: z.string(),
+  elevationRangeStart: z.string(),
+  elevationRangeEnd: z.string(),
+  distanceKm: z.string(),
+  difficulty: zRouteDifficulty,
 });
 export type RouteInfo = z.infer<typeof zRouteInfo>;
 

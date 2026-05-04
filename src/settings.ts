@@ -19,6 +19,17 @@ export type KmlFilename = z.infer<typeof zKmlFilename>;
 export const zRouteType = z.enum(["ski_touring", "mountaineering", "hiking"]);
 export type RouteType = z.infer<typeof zRouteType>;
 
+export const zDurationUnit = z.enum(["hours", "days"]);
+export type DurationUnit = z.infer<typeof zDurationUnit>;
+
+export const zRouteDifficulty = z.enum([
+  "beginner",
+  "intermediate",
+  "advanced",
+  "expert",
+]);
+export type RouteDifficulty = z.infer<typeof zRouteDifficulty>;
+
 export const zMarkerCoords = z.tuple([z.number(), z.number()]);
 export type MarkerCoords = z.infer<typeof zMarkerCoords>;
 
@@ -29,9 +40,13 @@ const zUptrackRoutesSettingItem = z.object({
   title: z.string(),
   type: zRouteType,
   marker: z.nullable(zMarkerCoords),
-  distance: z.string(),
-  elevation: z.string(),
-  duration: z.string(),
+  durationValue: z.string(),
+  durationUnit: zDurationUnit,
+  elevationGain: z.string(),
+  elevationRangeStart: z.string(),
+  elevationRangeEnd: z.string(),
+  distanceKm: z.string(),
+  difficulty: zRouteDifficulty,
 });
 export type UptrackRoutesSettingItem = z.infer<
   typeof zUptrackRoutesSettingItem
@@ -45,9 +60,13 @@ export const UPTRACK_ROUTES_SETTING_ITEM_DEFAULTS: z.input<
   title: "",
   type: "ski_touring",
   marker: null,
-  distance: "",
-  elevation: "",
-  duration: "",
+  durationValue: "",
+  durationUnit: "hours",
+  elevationGain: "",
+  elevationRangeStart: "",
+  elevationRangeEnd: "",
+  distanceKm: "",
+  difficulty: "beginner",
 };
 
 export const zUptrackRoutesSettingItemSafe = zFallback(

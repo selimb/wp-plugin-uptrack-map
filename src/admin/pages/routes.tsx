@@ -59,9 +59,13 @@ function buildDefaultRoutes(
       title: "",
       type: "ski_touring",
       marker: null,
-      distance: "",
-      elevation: "",
-      duration: "",
+      durationValue: "",
+      durationUnit: "hours",
+      elevationGain: "",
+      elevationRangeStart: "",
+      elevationRangeEnd: "",
+      distanceKm: "",
+      difficulty: "beginner",
     });
   }
 

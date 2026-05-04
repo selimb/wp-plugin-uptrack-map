@@ -75,9 +75,13 @@ class UptrackMapShortCode
             $title = $info["title"];
             $type = $info["type"];
             $marker = $info["marker"];
-            $distance = $info["distance"];
-            $elevation = $info["elevation"];
-            $duration = $info["duration"];
+            $duration_value = $info["durationValue"];
+            $duration_unit = $info["durationUnit"];
+            $elevation_gain = $info["elevationGain"];
+            $elevation_range_start = $info["elevationRangeStart"];
+            $elevation_range_end = $info["elevationRangeEnd"];
+            $distance_km = $info["distanceKm"];
+            $difficulty = $info["difficulty"];
 
             $relative_path = $kml_directory . "/" . $filename;
             $file_path = WP_CONTENT_DIR . "/" . $relative_path;
@@ -110,9 +114,13 @@ class UptrackMapShortCode
                 "marker" => $marker,
                 "url" => $post_url,
                 "title" => $post_title,
-                "distance" => $distance,
-                "elevation" => $elevation,
-                "duration" => $duration,
+                "durationValue" => $duration_value,
+                "durationUnit" => $duration_unit,
+                "elevationGain" => $elevation_gain,
+                "elevationRangeStart" => $elevation_range_start,
+                "elevationRangeEnd" => $elevation_range_end,
+                "distanceKm" => $distance_km,
+                "difficulty" => $difficulty,
             ];
         }
 
