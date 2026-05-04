@@ -14,6 +14,7 @@ class UptrackMapShortCode
         $settings = \get_options(Settings::ALL);
         // Relies on [php-default-kml-directory].
         $kml_directory = $settings[Settings::KML_DIRECTORY];
+        // Relies on [php-default-routes].
         $routes = $settings[Settings::ROUTES];
 
         $post_map = self::collect_posts($routes);

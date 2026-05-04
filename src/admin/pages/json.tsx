@@ -1,59 +1,82 @@
+import * as codemirrorJson from "@codemirror/lang-json";
+import { useState } from "@wordpress/element";
 import * as z from "zod/mini";
 
-import { zUptrackSettings } from "../../settings";
-import { SettingsJsonEditor } from "../SettingsJsonEditor";
+import {
+  UPTRACK_SETTINGS_DEFAULTS,
+  type UptrackSettings,
+  zUptrackSettings,
+  zUptrackSettingsSafe,
+} from "../../settings";
+import { CodeEditor, type CodeEditorLinter } from "../CodeEditor";
 import { useUpdateSettings } from "../use-update-settings";
 import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
 
 // SYNC [AdminJsonInput]
 const zAdminJsonInput = z.object({
   nonce: z.string(),
-  settings: z.unknown(),
+  settings: zUptrackSettingsSafe,
 });
 
 mountAdminPage({
   schema: zAdminJsonInput,
   render: (input) => (
     <JsonPage
-      settingsDefault={{ text: JSON.stringify(input.settings, null, 4) }}
+      settingsDefault={input.settings}
+      textDefault={JSON.stringify(input.settings, null, 4)}
     />
   ),
 });
 
-const formSchema = z.pipe(
-  z.pipe(
-    z.string(),
-    z.transform((text, ctx): unknown => {
-      try {
-        return JSON.parse(text);
-      } catch (error) {
-        ctx.issues.push({
-          code: "custom",
-          input: text,
-          message: (error as Error).message,
-        });
-        return z.NEVER;
-      }
-    }),
-  ),
-  zUptrackSettings,
-);
+type SettingsResult =
+  | { ok: true; value: UptrackSettings }
+  | { ok: false; error: string };
 
 function JsonPage({
   settingsDefault,
+  textDefault,
 }: {
-  settingsDefault: { text: string };
+  settingsDefault: UptrackSettings;
+  textDefault: string;
 }): React.JSX.Element {
   const { result, update } = useUpdateSettings();
+  const [settings, setSettings] = useState<SettingsResult>(() => ({
+    ok: true,
+    value: settingsDefault,
+  }));
 
   const form = useAdminForm({
-    defaultValues: settingsDefault,
-    onSubmit: async ({ value }) => {
-      const json: unknown = JSON.parse(value.text);
-      const data = formSchema.parse(json);
-      await update(data);
+    defaultValues: { text: textDefault },
+    onSubmit: async () => {
+      if (settings.ok) {
+        await update(settings.value);
+      }
     },
   });
+
+  const handleFormat = (): void => {
+    if (settings.ok) {
+      const formatted = JSON.stringify(settings.value, null, 4);
+      form.setFieldValue("text", formatted);
+    }
+  };
+
+  const linter: CodeEditorLinter = (view) => {
+    if (settings.ok) {
+      return [];
+    }
+    const text = view.state.doc.toString();
+
+    return [
+      {
+        from: 0,
+        to: Math.min(1, text.length),
+        severity: "error",
+        source: "JSON",
+        message: settings.error,
+      },
+    ];
+  };
 
   return (
     <form.AppForm>
@@ -68,21 +91,42 @@ function JsonPage({
         <FormSubmitNotice result={result} />
 
         <div className="form-field">
-          <form.Field
-            name="text"
-            children={(field) => (
-              <SettingsJsonEditor
-                text={field.state.value}
-                onChange={(text) => {
-                  field.setValue(text);
-                }}
-              />
-            )}
-          />
+          <div className="w-full">
+            <form.Field
+              name="text"
+              children={(field) => (
+                <CodeEditor
+                  value={field.state.value}
+                  extensions={[codemirrorJson.json()]}
+                  lint={linter}
+                  onChange={(text) => {
+                    field.setValue(text);
+                    setSettings(parseSettingsJson(text));
+                  }}
+                  onFormat={handleFormat}
+                  onReset={() =>
+                    JSON.stringify(UPTRACK_SETTINGS_DEFAULTS, null, 4)
+                  }
+                />
+              )}
+            />
+          </div>
         </div>
 
-        <form.SubmitButton />
+        <form.SubmitButton valid={settings.ok} />
       </form>
     </form.AppForm>
   );
+}
+
+function parseSettingsJson(text: string): SettingsResult {
+  try {
+    const parsed = JSON.parse(text) as unknown;
+    const validated = zUptrackSettings.parse(parsed);
+    return { ok: true, value: validated };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Invalid JSON";
+    return { ok: false, error: errorMessage };
+  }
 }

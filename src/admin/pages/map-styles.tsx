@@ -2,7 +2,7 @@ import { Icon, TextControl, Tooltip } from "@wordpress/components";
 import * as z from "zod/mini";
 
 import { zUptrackSettingsSafe } from "../../settings";
-import type { zMapStyles } from "../../uptrack-map/map-styles";
+import { zMapStyles } from "../../uptrack-map/map-styles";
 import { useUpdateSettings } from "../use-update-settings";
 import { FormSubmitNotice, mountAdminPage, useAdminForm } from "./_shared";
 
@@ -50,6 +50,9 @@ function MapStylesPage({
 
   const form = useAdminForm({
     defaultValues,
+    validators: {
+      onChange: zMapStyles,
+    },
     onSubmit: async ({ value }) => {
       await update({ uptrack_map_styles: value });
     },

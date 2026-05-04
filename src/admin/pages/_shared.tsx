@@ -30,8 +30,10 @@ export const { useAppForm: useAdminForm } = createFormHook({
   fieldComponents: {},
   fieldContext,
   formComponents: {
-    SubmitButton: function SubmitButton(): React.JSX.Element {
+    SubmitButton: (props: { valid?: boolean }): React.JSX.Element => {
       const form = useFormContext();
+
+      const { valid = true } = props;
 
       return (
         <form.Subscribe
@@ -40,7 +42,7 @@ export const { useAppForm: useAdminForm } = createFormHook({
             <Button
               variant="primary"
               type="submit"
-              disabled={!canSubmit || isSubmitting}
+              disabled={!canSubmit || isSubmitting || !valid}
               isBusy={isSubmitting}
               __next40pxDefaultSize
             >

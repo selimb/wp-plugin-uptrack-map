@@ -58,7 +58,9 @@ class Settings
                         "additionalProperties" => true,
                     ],
                 ],
-            ],
+            ]
+            // [php-default-routes] Need default for this one, since it's used server-side.
+            "default" => [],
             "autoload" => "no",
         ]);
 

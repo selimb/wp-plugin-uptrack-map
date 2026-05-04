@@ -4,7 +4,11 @@ import {
   DEFAULT_FOCUS_CARD_HTML,
   DEFAULT_UPTRACK_MAP_CSS,
 } from "./default-assets";
-import { MAP_STYLES_DEFAULTS, zMapStyles } from "./uptrack-map/map-styles";
+import {
+  MAP_STYLES_DEFAULTS,
+  zMapStyles,
+  zMapStylesSafe,
+} from "./uptrack-map/map-styles";
 import { zFallback } from "./utils/zod-fallback";
 
 z.config(z.locales.en());
@@ -67,7 +71,7 @@ export const zUptrackSettings = z.object({
 });
 export type UptrackSettings = z.infer<typeof zUptrackSettings>;
 
-const UPTRACK_SETTINGS_DEFAULTS: UptrackSettings = {
+export const UPTRACK_SETTINGS_DEFAULTS: UptrackSettings = {
   uptrack_kml_directory: "kml-paths",
   uptrack_routes: [],
   uptrack_focus_card_html: DEFAULT_FOCUS_CARD_HTML,
@@ -101,8 +105,5 @@ export const zUptrackSettingsSafe = z.object({
     zUptrackSettings.shape.uptrack_alpinejs_url,
     UPTRACK_SETTINGS_DEFAULTS.uptrack_alpinejs_url,
   ),
-  uptrack_map_styles: z.catch(
-    zUptrackSettings.shape.uptrack_map_styles,
-    UPTRACK_SETTINGS_DEFAULTS.uptrack_map_styles,
-  ),
-} satisfies Record<keyof UptrackSettings, z.ZodMiniCatch<z.ZodMiniType>>);
+  uptrack_map_styles: zMapStylesSafe,
+} satisfies Record<keyof UptrackSettings, unknown>);

@@ -8,24 +8,32 @@ z.config(z.locales.en());
 // simplifies form handling:
 // - Intermediate values can be strings, which is what form inputs produce.
 // - Final values are validated numbers.
-const zNumber = z.union([
-  z.number(),
-  z.pipe(
-    z.string(),
-    z.transform((str, ctx) => {
-      const num = Number(str);
-      if (Number.isNaN(num)) {
-        ctx.issues.push({
-          code: "custom",
-          input: str,
-          message: "Invalid number",
-        });
-        return z.NEVER;
-      }
-      return num;
-    }),
-  ),
-]);
+const zNumber = z.transform<string | number, number>((input, ctx) => {
+  if (typeof input === "number") {
+    return input;
+  }
+
+  if (typeof input !== "string") {
+    ctx.issues.push({
+      code: "invalid_type",
+      input,
+      expected: "string or number",
+      received: typeof input,
+    });
+    return z.NEVER;
+  }
+
+  const num = Number(input);
+  if (Number.isNaN(num)) {
+    ctx.issues.push({
+      code: "custom",
+      input,
+      message: "Invalid number",
+    });
+    return z.NEVER;
+  }
+  return num;
+});
 const zOpacity = zNumber.check(z.minimum(0), z.maximum(1));
 
 const zRouteStyle = z.object({
