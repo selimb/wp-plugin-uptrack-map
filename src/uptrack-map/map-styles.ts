@@ -23,16 +23,19 @@ const zNumber = z.transform<string | number, number>((input, ctx) => {
     return z.NEVER;
   }
 
-  const num = Number(input);
-  if (Number.isNaN(num)) {
-    ctx.issues.push({
-      code: "custom",
-      input,
-      message: "Invalid number",
-    });
-    return z.NEVER;
+  if (input.trim().length > 0) {
+    const num = Number(input);
+    if (!Number.isNaN(num)) {
+      return num;
+    }
   }
-  return num;
+
+  ctx.issues.push({
+    code: "custom",
+    input,
+    message: "Invalid number",
+  });
+  return z.NEVER;
 });
 const zOpacity = zNumber.check(z.minimum(0), z.maximum(1));
 

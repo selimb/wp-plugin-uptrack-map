@@ -1,5 +1,5 @@
 import { BaseControl } from "@wordpress/components";
-import { useId, useRef } from "@wordpress/element";
+import { useId } from "@wordpress/element";
 
 export function ColorControl({
   label,
