@@ -1,7 +1,7 @@
 {
   "name": "wp-plugin-uptrack-map",
   "private": true,
-  "version": "1.0",
+  "version": "1.1",
   "description": "Uptrack Map Wordpress Plugin",
   "type": "module",
   "scripts": {
@@ -11,6 +11,7 @@
     "build": "bun ./scripts/build.ts",
     "build:watch": "bun ./scripts/build.ts --watch",
     "build:prod": "bun ./scripts/build.ts --prod",
+    "routes:import:legacy": "bun ./scripts/import-legacy-routes.ts",
     "tsc": "tsc",
     "prettier": "prettier . --check",
     "prettier:fix": "prettier . --write",
